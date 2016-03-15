@@ -2,7 +2,7 @@
 
 2. Unzip the attached "MCUFRIEND_kbv.zip" into your User libraries folder.
 
-3. Insert your Mcufriend style display shield into UNO.
+3. Insert your Mcufriend style display shield into UNO.   Only 28-pin shields are supported.
 
 4. Start your Arduino IDE.
 
