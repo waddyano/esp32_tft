@@ -1554,7 +1554,8 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
             0x28, 0,            //Display Off
             //            0xF6, 3, 0x01, 0x01, 0x00,  //Interface Control needs EXTC=1 MX_EOR=1, TM=0, RIM=0
             0xB6, 3, 0x0A, 0x22, 0x27,  //Display Function [0A 82 27] ILI9329: REV=0, SS=1
-            0x11, 0,            //Sleep Out
+            0xB7, 1, 0x06,      //Entry Mode Set [06]
+			0x11, 0,            //Sleep Out
             TFTLCD_DELAY8, 150,
             0x29, 0,            //Display On
             0x3A, 1, 0x55,      //Pixel read=565, write=565
