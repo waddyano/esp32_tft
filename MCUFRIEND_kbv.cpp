@@ -1542,6 +1542,9 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
     case 0x9302:
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | INVERT_SS;
 		goto common_9329;
+    case 0x9338:
+        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | INVERT_SS | READ_24BITS;
+		goto common_9329;
     case 0x9329:
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS;
 	  common_9329:
