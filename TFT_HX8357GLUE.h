@@ -49,6 +49,8 @@ const GFXfont *Fonts[] = {
 #define TFT_GREENYELLOW 0xAFE5
 #define TFT_PINK        0xF81F
 
+#define MC_DATUM        4
+
 class TFT_HX8357GLUE : public MCUFRIEND_kbv
 {
     public:
@@ -60,7 +62,7 @@ class TFT_HX8357GLUE : public MCUFRIEND_kbv
         {
             MCUFRIEND_kbv::reset();
 			_ID = MCUFRIEND_kbv::readID();
-//            if (_ID == 0x00D3 || ID == 0xD3D3)
+            if (_ID == 0x00D3 || _ID == 0xD3D3)
 			   _ID = 0x9481;
             MCUFRIEND_kbv::begin(_ID);
             MCUFRIEND_kbv::setRotation(1);
@@ -138,6 +140,22 @@ class TFT_HX8357GLUE : public MCUFRIEND_kbv
             print(string);
             return w;
         }
+        int16_t   drawCentreString(char *string, int16_t poX, int16_t poY, int16_t idx)
+		{
+            int16_t x1, y1;
+            uint16_t w, h;
+            setFont(Fonts[_font = idx]);
+            getTextBounds(string, poX, poY, &x1, &y1, &w, &h);
+            poX -= w/2;
+			x1 -= w/2;
+			fillRect(x1, y1 + h, w, h, 0x0000);
+            MCUFRIEND_kbv::setCursor(poX, poY + h);
+            print(string);
+            return w;
+//		    return drawString(string, dX, poY, idx);
+		}
+        void   setTextDatum(uint8_t datum) { ; }
+        void   setTextPadding(uint16_t x_width) { ; }
 
     private:
         uint16_t _ID;
