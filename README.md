@@ -1,3 +1,6 @@
+#MCUFRIEND_kbv 
+Library for Uno 2.4, 2.8, 3.5, 3.6, 3.95 inch mcufriend  Shields
+
 1. Install "Adafruit_GFX.h" library from GitHub into your User libraries folder if not already there.
 
 2. Unzip the attached "MCUFRIEND_kbv.zip" into your User libraries folder.
