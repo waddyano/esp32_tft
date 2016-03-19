@@ -7,8 +7,12 @@
 4. Start your Arduino IDE.
 
 5. Build any of the Examples from the File->Examples->Mcufriend_kbv menu.  e.g.
-   graphictest_kbv.ino: shows all the methods
-   LCD_ID_readreg.ino:  diagnostic check to identify unsupported controllers.
+
+graphictest_kbv.ino: shows all the methods.
+
+LCD_ID_readreg.ino:  diagnostic check to identify unsupported controllers.
+
 
 HOW TO INSTALL AND USE: is now in "mcufriend_how_to.txt"
+
 CHANGE HISTORY:         is now in "mcufriend_history.txt"
