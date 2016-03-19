@@ -1,5 +1,5 @@
  //#define SUPPORT_0139   //costs about 238 bytes
- //#define SUPPORT_1963
+#define SUPPORT_1963
 #define SUPPORT_4535            //costs about 184 bytes
  //#define SUPPORT_8347A           //costs about 408 bytes
 #define SUPPORT_8347D           //costs about 408 bytes
