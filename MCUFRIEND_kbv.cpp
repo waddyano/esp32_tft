@@ -300,6 +300,7 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
       common_BGR:
         WriteCmdParamN(is8347 ? 0x16 : 0x36, 1, &val);
         _lcd_madctl = val;
+//	    if (_lcd_ID	== 0x1963) WriteCmdParamN(0x13, 0, NULL);   //NORMAL mode
     }
     // cope with 9320 variants
     else {
@@ -524,7 +525,8 @@ void MCUFRIEND_kbv::vertScroll(int16_t top, int16_t scrollines, int16_t offset)
     int16_t bfa = HEIGHT - top - scrollines;  // bottom fixed area
     int16_t vsp;
     int16_t sea = top;
-    vsp = top + offset; // vertical start position
+    if (offset <= -scrollines || offset >= scrollines) offset = 0; //valid scroll
+	vsp = top + offset; // vertical start position
     if (offset < 0)
         vsp += scrollines;          //keep in unsigned range
     sea = top + scrollines - 1;
@@ -548,9 +550,17 @@ void MCUFRIEND_kbv::vertScroll(int16_t top, int16_t scrollines, int16_t offset)
         d[4] = bfa >> 8;        //BFA
         d[5] = bfa;
         WriteCmdParamN(is8347 ? 0x0E : 0x33, 6, d);
-        d[0] = vsp >> 8;        //VSP
+        if (offset == 0 && rotation > 1) vsp = top + scrollines;   //make non-valid
+		d[0] = vsp >> 8;        //VSP
         d[1] = vsp;
         WriteCmdParamN(is8347 ? 0x14 : 0x37, 2, d);
+/*
+		if (offset == 0 && _lcd_ID == 0x1963) {
+		     // if offset == 0 then vsp = top which sounds fine to me
+			 // the SSD1963 is not happy in REV modes.  So we call NORMON
+			 WriteCmdParamN(0x13, 0, NULL);    //NORMAL i.e. disable scroll
+		}
+*/
 		return;
     }
     // cope with 9320 style variants:
@@ -863,7 +873,7 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
         init_table16(SSD1289_regValues, sizeof(SSD1289_regValues));
         break;
 
-#ifdef SUPPORT_1963
+#if defined(SUPPORT_1963) && USING_16BIT_BUS 
 	case 0x1963:
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | READ_NODUMMY | INVERT_SS | INVERT_RGB;
         // from NHD 5.0" 8-bit
