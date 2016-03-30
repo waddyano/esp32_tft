@@ -89,8 +89,19 @@ class UTFTGLUE : public MCUFRIEND_kbv
 		 settextcursor((char*)"", x, y); MCUFRIEND_kbv::print(num, dec);}
 	void setFont(uint8_t* font) { MCUFRIEND_kbv::setTextSize(1);}
 
-//	void drawBitmap(int x, int y, int sx, int sy, bitmapdatatype data, int scale=1) {
-//		 MCUFRIEND_kbv::drawBitmap(x, y, (const uint8_t*)data, sx, sy, _fcolor);}
+	void drawBitmap(int x, int y, int sx, int sy, uint16_t *data, int scale=1) {
+		 uint16_t color;
+		 MCUFRIEND_kbv::setAddrWindow(x, y, x + sx*scale - 1, y + sy*scale - 1);
+		 if (scale == 1) MCUFRIEND_kbv::pushColors((const uint8_t*)data, sx * sy, 1);
+		 else {
+		     for (int row = 0; row < sy; row++) {
+			     for (int col = 0; col < sx; col++) {
+                     color = pgm_read_word(data + (row*sx + col)*1);
+					 MCUFRIEND_kbv::fillRect(x+col*scale, y+row*scale, scale, scale, color);
+			     }
+		     }
+		 }
+		 }
 //	void drawBitmap(int x, int y, int sx, int sy, bitmapdatatype data, int deg, int rox, int roy);
 //	void lcdOff();
 //	void lcdOn();
