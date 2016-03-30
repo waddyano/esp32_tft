@@ -23,7 +23,8 @@ class MCUFRIEND_kbv : public Adafruit_GFX {
 	void     begin(uint16_t ID = 0x9341);                       // you only need the constructor
 	virtual void     drawPixel(int16_t x, int16_t y, uint16_t color);  // and these three
 	void     WriteCmdData(uint16_t cmd, uint16_t dat);                 // ?public methods !!!
-	uint16_t color565(uint8_t r, uint8_t g, uint8_t b) { return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3); }
+    void     pushCommand(uint16_t cmd, int8_t N, uint8_t * block);
+	uint16_t color565(uint8_t r, uint8_t g, uint8_t b) { return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | ((b & 0xF8) >> 3); }
 	uint16_t readID(void);
 	virtual void     fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
 	virtual void     drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color) { fillRect(x, y, 1, h, color); }
@@ -41,7 +42,7 @@ class MCUFRIEND_kbv : public Adafruit_GFX {
 	void     pushColors(uint8_t *block, int16_t n, bool first);
 	void     pushColors(const uint8_t *block, int16_t n, bool first);
 	void     vertScroll(int16_t top, int16_t scrollines, int16_t offset);
-	
+
 	private:
 	uint16_t _lcd_ID, _lcd_rev, _lcd_madctl, _lcd_drivOut, _MC, _MP, _MW, _SC, _EC, _SP, _EP;
     uint16_t  _lcd_xor, _lcd_capable;
