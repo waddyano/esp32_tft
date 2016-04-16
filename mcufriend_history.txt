@@ -7,14 +7,16 @@ Will Never Happen:
     Itead CPLD with ID=0x3082 ... will never work
 
 To Be Fixed:
-    SSD1963 has bad aspects.
 	GLUE Demo seems ok now
 
 v2.81: posted ....... NOT YET
     MCUFRIEND_kbv.cpp:  
+            SSD1963 fixed aspects.
 			Added ILI9302
 			Added ILI9338
 			Added HX8347-I
+	UTFTGLUE.h:
+	        implement drawBitmap() method. (no rotations)
 
 v2.8: posted 26 February 2016
     MCUFRIEND_kbv.cpp:  LANDSCAPE is now 90 degrees instead of 270 degrees
