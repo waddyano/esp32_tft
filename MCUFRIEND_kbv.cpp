@@ -32,7 +32,7 @@
 #define INVERT_RGB      (1<<11)
 #define REV_SCREEN      (1<<12)
 
-#if (defined(__AVR_ATmega2560__) || defined(__SAM3X8E__))\
+#if (defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__) || defined(__SAM3X8E__))\
  && (defined(USE_MEGA_16BIT_SHIELD) || defined(USE_DUE_16BIT_SHIELD))
 #define USING_16BIT_BUS 1
 #else
@@ -1103,6 +1103,7 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
     case 0x4747:       //HX8347-D
         _lcd_capable = REV_SCREEN | MIPI_DCS_REV1 | MV_AXIS | INVERT_SS;
 		goto common_8347DGI;
+	case 0x7575:       //HX8347-G
 	case 0x9595:       //HX8347-I
         _lcd_capable = REV_SCREEN | MIPI_DCS_REV1 | MV_AXIS;
       common_8347DGI:  
@@ -1587,6 +1588,7 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
             0xCB, 5, 0x39, 0x2C, 0x00, 0x34, 0x02,      //Power Control A [39 2C 00 34 02]
             0xF7, 1, 0x20,      //Pump Ratio [10]
             0xEA, 2, 0x00, 0x00,        //Driver Timing B [66 00]
+            0xB0, 1, 0x00,      //RGB Signal [00] 
             0xB1, 2, 0x00, 0x1B,        //Frame Control [00 1B]
             //            0xB6, 2, 0x0A, 0xA2, 0x27, //Display Function [0A 82 27 XX]    .kbv SS=1  
             0xB4, 1, 0x00,      //Inversion Control [02] .kbv NLA=1, NLB=1, NLC=1

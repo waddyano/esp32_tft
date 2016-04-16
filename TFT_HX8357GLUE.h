@@ -9,7 +9,7 @@
 #define HX8357_YELLOW  0xFFE0
 #define HX8357_WHITE   0xFFFF
 
-#include <Adafruit_GFX.h>    // Core graphics library
+//#include <Adafruit_GFX.h>    // Core graphics library
 #include <MCUFRIEND_kbv.h> // Hardware-specific library
 
 #include <Fonts/FreeSans9pt7b.h>
@@ -63,7 +63,7 @@ class TFT_HX8357GLUE : public MCUFRIEND_kbv
             MCUFRIEND_kbv::reset();
 			_ID = MCUFRIEND_kbv::readID();
             if (_ID == 0x00D3 || _ID == 0xD3D3)
-			   _ID = 0x9481;
+			   _ID = 0x9486;
             MCUFRIEND_kbv::begin(_ID);
             MCUFRIEND_kbv::setRotation(1);
             _first = true;

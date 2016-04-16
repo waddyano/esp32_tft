@@ -35,7 +35,7 @@
 #define PIN_HIGH(p, b)       (p) |= (1<<(b))
 #define PIN_OUTPUT(p, b)     *(&p-1) |= (1<<(b))
 
-#elif defined(__AVR_ATmega2560__)       //regular UNO shield on MEGA2560
+#elif defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)       //regular UNO shield on MEGA2560
 #define RD_PORT PORTF
 #define RD_PIN  0
 #define WR_PORT PORTF
@@ -171,7 +171,8 @@
                           PMC->PMC_PCER0 = (1 << ID_PIOB)|(1 << ID_PIOC);\
 						  PIOB->PIO_ODR = BMASK; PIOC->PIO_ODR = CMASK;\
 						}
-#define write8(x)     { write_8(x); WR_ACTIVE; WR_STROBE; WR_IDLE; }
+#define write8(x)     { write_8(x); WR_ACTIVE; WR_STROBE; }
+//#define write8(x)     { write_8(x); WR_ACTIVE; WR_STROBE; WR_IDLE; }
 #define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
 #define READ_8(dst)   { RD_STROBE; RD_ACTIVE; dst = read_8(); RD_IDLE; RD_IDLE; }
 #define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
