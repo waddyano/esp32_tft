@@ -29,9 +29,12 @@ void setup()
     Serial.println("");
     lcdInit();
     lcdReset();      //ensures that controller is in default state
+//    for (uint16_t i = 0; i < 256; i++) readReg(i, 7, "f.k"); 
     readReg(0x00, 2, "ID: ILI9320, ILI9325, ILI9335, ...");
     readReg(0x04, 4, "Manufacturer ID");
     readReg(0x09, 5, "Status Register");
+    readReg(0x0A, 2, "Get Powsr Mode");
+    readReg(0x0C, 2, "Get Pixel Format");
     readReg(0x61, 2, "RDID1 HX8347-G");
     readReg(0x62, 2, "RDID2 HX8347-G");
     readReg(0x63, 2, "RDID3 HX8347-G");
@@ -46,7 +49,8 @@ void setup()
     readReg(0xB6, 5, "Display Control");
     readReg(0xB7, 2, "Entry Mode Set");
     readReg(0xBF, 6, "ILI9481, HX8357-B");
-    readReg(0xC0, 6, "Panel Control");
+    readReg(0xC0, 9, "Panel Control");
+    readReg(0xC8, 13, "GAMMA");
     readReg(0xCC, 2, "Panel Control");
     readReg(0xD0, 3, "Power Control");
     readReg(0xD2, 5, "NVM Read");
@@ -54,6 +58,8 @@ void setup()
     readReg(0xDA, 2, "RDID1");
     readReg(0xDB, 2, "RDID2");
     readReg(0xDC, 2, "RDID3");
+    readReg(0xE0, 16, "GAMMA-P");
+    readReg(0xE1, 16, "GAMMA-N");
     readReg(0xEF, 6, "ILI9327");
     readReg(0xF2, 12, "Adjust Control 2");
     readReg(0xF6, 4, "Interface Control");
@@ -76,6 +82,8 @@ void readReg(uint16_t reg, uint8_t n, const char *msg)
     uint8_t val8;
     lcdReset();
     lcdSetWriteDir();
+    lcdWriteCommand(0xB0);     //Command Access Protect
+    lcdWriteData(0x00);        //looks wrong
 /*
     lcdWriteCommand(0xF6);
     lcdWriteData(0x01);
