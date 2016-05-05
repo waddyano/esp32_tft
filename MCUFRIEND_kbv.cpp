@@ -1,8 +1,9 @@
  //#define SUPPORT_0139   //costs about 238 bytes
-#define SUPPORT_1963
-#define SUPPORT_4535            //costs about 184 bytes
- //#define SUPPORT_8347A           //costs about 408 bytes
-#define SUPPORT_8347D           //costs about 408 bytes
+//#define SUPPORT_1289    //costs about 408 bytes
+#define SUPPORT_1963    //only works with 16BIT bus anyway
+//#define SUPPORT_8347D           //costs about 472 bytes, 0.27s
+//#define SUPPORT_8347A           //costs about +178 bytes on top of 8347D
+#define OFFSET_9327 32             //costs about 103 bytes, 0.08s
 
 #include "MCUFRIEND_kbv.h"
 #if defined(USE_SERIAL)
@@ -67,6 +68,7 @@ void MCUFRIEND_kbv::reset(void)
     wait_ms(100);
     RESET_IDLE;
     wait_ms(100);
+	WriteCmdData(0xB0, 0x0000);   //R61520 needs this to read ID
 }
 
 void MCUFRIEND_kbv::WriteCmdData(uint16_t cmd, uint16_t dat)
@@ -101,7 +103,7 @@ static inline void WriteCmdParam4(uint8_t cmd, uint8_t d1, uint8_t d2, uint8_t d
 }
 
 //#define WriteCmdParam4(cmd, d1, d2, d3, d4) {uint8_t d[4];d[0] = d1, d[1] = d2, d[2] = d3, d[3] = d4;WriteCmdParamN(cmd, 4, d);}
-void MCUFRIEND_kbv::pushCommand(uint16_t cmd, int8_t N, uint8_t * block) { WriteCmdParamN(cmd, N, block); }
+void MCUFRIEND_kbv::pushCommand(uint16_t cmd, uint8_t * block, int8_t N) { WriteCmdParamN(cmd, N, block); }
 
 static uint16_t read16bits(void)
 {
@@ -170,6 +172,8 @@ uint16_t MCUFRIEND_kbv::readID(void)
     ret = readReg32(0xBF);      //for ILI9481
     if (ret == 0x0494)
         return 0x9481;
+    if (ret == 0x2215)          //R61520
+        return 0x1520;
     ret = readReg32(0xEF);      //for ILI9327
     if (ret == 0x0493)
         return 0x9327;
@@ -339,6 +343,7 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
             _lcd_madctl = ORG | 0x0030;
             WriteCmdData(0x03, _lcd_madctl);    // set GRAM write direction and BGR=1.
             break;
+#ifdef SUPPORT_1289
         case 0x1289:
             _MC = 0x4E, _MP = 0x4F, _MW = 0x22, _SC = 0x44, _EC = 0x44, _SP = 0x45, _EP = 0x46;
             if (rotation & 1)
@@ -352,7 +357,8 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
             WriteCmdData(0x01, _lcd_drivOut);   // set Driver Output Control
             WriteCmdData(0x11, ORG | 0x6070);   // set GRAM write direction.
             break;
-        }
+#endif
+		}
     }
     if ((rotation & 1) && ((_lcd_capable & MV_AXIS) == 0)) {
         uint16_t x;
@@ -369,6 +375,12 @@ void MCUFRIEND_kbv::drawPixel(int16_t x, int16_t y, uint16_t color)
     // MCUFRIEND just plots at edge if you try to write outside of the box:
     if (x < 0 || y < 0 || x >= width() || y >= height())
         return;
+#if defined(OFFSET_9327)
+	if (_lcd_ID == 0x9327) {
+	    if (rotation == 2) y += OFFSET_9327;
+	    if (rotation == 3) x += OFFSET_9327;
+    }
+#endif
     if (_lcd_capable & MIPI_DCS_REV1) {
         WriteCmdParam4(_MC, x >> 8, x, x >> 8, x);
         WriteCmdParam4(_MP, y >> 8, y, y >> 8, y);
@@ -381,6 +393,12 @@ void MCUFRIEND_kbv::drawPixel(int16_t x, int16_t y, uint16_t color)
 
 void MCUFRIEND_kbv::setAddrWindow(int16_t x, int16_t y, int16_t x1, int16_t y1)
 {
+#if defined(OFFSET_9327)
+	if (_lcd_ID == 0x9327) {
+	    if (rotation == 2) y += OFFSET_9327, y1 += OFFSET_9327;
+	    if (rotation == 3) x += OFFSET_9327, x1 += OFFSET_9327;
+    }
+#endif
     if (_lcd_capable & MIPI_DCS_REV1) {
         WriteCmdParam4(_MC, x >> 8, x, x1 >> 8, x1);
         WriteCmdParam4(_MP, y >> 8, y, y1 >> 8, y1);
@@ -524,9 +542,15 @@ void MCUFRIEND_kbv::pushColors(const uint8_t * block, int16_t n, bool first)
 
 void MCUFRIEND_kbv::vertScroll(int16_t top, int16_t scrollines, int16_t offset)
 {
+#if defined(OFFSET_9327)
+	if (_lcd_ID == 0x9327) {
+	    if (rotation == 2 || rotation == 3) top += OFFSET_9327;
+    }
+#endif
     int16_t bfa = HEIGHT - top - scrollines;  // bottom fixed area
     int16_t vsp;
     int16_t sea = top;
+	if (_lcd_ID == 0x9327) bfa += 32;
     if (offset <= -scrollines || offset >= scrollines) offset = 0; //valid scroll
 	vsp = top + offset; // vertical start position
     if (offset < 0)
@@ -534,6 +558,7 @@ void MCUFRIEND_kbv::vertScroll(int16_t top, int16_t scrollines, int16_t offset)
     sea = top + scrollines - 1;
     if (_lcd_capable & MIPI_DCS_REV1) {
         uint8_t d[6];           // for multi-byte parameters
+/*
         if (_lcd_ID == 0x9327) {        //panel is wired for 240x432 
             if (rotation == 2 || rotation == 3) { //180 or 270 degrees
                 if (scrollines == HEIGHT) {
@@ -545,6 +570,7 @@ void MCUFRIEND_kbv::vertScroll(int16_t top, int16_t scrollines, int16_t offset)
             }
             bfa = 432 - top - scrollines;
         }
+*/
         d[0] = top >> 8;        //TFA
         d[1] = top;
         d[2] = scrollines >> 8; //VSA
@@ -552,17 +578,16 @@ void MCUFRIEND_kbv::vertScroll(int16_t top, int16_t scrollines, int16_t offset)
         d[4] = bfa >> 8;        //BFA
         d[5] = bfa;
         WriteCmdParamN(is8347 ? 0x0E : 0x33, 6, d);
-        if (offset == 0 && rotation > 1) vsp = top + scrollines;   //make non-valid
+//        if (offset == 0 && rotation > 1) vsp = top + scrollines;   //make non-valid
 		d[0] = vsp >> 8;        //VSP
         d[1] = vsp;
         WriteCmdParamN(is8347 ? 0x14 : 0x37, 2, d);
-/*
-		if (offset == 0 && _lcd_ID == 0x1963) {
-		     // if offset == 0 then vsp = top which sounds fine to me
-			 // the SSD1963 is not happy in REV modes.  So we call NORMON
-			 WriteCmdParamN(0x13, 0, NULL);    //NORMAL i.e. disable scroll
+		if (is8347) { 
+		    d[0] = (offset != 0) ? (_lcd_ID == 0x8347 ? 0x02 : 0x08) : 0;
+			WriteCmdParamN(_lcd_ID == 0x8347 ? 0x18 : 0x01, 1, d);  //HX8347-D
+		} else if (offset == 0 && (_lcd_capable & MIPI_DCS_REV1)) {
+			WriteCmdParamN(0x13, 0, NULL);    //NORMAL i.e. disable scroll
 		}
-*/
 		return;
     }
     // cope with 9320 style variants:
@@ -583,10 +608,12 @@ void MCUFRIEND_kbv::vertScroll(int16_t top, int16_t scrollines, int16_t offset)
         WriteCmdData(0x32, top);        //SSA
         WriteCmdData(0x33, vsp - top);  //SST
         break;
+#ifdef SUPPORT_1289
     case 0x1289:
         WriteCmdData(0x41, vsp);        //VL#
         break;
-    case 0xB509:
+#endif
+	case 0xB509:
         WriteCmdData(0x401, (1 << 1) | _lcd_rev);       //VLE, REV 
         WriteCmdData(0x404, vsp);       //VL# 
         break;
@@ -625,12 +652,14 @@ void MCUFRIEND_kbv::invertDisplay(boolean i)
     case 0x0154:
         WriteCmdData(0x07, 0x13 | (_lcd_rev << 2));     //.kbv kludge
         break;
+#ifdef SUPPORT_1289
     case 0x1289:
         _lcd_drivOut &= ~(1 << 13);
         if (_lcd_rev)
             _lcd_drivOut |= (1 << 13);
         WriteCmdData(0x01, _lcd_drivOut);
         break;
+#endif
     case 0xB509:
         WriteCmdData(0x401, (1 << 1) | _lcd_rev);       //.kbv kludge VLE 
         break;
@@ -826,6 +855,7 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
 
         break;
 
+#ifdef SUPPORT_1289
     case 0x1289:
         _lcd_capable = 0 | XSA_XEA_16BIT | REV_SCREEN;
         // came from MikroElektronika library http://www.hmsprojects.com/tft_lcd.html
@@ -873,6 +903,25 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
             0x004e, 0x0000,
         };
         init_table16(SSD1289_regValues, sizeof(SSD1289_regValues));
+        break;
+#endif
+
+    case 0x1520:
+        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_24BITS;
+        static const uint8_t R61526_regValues[] PROGMEM = {
+            0x01, 0,            //Soft Reset
+            TFTLCD_DELAY8, 120*2,  // .kbv will power up with ONLY reset, sleep out, display on
+            0x28, 0,            //Display Off
+//			0xB0, 2, 0x00, 0x00,      //Command Access Protect
+//			0xC0, 8, 0x0A, 0x4F, 0x00, 0x00, 0x02, 0x00, 0x01, 0x00,  //DM=1, BGR=1
+			0xB0, 1, 0x00,       //Command Access Protect
+			0xC0, 1, 0x0A,      //DM=1, BGR=1
+			0x11, 0,            //Sleep Out
+            TFTLCD_DELAY8, 150,
+            0x29, 0,            //Display On
+            0x3A, 1, 0x55,      //Pixel read=565, write=565
+        };
+        init_table(R61526_regValues, sizeof(R61526_regValues));
         break;
 
 #if defined(SUPPORT_1963) && USING_16BIT_BUS 
