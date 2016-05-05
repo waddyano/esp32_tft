@@ -8,7 +8,7 @@ Will Never Happen:
 To Be Fixed:
 	GLUE Demo seems ok now
 
-v2.9: posted 05 June 2016
+v2.9: posted 05 May 2016
     MCUFRIEND_kbv.cpp:  
 			Added pushCommand() method   to send block of 8-bit SRAM data to MIPI controller
 			SSD1963 fixed aspects.
