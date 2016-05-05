@@ -1,5 +1,5 @@
 #ifndef MCUFRIEND_KBV_H_
-#define MCUFRIEND_KBV_H_   281
+#define MCUFRIEND_KBV_H_   290
 
 //#define USE_KEIL
 //#define USE_SERIAL
@@ -23,7 +23,7 @@ class MCUFRIEND_kbv : public Adafruit_GFX {
 	void     begin(uint16_t ID = 0x9341);                       // you only need the constructor
 	virtual void     drawPixel(int16_t x, int16_t y, uint16_t color);  // and these three
 	void     WriteCmdData(uint16_t cmd, uint16_t dat);                 // ?public methods !!!
-    void     pushCommand(uint16_t cmd, int8_t N, uint8_t * block);
+    void     pushCommand(uint16_t cmd, uint8_t * block, int8_t N);
 	uint16_t color565(uint8_t r, uint8_t g, uint8_t b) { return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | ((b & 0xF8) >> 3); }
 	uint16_t readID(void);
 	virtual void     fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
