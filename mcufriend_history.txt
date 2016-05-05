@@ -1,23 +1,30 @@
 CHANGE HISTORY:
 
 Will Never Happen:
-    ILI9327 vertical scroll will ALWAYS be limited in Landscape and Portrait_Rev
-    ST7781 vert scroll is not implemented
+    R61520 vert scroll is not possible
+	ST7781 vert scroll is not implemented
     ILI9320, 9325, ... can never vert scroll sub-window 
-    Itead CPLD with ID=0x3082 ... will never work
 
 To Be Fixed:
 	GLUE Demo seems ok now
 
-v2.81: posted ....... NOT YET
+v2.9: posted 05 June 2016
     MCUFRIEND_kbv.cpp:  
-            SSD1963 fixed aspects.
+			Added pushCommand() method   to send block of 8-bit SRAM data to MIPI controller
+			SSD1963 fixed aspects.
 			Added ILI9302
 			Added ILI9338
-			Added HX8347-I
+			Added R61520
+			ILI9327 defaults to shifted band in REV modes.  #define OFFSET_9327			
+			Conditional S6D0139.    #define SUPPORT_0139 Untested
+			Conditional HX8347-A.   #define SUPPORT_8347A Untested
+			Conditional HX8347-I.   #define SUPPORT_8347D
+			Conditional SSD1289.    #define SUPPORT_1289
 	UTFTGLUE.h:
 	        implement drawBitmap() method. (no rotations)
-
+    LCD_ID_readreg.ino:
+	        write(0xB0, 0x00) after hardware Reset to read manufacturer locations.
+			added some extra registers.
 v2.8: posted 26 February 2016
     MCUFRIEND_kbv.cpp:  LANDSCAPE is now 90 degrees instead of 270 degrees
 	                methods branch on MIPI / 9320 style
