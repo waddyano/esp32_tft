@@ -1,7 +1,7 @@
  //#define SUPPORT_0139   //costs about 238 bytes
 //#define SUPPORT_1289    //costs about 408 bytes
 #define SUPPORT_1963    //only works with 16BIT bus anyway
-//#define SUPPORT_8347D           //costs about 472 bytes, 0.27s
+#define SUPPORT_8347D           //costs about 472 bytes, 0.27s
 //#define SUPPORT_8347A           //costs about +178 bytes on top of 8347D
 #define OFFSET_9327 32             //costs about 103 bytes, 0.08s
 
@@ -1690,26 +1690,156 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_BGR;
         static const uint8_t ILI9481_regValues[] PROGMEM = {    // Atmel MaxTouch
             0x01, 0,            //Soft Reset
-            TFTLCD_DELAY8, 50,
+            TFTLCD_DELAY8, 125,
             0x11, 0,            //Sleep Out
             TFTLCD_DELAY8, 20,
-            0xD0, 3, 0x07, 0x42, 0x18,  //Set Power
-            0xD1, 3, 0x00, 0x07, 0x10,  // Set VCOM
-            0xD2, 2, 0x01, 0x02,        // Set Power for Normal Mode
-            0xC0, 5, 0x10, 0x3B, 0x00, 0x02, 0x11,      //Set Panel Driving
-            0xC5, 1, 0x08,      //Frame Rate
+            0xB0, 1, 0x00,
+            0xD0, 3, 0x07, 0x42, 0x18,  // Set Power [00 43 18] x1.00, x6, x3
+            0xD1, 3, 0x00, 0x07, 0x10,  // Set VCOM  [00 00 00] x0.72, x1.02
+            0xD2, 2, 0x01, 0x02,        // Set Power for Normal Mode [01 22]
+            0xC0, 5, 0x10, 0x3B, 0x00, 0x02, 0x11,      //Set Panel Driving [10 3B 00 02 11]
+            0xC5, 1, 0x03,      //Frame Rate [03]
             0xC8, 12, 0x00, 0x32, 0x36, 0x45, 0x06, 0x16, 0x37, 0x75, 0x77, 0x54, 0x0C, 0x00,
             0x36, 1, 0x0A,      //Memory Access [00]
-            0x3A, 1, 0x55,      //Interlace Pixel Format [XX]
 
+            0x3A, 1, 0x55,      //Interlace Pixel Format [XX]
+            0x11, 0,            //Sleep Out
+            TFTLCD_DELAY8, 120,
+            0x29, 0,            //Display On
+            TFTLCD_DELAY8, 25,
+        };
+        static const uint8_t ILI9481_CPT29_regValues[] PROGMEM = {    // 320x430
+            0x01, 0,            //Soft Reset
+            TFTLCD_DELAY8, 125,
+            0x11, 0,            //Sleep Out
+            TFTLCD_DELAY8, 20,
+            0xB0, 1, 0x00,
+            0xD0, 3, 0x07, 0x42, 0x1C,  // Set Power [00 43 18]
+            0xD1, 3, 0x00, 0x02, 0x0F,  // Set VCOM  [00 00 00] x0.695, x1.00
+            0xD2, 2, 0x01, 0x11,        // Set Power for Normal Mode [01 22]
+            0xC0, 5, 0x10, 0x35, 0x00, 0x02, 0x11,      //Set Panel Driving [10 3B 00 02 11]
+            0xC5, 1, 0x03,      //Frame Rate [03]
+            0xC8, 12, 0x00, 0x30, 0x36, 0x45, 0x04, 0x16, 0x37, 0x75, 0x77, 0x54, 0x0F, 0x00,
+            0xE4, 1, 0xA0,
+            0xF0, 1, 0x01,
+            0xF3, 2, 0x02, 0x1A,			
+            0x36, 1, 0x0A,      //Memory Access [00]
             0x2A, 4, 0x00, 0x00, 0x01, 0x3F,
-            0x2B, 4, 0x00, 0x00, 0x01, 0xE0,
+            0x2B, 4, 0x00, 0x00, 0x01, 0xAD,		
+
+            0x3A, 1, 0x55,      //Interlace Pixel Format [XX]
+            0x11, 0,            //Sleep Out
+            TFTLCD_DELAY8, 120,
+            0x29, 0,            //Display On
+            TFTLCD_DELAY8, 25,
+        };
+        static const uint8_t ILI9481_PVI35_regValues[] PROGMEM = {    // 320x480
+            0x01, 0,            //Soft Reset
+            TFTLCD_DELAY8, 125,
+            0x11, 0,            //Sleep Out
+            TFTLCD_DELAY8, 20,
+            0xB0, 1, 0x00,
+            0xD0, 3, 0x07, 0x41, 0x1D,  // Set Power [00 43 18]
+            0xD1, 3, 0x00, 0x2B, 0x1F,  // Set VCOM  [00 00 00] x0.900, x1.32
+            0xD2, 2, 0x01, 0x11,        // Set Power for Normal Mode [01 22]
+            0xC0, 5, 0x10, 0x3B, 0x00, 0x02, 0x11,      //Set Panel Driving [10 3B 00 02 11]
+            0xC5, 1, 0x03,      //Frame Rate [03]
+            0xC8, 12, 0x00, 0x14, 0x33, 0x10, 0x00, 0x16, 0x44, 0x36, 0x77, 0x00, 0x0F, 0x00,
+            0xE4, 1, 0xA0,
+            0xF0, 1, 0x01,
+            0xF3, 2, 0x40, 0x0A,			
+            0x36, 1, 0x0A,      //Memory Access [00]
+
+            0x3A, 1, 0x55,      //Interlace Pixel Format [XX]
+            0x11, 0,            //Sleep Out
+            TFTLCD_DELAY8, 120,
+            0x29, 0,            //Display On
+            TFTLCD_DELAY8, 25,
+        };
+        static const uint8_t ILI9481_AUO317_regValues[] PROGMEM = {    // 320x480
+            0x01, 0,            //Soft Reset
+            TFTLCD_DELAY8, 125,
+            0x11, 0,            //Sleep Out
+            TFTLCD_DELAY8, 20,
+            0xB0, 1, 0x00,
+            0xD0, 3, 0x07, 0x40, 0x1D,  // Set Power [00 43 18]
+            0xD1, 3, 0x00, 0x18, 0x13,  // Set VCOM  [00 00 00] x0.805, x1.08
+            0xD2, 2, 0x01, 0x11,        // Set Power for Normal Mode [01 22]
+            0xC0, 5, 0x10, 0x3B, 0x00, 0x02, 0x11,      //Set Panel Driving [10 3B 00 02 11]
+            0xC5, 1, 0x03,      //Frame Rate [03]
+            0xC8, 12, 0x00, 0x44, 0x06, 0x44, 0x0A, 0x08, 0x17, 0x33, 0x77, 0x44, 0x08, 0x0C,
+            0xE4, 1, 0xA0,
+            0xF0, 1, 0x01,			
+            0x36, 1, 0x0A,      //Memory Access [00]
+
+            0x3A, 1, 0x55,      //Interlace Pixel Format [XX]
+            0x11, 0,            //Sleep Out
+            TFTLCD_DELAY8, 120,
+            0x29, 0,            //Display On
+            TFTLCD_DELAY8, 25,
+        };
+        static const uint8_t ILI9481_CMO35_regValues[] PROGMEM = {    // 320480
+            0x01, 0,            //Soft Reset
+            TFTLCD_DELAY8, 125,
+            0x11, 0,            //Sleep Out
+            TFTLCD_DELAY8, 20,
+            0xB0, 1, 0x00,
+            0xD0, 3, 0x07, 0x41, 0x1D,  // Set Power [00 43 18] 07,41,1D
+            0xD1, 3, 0x00, 0x1C, 0x1F,  // Set VCOM  [00 00 00] x0.825, x1.32 1C,1F
+            0xD2, 2, 0x01, 0x11,        // Set Power for Normal Mode [01 22]
+            0xC0, 5, 0x10, 0x3B, 0x00, 0x02, 0x11,      //Set Panel Driving [10 3B 00 02 11]
+            0xC5, 1, 0x03,      //Frame Rate [03]
+			0xC6, 1, 0x83, 
+            0xC8, 12, 0x00, 0x26, 0x21, 0x00, 0x00, 0x1F, 0x65, 0x23, 0x77, 0x00, 0x0F, 0x00,
+            0xF0, 1, 0x01,		//?
+            0xE4, 1, 0xA0,      //?SETCABC on Himax
+            0x36, 1, 0x48,      //Memory Access [00]
+            0xB4, 1, 0x11,			
+
+            0x3A, 1, 0x55,      //Interlace Pixel Format [XX]
+            0x11, 0,            //Sleep Out
+            TFTLCD_DELAY8, 120,
+            0x29, 0,            //Display On
+            TFTLCD_DELAY8, 25,
+        };
+        static const uint8_t ILI9481_RGB_regValues[] PROGMEM = {    // 320x480
+            0x01, 0,            //Soft Reset
+            TFTLCD_DELAY8, 125,
+            0x11, 0,            //Sleep Out
+            TFTLCD_DELAY8, 20,
+            0xB0, 1, 0x00,
+            0xD0, 3, 0x07, 0x41, 0x1D,  // SETPOWER [00 43 18]
+            0xD1, 3, 0x00, 0x2B, 0x1F,  // SETVCOM  [00 00 00] x0.900, x1.32
+            0xD2, 2, 0x01, 0x11,        // SETNORPOW for Normal Mode [01 22]
+            0xC0, 6, 0x10, 0x3B, 0x00, 0x02, 0x11, 0x00,     //SETPANEL [10 3B 00 02 11]
+            0xC5, 1, 0x03,      //SETOSC Frame Rate [03]
+            0xC6, 1, 0x80,      //SETRGB interface control
+			0xC8, 12, 0x00, 0x14, 0x33, 0x10, 0x00, 0x16, 0x44, 0x36, 0x77, 0x00, 0x0F, 0x00,
+            0xF3, 2, 0x40, 0x0A,			
+            0xF0, 1, 0x08,
+            0xF6, 1, 0x84,
+            0xF7, 1, 0x80,
+            0x0C, 2, 0x00, 0x55, //RDCOLMOD
+			0xB4, 1, 0x00,      //SETDISPLAY
+//			0xB3, 4, 0x00, 0x01, 0x06, 0x01,  //SETGRAM simple example
+			0xB3, 4, 0x00, 0x01, 0x06, 0x30,  //jpegs example
+            0x36, 1, 0x48,      //Memory Access [00]
+            0x3A, 1, 0x66,      //Interlace Pixel Format [XX]
+			0x20, 0,            //INVOFF
+//			0x21, 0,            //INVON
+
+//            0x3A, 1, 0x55,      //Interlace Pixel Format [XX]
             0x11, 0,            //Sleep Out
             TFTLCD_DELAY8, 120,
             0x29, 0,            //Display On
             TFTLCD_DELAY8, 25,
         };
         init_table(ILI9481_regValues, sizeof(ILI9481_regValues));
+//        init_table(ILI9481_CPT29_regValues, sizeof(ILI9481_CPT29_regValues));
+//        init_table(ILI9481_PVI35_regValues, sizeof(ILI9481_PVI35_regValues));
+//        init_table(ILI9481_AUO317_regValues, sizeof(ILI9481_AUO317_regValues));
+//        init_table(ILI9481_CMO35_regValues, sizeof(ILI9481_CMO35_regValues));
+//        init_table(ILI9481_RGB_regValues, sizeof(ILI9481_RGB_regValues));
         p16 = (int16_t *) & HEIGHT;
         *p16 = 480;
         p16 = (int16_t *) & WIDTH;

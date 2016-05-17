@@ -2,7 +2,7 @@
 #define MCUFRIEND_KBV_H_   290
 
 //#define USE_KEIL
-//#define USE_SERIAL
+#define USE_SERIAL
 
 #if ARDUINO < 165
 #define USE_GFX_KBV
