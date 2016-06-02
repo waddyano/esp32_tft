@@ -75,6 +75,7 @@ class UTFTGLUE : public MCUFRIEND_kbv
 	void drawCircle(int x, int y, int radius) { MCUFRIEND_kbv::drawCircle(x, y, radius, _fcolor);}
 	void fillCircle(int x, int y, int radius) { MCUFRIEND_kbv::fillCircle(x, y, radius, _fcolor);}
 	void setColor(byte r, byte g, byte b)  { MCUFRIEND_kbv::setTextColor(_fcolor = setrgb(r, g, b), _bcolor);}
+	void setColor(uint16_t c)  { MCUFRIEND_kbv::setTextColor(_fcolor = c, _bcolor);}
 	void setBackColor(byte r, byte g, byte b)  { MCUFRIEND_kbv::setTextColor(_fcolor, _bcolor = setrgb(r, g, b));}
 	void print(const char *st, int x, int y, int deg=0)  {
 		 settextcursor((char*)st, x, y); MCUFRIEND_kbv::print(st);}
