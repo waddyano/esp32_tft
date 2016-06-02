@@ -4,11 +4,12 @@
 //#define USE_SSD1289_SHIELD_MEGA 
 //#define USE_SSD1289_SHIELD_DUE 
 //#define USE_MEGA_8BIT_PROTOSHIELD
-#define USE_MEGA_16BIT_SHIELD     //RD on PL6 (D43)
+//#define USE_MEGA_8BIT_SHIELD
+//#define USE_MEGA_16BIT_SHIELD     //RD on PL6 (D43)
 //#define USE_BLD_BST_MEGA32U4
 //#define USE_BLD_BST_MEGA2560
 //#define USE_DUE_8BIT_PROTOSHIELD
-//#define USE_DUE_16BIT_SHIELD        //RD on PA15 (D24) 
+#define USE_DUE_16BIT_SHIELD        //RD on PA15 (D24) 
 
 #if 0
 #elif defined(__AVR_ATmega328P__) && defined(USE_SSD1289_SHIELD_UNO)    //on UNO
@@ -283,6 +284,33 @@ static inline void write_8(uint8_t val)
 #define write16(x)    { write_16(x); WR_STROBE; }
 #define READ_16(dst)  { RD_STROBE; dst = read_16(); RD_IDLE; }
 #define READ_8(dst)   { READ_16(dst); dst &= 0xFFFF; }
+
+#define PIN_LOW(p, b)        (p) &= ~(1<<(b))
+#define PIN_HIGH(p, b)       (p) |= (1<<(b))
+#define PIN_OUTPUT(p, b)     *(&p-1) |= (1<<(b))
+
+#elif defined(__AVR_ATmega2560__) && defined(USE_MEGA_8BIT_SHIELD)
+#warning USE_MEGA_8BIT_SHIELD for vagos21
+#define RD_PORT PORTL
+#define RD_PIN  6        //PL6 (D43).   Graham has PA15 (D24) on Due Shield 
+#define WR_PORT PORTG
+#define WR_PIN  2        //D39 CTE
+#define CD_PORT PORTD
+#define CD_PIN  7        //D38 CTE
+#define CS_PORT PORTG
+#define CS_PIN  1        //D40 CTE
+#define RESET_PORT PORTG
+#define RESET_PIN  0     //D41 CTE
+
+#define write_8(x)   { PORTA = x;}
+
+#define read_8()      ( PINA )
+#define setWriteDir() { DDRA = 0xFF; }
+#define setReadDir()  { DDRA = 0x00; }
+#define write8(x)     { write_8(x); WR_STROBE; }
+#define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
+#define READ_8(dst)   { RD_STROBE; dst = read_8(); RD_IDLE; }
+#define READ_16(dst)  { RD_STROBE; dst = read_8(); RD_IDLE; RD_STROBE; dst = (dst<<8) | read_8(); RD_IDLE; }
 
 #define PIN_LOW(p, b)        (p) &= ~(1<<(b))
 #define PIN_HIGH(p, b)       (p) |= (1<<(b))
