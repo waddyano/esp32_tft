@@ -1214,6 +1214,54 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
         };
         init_table(HX8347G_2_regValues, sizeof(HX8347G_2_regValues));
         break;
+	case 0x5252:       //HX8352-A
+        _lcd_capable = REV_SCREEN | MIPI_DCS_REV1 | MV_AXIS;
+		is8347 = 1;
+        static const uint8_t HX8352A_regValues[] PROGMEM = {
+            0x83, 1, 0x02,    //TESTM=1
+            0x85, 1, 0x03,    //VDC_SEL=011
+            0x8B, 2, 0x01, 0x93,   //STBA[7]=1,STBA[5:4]=01,STBA[1:0]=11
+            0x91, 1, 0x01,    //DCDC_SYNC=1
+            0x83, 1, 0x00,    //TESTM=0
+            //Gamma  Setting
+            0x3E, 12, 0xB0, 0x03, 0x10, 0x56, 0x13, 0x46, 0x23, 0x76, 0x00, 0x5E, 0x4F, 0x40,
+            //Power Voltage Setting
+            0x17, 1, 0x91,      //
+            0x2B, 1, 0xF9,      //
+            TFTLCD_DELAY8, 10,
+            0x1B, 1, 0x14,      //
+            0x1A, 1, 0x11,      //
+            0x1C, 1, 0x06,      //
+            0x1F, 1, 0x42,      //
+            TFTLCD_DELAY8, 20,
+            0x19, 1, 0x0A,      //
+            0x19, 1, 0x1A,      //
+            TFTLCD_DELAY8, 40,
+            0x19, 1, 0x12,      //
+            TFTLCD_DELAY8, 40,
+            0x1E, 1, 0x27,      //
+            TFTLCD_DELAY8, 100,
+            //Display ON Setting
+            0x24, 1, 0x60,      //
+            0x3D, 1, 0x40,      //
+            0x34, 1, 0x38,      //
+            0x35, 1, 0x38,      //
+            0x24, 1, 0x38,      //
+            TFTLCD_DELAY8, 40,
+            0x24, 1, 0x3C,      //
+            0x16, 1, 0x1C,      //
+            0x01, 1, 0x06,      //
+            0x55, 1, 0x00,      //
+            //Set GRAM Area
+            0x02, 2, 0x00, 0x00,        //Column Start
+            0x04, 2, 0x00, 0xEF,        //Column End
+            0x06, 2, 0x00, 0x00,        //Row Start
+            0x08, 2, 0x01, 0x8F,        //Row End
+        };
+        init_table(HX8352A_regValues, sizeof(HX8352A_regValues));
+        p16 = (int16_t *) & HEIGHT;
+        *p16 = 400;
+        break;
 #endif
 #ifdef SUPPORT_8347A
     case 0x8347:

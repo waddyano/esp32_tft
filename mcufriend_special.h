@@ -7,9 +7,9 @@
 //#define USE_MEGA_8BIT_SHIELD
 //#define USE_MEGA_16BIT_SHIELD     //RD on PL6 (D43)
 //#define USE_BLD_BST_MEGA32U4
-//#define USE_BLD_BST_MEGA2560
+#define USE_BLD_BST_MEGA2560
 //#define USE_DUE_8BIT_PROTOSHIELD
-#define USE_DUE_16BIT_SHIELD        //RD on PA15 (D24) 
+//#define USE_DUE_16BIT_SHIELD        //RD on PA15 (D24) 
 
 #if 0
 #elif defined(__AVR_ATmega328P__) && defined(USE_SSD1289_SHIELD_UNO)    //on UNO
