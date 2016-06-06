@@ -1250,7 +1250,7 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
             0x24, 1, 0x3C,      //
             0x16, 1, 0x1C,      //
             0x01, 1, 0x06,      //
-            0x55, 1, 0x04,      //SM_PANEL=0, SS_PANEL=0, GS_PANEL=1, REV_PANEL=0, BGR_PANEL=0
+            0x55, 1, 0x06,      //SM_PANEL=0, SS_PANEL=0, GS_PANEL=1, REV_PANEL=1, BGR_PANEL=0
             //Set GRAM Area
             0x02, 2, 0x00, 0x00,        //Column Start
             0x04, 2, 0x00, 0xEF,        //Column End
