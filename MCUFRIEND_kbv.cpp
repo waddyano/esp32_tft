@@ -644,11 +644,9 @@ void MCUFRIEND_kbv::invertDisplay(boolean i)
         if (is8347) {
             // HX8347D: 0x36 Panel Characteristic. REV_Panel
             // HX8347A: 0x36 is Display Control 10
-#if defined(SUPPORT_8347D)
-            val = _lcd_rev ? 8 : 10;     //HX8347-D: SCROLLON=bit3, INVON=bit1
-#else
-            val = _lcd_rev ? 6 : 2;     //INVON id bit#2 on HX8347-A.  NORON=bit#1
-#endif
+            if (_lcd_ID == 0x8347 || _lcd_ID == 0x5252) // HX8347-A, HX5352-A
+			    val = _lcd_rev ? 6 : 2;       //INVON id bit#2,  NORON=bit#1
+            else val = _lcd_rev ? 8 : 10;     //HX8347-D, G, I: SCROLLON=bit3, INVON=bit1
             // HX8347: 0x01 Display Mode has diff bit mapping for A, D 
             WriteCmdParamN(0x01, 1, &val);
         } else
@@ -1216,7 +1214,7 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
         init_table(HX8347G_2_regValues, sizeof(HX8347G_2_regValues));
         break;
 	case 0x5252:       //HX8352-A
-        _lcd_capable = MIPI_DCS_REV1 | MV_AXIS | INVERT_SS;
+        _lcd_capable = MIPI_DCS_REV1 | MV_AXIS;
 		is8347 = 1;
         static const uint8_t HX8352A_regValues[] PROGMEM = {
             0x83, 1, 0x02,    //TESTM=1
@@ -1252,7 +1250,7 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
             0x24, 1, 0x3C,      //
             0x16, 1, 0x1C,      //
             0x01, 1, 0x06,      //
-            0x55, 1, 0x00,      //
+            0x55, 1, 0x04,      //SM_PANEL=0, SS_PANEL=0, GS_PANEL=1, REV_PANEL=0, BGR_PANEL=0
             //Set GRAM Area
             0x02, 2, 0x00, 0x00,        //Column Start
             0x04, 2, 0x00, 0xEF,        //Column End
