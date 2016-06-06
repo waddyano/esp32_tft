@@ -309,6 +309,7 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
             goto common_MC;
         } else if (is8347) {
             _MC = 0x02, _MP = 0x06, _MW = 0x22, _SC = 0x02, _EC = 0x04, _SP = 0x06, _EP = 0x08;
+			if (_ld_ID == 0x5252) val |= 0x02;   //VERT_SCROLLON
             goto common_BGR;
         }
       common_MC:
@@ -1215,7 +1216,7 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
         init_table(HX8347G_2_regValues, sizeof(HX8347G_2_regValues));
         break;
 	case 0x5252:       //HX8352-A
-        _lcd_capable = REV_SCREEN | MIPI_DCS_REV1 | MV_AXIS;
+        _lcd_capable = MIPI_DCS_REV1 | MV_AXIS | INVERT_SS;
 		is8347 = 1;
         static const uint8_t HX8352A_regValues[] PROGMEM = {
             0x83, 1, 0x02,    //TESTM=1
