@@ -309,8 +309,11 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
             goto common_MC;
         } else if (is8347) {
             _MC = 0x02, _MP = 0x06, _MW = 0x22, _SC = 0x02, _EC = 0x04, _SP = 0x06, _EP = 0x08;
-			if (_ld_ID == 0x5252) val |= 0x02;   //VERT_SCROLLON
-            goto common_BGR;
+			if (_ld_ID == 0x5252) {
+			    val |= 0x02;   //VERT_SCROLLON
+				if (val & 0x10) val |= 0x04;   //if (ML) SS=1 kludge mirror in XXX_REV modes
+            }
+			goto common_BGR;
         }
       common_MC:
         _MC = 0x2A, _MP = 0x2B, _MW = 0x2C, _SC = 0x2A, _EC = 0x2A, _SP = 0x2B, _EP = 0x2B;
@@ -1217,39 +1220,40 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
         _lcd_capable = MIPI_DCS_REV1 | MV_AXIS;
 		is8347 = 1;
         static const uint8_t HX8352A_regValues[] PROGMEM = {
-            0x83, 1, 0x02,    //TESTM=1
-            0x85, 1, 0x03,    //VDC_SEL=011
-            0x8B, 2, 0x01, 0x93,   //STBA[7]=1,STBA[5:4]=01,STBA[1:0]=11
-            0x91, 1, 0x01,    //DCDC_SYNC=1
-            0x83, 1, 0x00,    //TESTM=0
+            0x83, 1, 0x02,      //Test Mode: TESTM=1
+            0x85, 1, 0x03,      //VDD ctl  : VDC_SEL=3 [05]
+            0x8B, 1, 0x01,      //VGS_RES 1: RES_VGS1=1 
+            0x8C, 1, 0x93,      //VGS_RES 2: RES_VGS2=1, anon=0x13 [93]
+            0x91, 1, 0x01,      //PWM control: SYNC=1
+            0x83, 1, 0x00,      //Test Mode: TESTM=0
             //Gamma  Setting
             0x3E, 12, 0xB0, 0x03, 0x10, 0x56, 0x13, 0x46, 0x23, 0x76, 0x00, 0x5E, 0x4F, 0x40,
             //Power Voltage Setting
-            0x17, 1, 0x91,      //
-            0x2B, 1, 0xF9,      //
+            0x17, 1, 0x91,      //OSC   1: RADJ=9, OSC_EN=1 [F0]
+            0x2B, 1, 0xF9,      //Cycle 1: N_DC=F9 [BE]
             TFTLCD_DELAY8, 10,
-            0x1B, 1, 0x14,      //
-            0x1A, 1, 0x11,      //
-            0x1C, 1, 0x06,      //
-            0x1F, 1, 0x42,      //
+            0x1B, 1, 0x14,      //Power 3: BT=1, ??=1, AP=0 [42]  
+            0x1A, 1, 0x11,      //Power 2: VC3=1, VC1=1 [05]
+            0x1C, 1, 0x06,      //Power 4: VRH=6 [0D]
+            0x1F, 1, 0x42,      //VCOM   : VCM=42 [55]
             TFTLCD_DELAY8, 20,
-            0x19, 1, 0x0A,      //
-            0x19, 1, 0x1A,      //
+            0x19, 1, 0x0A,      //Power 1: DK=1, VL_TR1=1 [09]
+            0x19, 1, 0x1A,      //Power 1: PON=1, DK=1, VL_TR1=1 [09]
             TFTLCD_DELAY8, 40,
-            0x19, 1, 0x12,      //
+            0x19, 1, 0x12,      //Power 1: PON=1, DK=1, STB=1 [09]
             TFTLCD_DELAY8, 40,
-            0x1E, 1, 0x27,      //
+            0x1E, 1, 0x27,      //Power 6: VCOMG=1, VDV=7 [10]
             TFTLCD_DELAY8, 100,
             //Display ON Setting
-            0x24, 1, 0x60,      //
-            0x3D, 1, 0x40,      //
-            0x34, 1, 0x38,      //
-            0x35, 1, 0x38,      //
-            0x24, 1, 0x38,      //
+            0x24, 1, 0x60,      //Display 2: PT=1, GON=1 [A0]
+            0x3D, 1, 0x40,      //Source 1: N_SAP=40 [C0]
+            0x34, 1, 0x38,      //Cycle 10: EQS=0x38 [38]
+            0x35, 1, 0x38,      //Cycle 11: EQP=0x38 [38]
+            0x24, 1, 0x38,      //Display 2: GON=1 D=2 [A0]
             TFTLCD_DELAY8, 40,
-            0x24, 1, 0x3C,      //
-            0x16, 1, 0x1C,      //
-            0x01, 1, 0x06,      //
+            0x24, 1, 0x3C,      //Display 2: GON=1 D=3 [A0]
+            0x16, 1, 0x1C,      //Memaccess: GS=1, BGR=1, SS=1 
+            0x01, 1, 0x06,      //Disp Mode: INVON=1, NORON=1 [02]
             0x55, 1, 0x06,      //SM_PANEL=0, SS_PANEL=0, GS_PANEL=1, REV_PANEL=1, BGR_PANEL=0
             //Set GRAM Area
             0x02, 2, 0x00, 0x00,        //Column Start
