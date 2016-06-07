@@ -309,7 +309,7 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
             goto common_MC;
         } else if (is8347) {
             _MC = 0x02, _MP = 0x06, _MW = 0x22, _SC = 0x02, _EC = 0x04, _SP = 0x06, _EP = 0x08;
-			if (_ld_ID == 0x5252) {
+			if (_lcd_ID == 0x5252) {
 			    val |= 0x02;   //VERT_SCROLLON
 				if (val & 0x10) val |= 0x04;   //if (ML) SS=1 kludge mirror in XXX_REV modes
             }
