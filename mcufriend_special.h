@@ -718,6 +718,8 @@ static inline void write_8(uint8_t val)
 #define RESET_PIN  9   //D41
 // configure macros for data bus 
 // 
+#define AMASK         ((3<<14))                 //PA14-PA15    D23-D24
+#define BMASK         (1<<26)                   //PB26         D22
 #define DMASK         ((15<<0)|(1<<6))          //PD0-PD3, PD6 D25-D28,D29
 
 #define write_8(x)   { PIOA->PIO_CODR = AMASK; PIOB->PIO_CODR = BMASK; PIOD->PIO_CODR = DMASK; \
