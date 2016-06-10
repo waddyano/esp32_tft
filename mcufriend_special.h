@@ -703,6 +703,59 @@ static inline void write_8(uint8_t val)
 #define PIN_HIGH(port, pin)   (port)->PIO_SODR = (1<<(pin))
 #define PIN_OUTPUT(port, pin) (port)->PIO_OER = (1<<(pin))
 
+#elif defined(__SAM3X8E__) && defined(USE_MEGA_8BIT_SHIELD)  //regular CTE shield on DUE
+#warning USE_MEGA_8BIT_SHIELD for peloxp
+// configure macros for the control pins
+#define RD_PORT PIOA
+#define RD_PIN  20     //D43
+#define WR_PORT PIOC
+#define WR_PIN  7      //D39
+#define CD_PORT PIOC
+#define CD_PIN  6      //D38
+#define CS_PORT PIOC
+#define CS_PIN  8      //D40
+#define RESET_PORT PIOC
+#define RESET_PIN  9   //D41
+// configure macros for data bus 
+// 
+#define DMASK         ((15<<0)|(1<<6))          //PD0-PD3, PD6 D25-D28,D29
+
+#define write_8(x)   { PIOA->PIO_CODR = AMASK; PIOB->PIO_CODR = BMASK; PIOD->PIO_CODR = DMASK; \
+                        PIOA->PIO_SODR = (((x)&(3<<9))<<5); \
+                        PIOB->PIO_SODR = (((x)&(1<<8))<<18); \
+                        PIOD->PIO_SODR = (((x)&(1<<7))<<2)|(((x)&(1<<5))<<5)|(((x)&(15<<11))>>11)|(((x)&(1<<15))>>9); \
+					  }
+
+#define read_8()     ( 0\
+                        |((PIOB->PIO_PDSR & (1<<26))>>18)\
+                        |((PIOA->PIO_PDSR & (3<<14))>>5)\
+                        |((PIOD->PIO_PDSR & (15<<0))<<11)\
+                        |((PIOD->PIO_PDSR & (1<<6))<<9)\
+                      )
+
+#define setWriteDir() {\
+                        PIOA->PIO_OER = AMASK; PIOA->PIO_PER = AMASK; \
+                        PIOB->PIO_OER = BMASK; PIOB->PIO_PER = BMASK; \
+                        PIOD->PIO_OER = DMASK; PIOD->PIO_PER = DMASK; \
+                      }
+#define setReadDir()  { \
+                        PMC->PMC_PCER0 = (1 << ID_PIOA)|(1 << ID_PIOB)|(1 << ID_PIOC)|(1 << ID_PIOD); \
+						PIOA->PIO_ODR = AMASK; \
+						PIOB->PIO_ODR = BMASK; \
+						PIOD->PIO_ODR = DMASK; \
+					  }
+
+// ILI9486 is slower than ILI9481
+#define write8(x)     { write_8(x); WR_ACTIVE; WR_ACTIVE; WR_STROBE; WR_IDLE; WR_IDLE; }
+#define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
+#define READ_8(dst)   { RD_STROBE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; dst = read_8(); RD_IDLE; RD_IDLE; RD_IDLE; }
+#define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
+
+// Shield Control macros.
+#define PIN_LOW(port, pin)    (port)->PIO_CODR = (1<<(pin))
+#define PIN_HIGH(port, pin)   (port)->PIO_SODR = (1<<(pin))
+#define PIN_OUTPUT(port, pin) (port)->PIO_OER = (1<<(pin))
+
 #else
 #define USE_SPECIAL_FAIL
 #endif
