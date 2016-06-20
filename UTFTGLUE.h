@@ -18,6 +18,19 @@
 
 #include <MCUFRIEND_kbv.h>
 
+#include <Adafruit_GFX.h>
+
+#if defined(_GFXFONT_H_)
+#include <FreeDefaultFonts.h>
+#define SmallFont &FreeSmallFont
+#define BigFont   &FreeBigFont
+#define SevenSegNumFont &FreeSevenSegNumFont
+#else
+extern uint8_t SmallFont[];
+extern uint8_t BigFont[];
+extern uint8_t SevenSegNumFont[];
+#endif
+
 struct _current_font
 {
 	uint8_t* font;
@@ -88,8 +101,9 @@ class UTFTGLUE : public MCUFRIEND_kbv
 		 settextcursor(buf, x, y); MCUFRIEND_kbv::print(buf);}
 	void printNumF(double num, byte dec, int x, int y, char divider='.', int length=0, char filler=' ') {
 		 settextcursor((char*)"", x, y); MCUFRIEND_kbv::print(num, dec);}
+#if !defined(_GFXFONT_H_)
 	void setFont(uint8_t* font) { MCUFRIEND_kbv::setTextSize(1);}
-
+#endif
 	void drawBitmap(int x, int y, int sx, int sy, uint16_t *data, int scale=1) {
 		 uint16_t color;
 		 MCUFRIEND_kbv::setAddrWindow(x, y, x + sx*scale - 1, y + sy*scale - 1);
@@ -117,9 +131,22 @@ class UTFTGLUE : public MCUFRIEND_kbv
 	uint8_t _radius;
 	uint8_t _orient;
     void settextcursor(char *st, int x, int y) {
-		int pos;
+		int16_t pos, x1, y1;
+		uint16_t len, w, h;
+#if defined(_GFXFONT_H_)
+		if (MCUFRIEND_kbv::gfxFont != NULL) y += pgm_read_byte(&gfxFont->yAdvance);
 		if (x == CENTER || x == RIGHT) {
-			pos = (MCUFRIEND_kbv::width() - strlen(st) * 6);
+		    if (MCUFRIEND_kbv::gfxFont != NULL) {
+			    getTextBounds(st, 0, 0, &x1, &y1, &w, &h);
+				len = x1 - 0 + w;    // misses the final right padding.
+		    } else 
+#else
+		if (x == CENTER || x == RIGHT) {
+#endif
+			{
+			    len = strlen(st) * 6;
+			}
+			pos = (MCUFRIEND_kbv::width() - len);
 			if (x == CENTER) x = pos/2;
 			else x = pos;
 		}			
