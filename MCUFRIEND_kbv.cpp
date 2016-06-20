@@ -166,18 +166,20 @@ uint16_t MCUFRIEND_kbv::readID(void)
     ret = readReg(0x67);        //HX8347-A
     if (ret == 0x4747)
         return 0x8347;
-    ret = readReg32(0xA1);      //for SSD1963 [0x01576101]
+    ret = readReg32(0xA1);      //SSD1963: [01 57 61 01]
     if (ret == 0x6101)
         return 0x1963;
-    ret = readReg32(0xBF);      //for ILI9481
-    if (ret == 0x0494)
+    ret = readReg32(0xBF);
+                                //HX8357B: [xx 01 62 83 57 FF] unsupported
+                                //R61581:  [xx 01 22 15 81]    unsupported
+	if (ret == 0x0494)          //ILI9481: [xx 02 04 94 81 FF]
         return 0x9481;
-    if (ret == 0x2215)          //R61520
+    if (ret == 0x2215)          //R61520:  [xx 01 22 15 20]
         return 0x1520;
-    ret = readReg32(0xEF);      //for ILI9327
+    ret = readReg32(0xEF);      //ILI9327: [xx 02 04 93 27 FF] 
     if (ret == 0x0493)
         return 0x9327;
-    ret = readReg32(0x04);      //0x8552 for ST7789V
+    ret = readReg32(0x04);      //ST7789V: [85 85 52] 
     if (ret == 0x8552)
         return 0x7789;
     ret = readReg32(0xD3);      //for ILI9488, 9486, 9340, 9341
@@ -1663,21 +1665,21 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
         *p16 = 240;
         break;
     case 0x9302:
-        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | INVERT_SS;
+        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS;
 		goto common_9329;
     case 0x9338:
-        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | INVERT_SS | READ_24BITS;
+        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_24BITS;
 		goto common_9329;
     case 0x9329:
-        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS;
+        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | INVERT_SS | REV_SCREEN;
 	  common_9329:
         static const uint8_t ILI9329_regValues[] PROGMEM = {
             0x01, 0,            //Soft Reset
             TFTLCD_DELAY8, 50,  // .kbv will power up with ONLY reset, sleep out, display on
             0x28, 0,            //Display Off
-            //            0xF6, 3, 0x01, 0x01, 0x00,  //Interface Control needs EXTC=1 MX_EOR=1, TM=0, RIM=0
-            0xB6, 3, 0x0A, 0x22, 0x27,  //Display Function [0A 82 27] ILI9329: REV=0, SS=1
-            0xB7, 1, 0x06,      //Entry Mode Set [06]
+//            0xF6, 3, 0x01, 0x01, 0x00,  //Interface Control needs EXTC=1 MX_EOR=1, TM=0, RIM=0
+//            0xB6, 3, 0x0A, 0x82, 0x27,  //Display Function [0A 82 27]
+//            0xB7, 1, 0x06,      //Entry Mode Set [06]
 			0x11, 0,            //Sleep Out
             TFTLCD_DELAY8, 150,
             0x29, 0,            //Display On
@@ -1760,11 +1762,15 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
 			0xD0, 3, 0x07, 0x42, 0x18,  // Set Power [00 43 18] x1.00, x6, x3
             0xD1, 3, 0x00, 0x07, 0x10,  // Set VCOM  [00 00 00] x0.72, x1.02
             0xD2, 2, 0x01, 0x02,        // Set Power for Normal Mode [01 22]
+            0xD3, 2, 0x01, 0x02,        // Set Power for Partial Mode [01 22]
+            0xD4, 2, 0x01, 0x02,        // Set Power for Idle Mode [01 22]
             0xC0, 5, 0x10, 0x3B, 0x00, 0x02, 0x11,      //Set Panel Driving [10 3B 00 02 11]
             0xC1, 3, 0x10, 0x10, 0x88,  // Display Timing Normal [10 10 88]
 			0xC5, 1, 0x03,      //Frame Rate [03]
+			0xC6, 1, 0x02,      //Interface Control [02]
             0xC8, 12, 0x00, 0x32, 0x36, 0x45, 0x06, 0x16, 0x37, 0x75, 0x77, 0x54, 0x0C, 0x00,
-            0x36, 1, 0x0A,      //Memory Access [00]
+			0xCC, 1, 0x00,      //Panel Control [00]
+//            0x36, 1, 0x0A,      //Memory Access [00]
 
             0x3A, 1, 0x55,      //Interlace Pixel Format [XX]
             0x11, 0,            //Sleep Out
@@ -1915,12 +1921,12 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
 	    	0x01, 0,            //Soft Reset
             TFTLCD_DELAY8, 50,
             0x28, 0,            //Display Off
-            0xC0, 2, 0x0d, 0x0d,        //Power Control 1 [0x0E0E]
-            0xC1, 2, 0x43, 0x00,        //Power Control 2 [0x4300]
-            0xC2, 1, 0x00,      //Power Control 3
-            0xC5, 4, 0x00, 0x48, 0x00, 0x48,    //VCOM  Control 1 [0x00400040]
-            0xB4, 1, 0x00,      //Inversion Control
-            0xB6, 3, 0x00, 0x02, 0x3B,  // Display Function Control  .kbv GS=0,SS=0
+            0xC0, 2, 0x0d, 0x0d,        //Power Control 1 [0E 0E]
+            0xC1, 2, 0x43, 0x00,        //Power Control 2 [43 00]
+            0xC2, 1, 0x00,      //Power Control 3 [33]
+            0xC5, 4, 0x00, 0x48, 0x00, 0x48,    //VCOM  Control 1 [00 40 00 40]
+            0xB4, 1, 0x00,      //Inversion Control [00]
+            0xB6, 3, 0x02, 0x02, 0x3B,  // Display Function Control [02 02 3B]
 #define GAMMA9486 4
 #if GAMMA9486 == 0
             // default GAMMA terrible
