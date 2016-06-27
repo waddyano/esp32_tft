@@ -20,6 +20,7 @@
 
 #include <Adafruit_GFX.h>
 
+//#undef _GFXFONT_H_
 #if defined(_GFXFONT_H_)
 #include <FreeDefaultFonts.h>
 #define SmallFont &FreeSmallFont
