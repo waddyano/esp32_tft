@@ -1,4 +1,4 @@
- //#define SUPPORT_0139   //costs about 238 bytes
+//#define SUPPORT_0139   //costs about 238 bytes
 //#define SUPPORT_1289    //costs about 408 bytes
 #define SUPPORT_1963    //only works with 16BIT bus anyway
 //#define SUPPORT_8347D           //costs about 472 bytes, 0.27s
@@ -1559,10 +1559,12 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
     case 0x6809:
         _lcd_capable = 0 | REV_SCREEN | INVERT_GS | AUTO_READINC;
         goto common_93x5;
-    case 0x9325:
+    case 0x9328:
+	case 0x9325:
         _lcd_capable = 0 | REV_SCREEN | INVERT_GS;
         goto common_93x5;
-    case 0x9335:
+    case 0x9331:
+	case 0x9335:
         _lcd_capable = 0 | REV_SCREEN;
       common_93x5:
         static const uint16_t ILI9325_regValues[] PROGMEM = {
