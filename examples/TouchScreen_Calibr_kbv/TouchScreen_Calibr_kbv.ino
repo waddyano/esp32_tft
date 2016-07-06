@@ -71,7 +71,12 @@ void showpoint(void)
 // ************************************
 
 // Declare which fonts we will be using
-extern uint8_t SmallFont[];
+#if defined(SmallFont)         //.kbv new GLUE defines FreeSmallFont
+#undef SmallFont               //.kbv lose it
+#define SmallFont NULL         //.kbv use System Font
+#else
+extern uint8_t SmallFont[];    //.kbv
+#endif
 
 uint32_t cx, cy;
 uint32_t rx[8], ry[8];
@@ -201,6 +206,7 @@ void startup()
     myGLCD.print(TITLE, CENTER, 1);
     myGLCD.setBackColor(0, 0, 0);
 
+    myGLCD.print("#define NUMSAMPLES 3 in Library", LEFT, 18);
     myGLCD.print("Use a stylus or something", LEFT, 30);
     myGLCD.print("similar to touch as close", LEFT, 42);
     myGLCD.print("to the center of the", LEFT, 54);
