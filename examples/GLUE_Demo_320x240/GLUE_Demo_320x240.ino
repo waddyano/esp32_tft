@@ -22,35 +22,18 @@
 
 
 #include <Adafruit_GFX.h>
-//#include <Adafruit_TFTLCD.h>     // this header is not needed
 #include <UTFTGLUE.h>              // class methods are in here
-//UTFTGLUE myGLCD;                         // use for default shield
-//UTFTGLUE myGLCD(0x9320,A2,A1,A3,A4,A0);
-//UTFTGLUE myGLCD(0x9325,A2,A1,A3,A4,A0);
-//UTFTGLUE myGLCD(0x7783,A2,A1,A3,A4,A0);
-//UTFTGLUE myGLCD(0x1289,A1,A2,A0,0,A3);    // this might choose the pins
 UTFTGLUE myGLCD(0x0154,A2,A1,A3,A4,A0);
 
-/*
-#include <UTFT.h>
-//#include <SD.h>
-//UTFT myGLCD(ILI9325C,A2,A1,A3,A4);    // Remember to change the model parameter to suit your display module!
-//UTFT myGLCD(ILI9325D_8,A2,A1,A3,A4);    // Remember to change the model parameter to suit your display module!
-UTFT myGLCD(SSD1289_8,A1,A2,A0,A3);    // Remember to change the model parameter to suit your display module!
-*/
-
-// Uncomment the next line for Arduino 2009/Uno
-// UTFT(byte model, int RS, int WR,int CS,int RD)
-//UTFT myGLCD(ILI9325C,A2,A1,A3,A0);    // Remember to change the model parameter to suit your display module!
-//Adafruit_UTFT myGLCD;
-
 // Declare which fonts we will be using
-extern uint8_t SmallFont[];
+#if !defined(SmallFont)
+extern uint8_t SmallFont[];    //.kbv GLUE defines as GFXFont ref
+#endif
 
 void setup()
 {
-  randomSeed(analogRead(0));
-    pinMode(A0, OUTPUT);
+  randomSeed(analogRead(5));   //.kbv Due does not like A0
+    pinMode(A0, OUTPUT);       //.kbv mcufriend have RD on A0
     digitalWrite(A0, HIGH);
   
 // Setup the LCD

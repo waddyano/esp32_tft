@@ -10,7 +10,7 @@
 // This program requires the UTFT library.
 //
 
-#include <Adafruit_GFX.h>
+//#include <Adafruit_GFX.h>
 //#include <Adafruit_TFTLCD.h>
 #include <MCUFRIEND_kbv.h>
 #include <UTFTGLUE.h>
@@ -22,18 +22,15 @@ extern uint8_t SmallFont[];
 #include <UTFT.h>
 
 // Declare which fonts we will be using
-extern uint8_t SmallFont[];
-
-// Uncomment the next line for Arduino 2009/Uno
-UTFT myGLCD(ITDB32WD,19,18,17,16);   // Remember to change the model parameter to suit your display module!
-
-// Uncomment the next line for Arduino Mega
-//UTFT myGLCD(ITDB32WD,38,39,40,41);   // Remember to change the model parameter to suit your display module!
-*/
+#if !defined(SmallFont)
+extern uint8_t SmallFont[];    //.kbv GLUE defines as GFXFont ref
+#endif
 
 void setup()
 {
-  randomSeed(analogRead(0));
+  randomSeed(analogRead(5));   //.kbv Due does not like A0
+    pinMode(A0, OUTPUT);       //.kbv mcufriend have RD on A0
+    digitalWrite(A0, HIGH);
   
 // Setup the LCD
   myGLCD.InitLCD();
