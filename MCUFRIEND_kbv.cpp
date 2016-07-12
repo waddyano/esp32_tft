@@ -3,6 +3,7 @@
 #define SUPPORT_1963    //only works with 16BIT bus anyway
 //#define SUPPORT_8347D           //costs about 472 bytes, 0.27s
 //#define SUPPORT_8347A           //costs about +178 bytes on top of 8347D
+//#define SUPPORT_8352A           //costs about 688 bytes, 0.27s
 #define OFFSET_9327 32             //costs about 103 bytes, 0.08s
 
 #include "MCUFRIEND_kbv.h"
@@ -1263,6 +1264,9 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
         };
         init_table(HX8347G_2_regValues, sizeof(HX8347G_2_regValues));
         break;
+#endif
+		
+#ifdef SUPPORT_8352A
 	case 0x5252:       //HX8352-A
         _lcd_capable = MIPI_DCS_REV1 | MV_AXIS;
 		is8347 = 1;
