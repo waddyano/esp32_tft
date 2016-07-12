@@ -1116,6 +1116,7 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
             0x01, 0,            //Soft Reset
             TFTLCD_DELAY8, 50,
             0x28, 0,            //Display Off
+            0x3A, 1, 0x66,      //Pixel format
             0x11, 0,            //Sleep Out
             TFTLCD_DELAY8, 150,
             0x29, 0,            //Display On
