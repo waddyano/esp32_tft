@@ -121,6 +121,22 @@ static uint16_t read16bits(void)
     return (ret << 8) | lo;
 }
 
+uint32_t readReg40(uint16_t reg)
+{
+    uint16_t h, m, l;
+    CS_ACTIVE;
+    WriteCmd(reg);
+    setReadDir();
+    CD_DATA;
+    h = read16bits();
+    m = read16bits();
+    l = read16bits();
+    RD_IDLE;
+    CS_IDLE;
+    setWriteDir();
+    return ((uint32_t) h << 24) | (m << 8) | (l >> 8);
+}
+
 uint16_t MCUFRIEND_kbv::readReg(uint16_t reg)
 {
     uint16_t ret;
@@ -169,15 +185,19 @@ uint16_t MCUFRIEND_kbv::readID(void)
     ret = readReg32(0xA1);      //SSD1963: [01 57 61 01]
     if (ret == 0x6101)
         return 0x1963;
-    ret = readReg32(0xBF);
+	ret = readReg40(0xBF);
                                 //HX8357B: [xx 01 62 83 57 FF] unsupported
                                 //R61581:  [xx 01 22 15 81]    unsupported
-	if (ret == 0x0494)          //ILI9481: [xx 02 04 94 81 FF]
+	if (ret == 0x9481)          //ILI9481: [xx 02 04 94 81 FF]
         return 0x9481;
-    if (ret == 0x2215)          //R61520:  [xx 01 22 15 20]
+    if (ret == 0x1511)          //?R61511: [xx 02 04 15 11] not tested yet
+        return 0x1511;
+    if (ret == 0x1520)          //?R61520: [xx 01 22 15 20]
         return 0x1520;
-    ret = readReg32(0xEF);      //ILI9327: [xx 02 04 93 27 FF] 
-    if (ret == 0x0493)
+    if (ret == 0x1400)          //?RM68140:[xx FF 68 14 00] not tested yet
+        return 0x6814;
+    ret = readReg40(0xEF);      //ILI9327: [xx 02 04 93 27 FF] 
+    if (ret == 0x9327)
         return 0x9327;
     ret = readReg32(0x04);      //ST7789V: [85 85 52] 
     if (ret == 0x8552)
