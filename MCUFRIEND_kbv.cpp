@@ -1,6 +1,7 @@
 //#define SUPPORT_0139   //costs about 238 bytes
 //#define SUPPORT_1289    //costs about 408 bytes
 #define SUPPORT_1963    //only works with 16BIT bus anyway
+#define SUPPORT_68140           //very untested
 //#define SUPPORT_8347D           //costs about 472 bytes, 0.27s
 //#define SUPPORT_8347A           //costs about +178 bytes on top of 8347D
 //#define SUPPORT_8352A           //costs about 688 bytes, 0.27s
@@ -33,6 +34,8 @@
 #define MV_AXIS         (1<<10)
 #define INVERT_RGB      (1<<11)
 #define REV_SCREEN      (1<<12)
+#define FLIP_VERT       (1<<13)
+#define FLIP_HORIZ      (1<<14)
 
 #if (defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__) || defined(__SAM3X8E__))\
  && (defined(USE_MEGA_16BIT_SHIELD) || defined(USE_DUE_16BIT_SHIELD))
@@ -323,12 +326,12 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
             WriteCmdParamN(0xB6, 3, d);
 #endif
             goto common_MC;
-        } else if (_lcd_ID == 0x1963 || _lcd_ID == 0x9481 || _lcd_ID == 0x1511) {
+        } else if (_lcd_ID == 0x1963 || _lcd_ID == 0x9481 || _lcd_ID == 0x1511 || _lcd_ID == 0x6814) {
             if (val & 0x80)
                 val |= 0x01;    //GS
             if ((val & 0x40))
                 val |= 0x02;    //SS
-            if (_lcd_ID == 0x1963) val &= ~0xC0;
+            if (_lcd_ID == 0x1963 || _lcd_ID == 0x6814) val &= ~0xC0;
             if (_lcd_ID == 0x9481) val &= ~0xD0;
             if (_lcd_ID == 0x1511) {
                 val &= ~0x01;   //remove flip vert
@@ -1103,6 +1106,25 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
             0x0007, 0x0133,
         };
         init_table16(LGDP4535_regValues, sizeof(LGDP4535_regValues));
+        break;
+#endif
+
+#ifdef SUPPORT_68140
+    case 0x6814:
+        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS;
+		static const uint8_t RM68140_regValues_max[] PROGMEM = {        //
+            0x01, 0,            //Soft Reset
+            TFTLCD_DELAY8, 50,
+            0x28, 0,            //Display Off
+            0x11, 0,            //Sleep Out
+            TFTLCD_DELAY8, 150,
+            0x29, 0,            //Display On
+        };
+        init_table(RM68140_regValues_max, sizeof(RM68140_regValues_max));
+        p16 = (int16_t *) & HEIGHT;
+        *p16 = 480;
+        p16 = (int16_t *) & WIDTH;
+        *p16 = 320;
         break;
 #endif
 
