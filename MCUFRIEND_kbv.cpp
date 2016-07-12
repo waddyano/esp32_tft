@@ -322,12 +322,18 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
             WriteCmdParamN(0xB6, 3, d);
 #endif
             goto common_MC;
-        } else if (_lcd_ID == 0x1963 || _lcd_ID == 0x9481) {
+        } else if (_lcd_ID == 0x1963 || _lcd_ID == 0x9481 || _lcd_ID == 0x1511) {
             if (val & 0x80)
                 val |= 0x01;    //GS
             if ((val & 0x40))
                 val |= 0x02;    //SS
-            val &= (_lcd_ID == 0x1963) ? ~0xC0 : ~0xD0; //MY=0, MX=0 with ML=0 for ILI9481
+            if (_lcd_ID == 0x1963) val &= ~0xC0;
+            if (_lcd_ID == 0x9481) val &= ~0xD0;
+            if (_lcd_ID == 0x1511) {
+                val &= ~0x01;   //remove flip vert
+                val |= 0xC0;    //force penguin 180 rotation, keep ML
+            }
+//            val &= (_lcd_ID == 0x1963) ? ~0xC0 : ~0xD0; //MY=0, MX=0 with ML=0 for ILI9481
             goto common_MC;
         } else if (is8347) {
             _MC = 0x02, _MP = 0x06, _MW = 0x22, _SC = 0x02, _EC = 0x04, _SP = 0x06, _EP = 0x08;
@@ -939,6 +945,25 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
         init_table16(SSD1289_regValues, sizeof(SSD1289_regValues));
         break;
 #endif
+
+    case 0x1511:                // Unknown from Levy
+        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | READ_LOWHIGH;
+        static const uint8_t R61511_regValues[] PROGMEM = {
+            0x01, 0,            //Soft Reset
+            TFTLCD_DELAY8, 120*2,  // .kbv will power up with ONLY reset, sleep out, display on
+            0x28, 0,            //Display Off
+			0xB0, 1, 0x00,       //Command Access Protect
+			0x11, 0,            //Sleep Out
+            TFTLCD_DELAY8, 150,
+            0x29, 0,            //Display On
+            0x3A, 1, 0x55,      //Pixel read=565, write=565
+        };
+        init_table(R61511_regValues, sizeof(R61511_regValues));
+        p16 = (int16_t *) & HEIGHT;
+        *p16 = 480;
+        p16 = (int16_t *) & WIDTH;
+        *p16 = 320;
+        break;
 
     case 0x1520:
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_24BITS;
