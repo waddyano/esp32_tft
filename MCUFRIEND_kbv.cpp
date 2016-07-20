@@ -250,6 +250,7 @@ int16_t MCUFRIEND_kbv::readGRAM(int16_t x, int16_t y, uint16_t * block, int16_t 
         } else {
             READ_16(dummy);
         }
+		if (_lcd_ID == 0x1511) READ_8(r);   //extra dummy for R61511
         while (n) {
             if (_lcd_capable & READ_24BITS) {
                 READ_8(r);
@@ -313,10 +314,7 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
     if (_lcd_capable & INVERT_RGB)
         val ^= 0x08;
     if (_lcd_capable & MIPI_DCS_REV1) {
-        if (_lcd_ID == 0x9486) {
-#if USING_16BIT_BUS
-            // my 16-bit write-only shield seems to be an ILI9486 
-            _lcd_capable &= ~REV_SCREEN;
+        if (_lcd_ID == 0x6814) {  //.kbv my weird 0x9486 might be 68140
             GS = (val & 0x80) ? (1 << 6) : 0;   //MY
             SS = (val & 0x40) ? (1 << 5) : 0;   //MX
             val &= 0x28;        //keep MV, BGR, MY=0, MX=0, ML=0
@@ -324,7 +322,6 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
             d[1] = GS | SS | 0x02;      //MY, MX
             d[2] = 0x3B;
             WriteCmdParamN(0xB6, 3, d);
-#endif
             goto common_MC;
         } else if (_lcd_ID == 0x1963 || _lcd_ID == 0x9481 || _lcd_ID == 0x1511 || _lcd_ID == 0x6814) {
             if (val & 0x80)
@@ -951,7 +948,7 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
 #endif
 
     case 0x1511:                // Unknown from Levy
-        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | READ_LOWHIGH;
+        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1;   //extra read_8(dummy)
         static const uint8_t R61511_regValues[] PROGMEM = {
             0x01, 0,            //Soft Reset
             TFTLCD_DELAY8, 120*2,  // .kbv will power up with ONLY reset, sleep out, display on
@@ -1116,7 +1113,11 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
             0x01, 0,            //Soft Reset
             TFTLCD_DELAY8, 50,
             0x28, 0,            //Display Off
-            0x3A, 1, 0x66,      //Pixel format
+#if USING_16BIT_BUS
+            0x3A, 1, 0x55,      //Pixel format .kbv my Mega Shield
+#else
+            0x3A, 1, 0x66,      //Pixel format Attila's Uno Shield
+#endif
             0x11, 0,            //Sleep Out
             TFTLCD_DELAY8, 150,
             0x29, 0,            //Display On
