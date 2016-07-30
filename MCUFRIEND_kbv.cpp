@@ -204,6 +204,8 @@ uint16_t MCUFRIEND_kbv::readID(void)
     if (ret == 0x9327)
         return 0x9327;
     ret = readReg32(0x04);      //ST7789V: [85 85 52] 
+    if (ret == 0x8000)          //HX8357-D
+        return 0x8357;
     if (ret == 0x8552)
         return 0x7789;
     ret = readReg32(0xD3);      //for ILI9488, 9486, 9340, 9341
@@ -1555,6 +1557,25 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
         //        init_table(HX8347G_2_regValues, sizeof(HX8347G_2_regValues));
         break;
 #endif
+
+    case 0x8357:
+        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | REV_SCREEN;
+        static const uint8_t HX8357D_regValues[] PROGMEM = {
+	    	0x01, 0,            //Soft Reset
+            TFTLCD_DELAY8, 50,
+            0x28, 0,            //Display Off
+            0x3A, 1, 0x55,      //Interlace Pixel
+            0x11, 0,            //Sleep Out
+            TFTLCD_DELAY8, 50,
+            0x29, 0,            //Display On
+        };
+        init_table(HX8357D_regValues, sizeof(HX8357D_regValues));
+        p16 = (int16_t *) & HEIGHT;
+        *p16 = 480;
+        p16 = (int16_t *) & WIDTH;
+        *p16 = 320;
+        break;
+
     case 0x5408:
         _lcd_capable = 0 | REV_SCREEN | READ_BGR | INVERT_GS;
         goto common_9320;
