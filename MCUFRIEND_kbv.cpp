@@ -1559,7 +1559,7 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
 #endif
 
     case 0x8357:
-        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | REV_SCREEN;
+        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | REV_SCREEN | READ_24BITS;
         static const uint8_t HX8357D_regValues[] PROGMEM = {
 	    	0x01, 0,            //Soft Reset
             TFTLCD_DELAY8, 50,
