@@ -91,6 +91,7 @@ class UTFTGLUE : public MCUFRIEND_kbv
 	void setColor(byte r, byte g, byte b)  { MCUFRIEND_kbv::setTextColor(_fcolor = setrgb(r, g, b), _bcolor);}
 	void setColor(uint16_t c)  { MCUFRIEND_kbv::setTextColor(_fcolor = c, _bcolor);}
 	void setBackColor(byte r, byte g, byte b)  { MCUFRIEND_kbv::setTextColor(_fcolor, _bcolor = setrgb(r, g, b));}
+	void setBackColor(uint32_t c)  { if (c == 0xFFFFFFFF) _bcolor = _fcolor; MCUFRIEND_kbv::setTextColor(_fcolor, _bcolor = c);}
 	void print(const char *st, int x, int y, int deg=0)  {
 		 settextcursor((char*)st, x, y); MCUFRIEND_kbv::print(st);}
 	void print(char *st, int x, int y, int deg=0)  {
