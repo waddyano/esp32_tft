@@ -723,16 +723,17 @@ static inline void write_8(uint8_t val)
 #define DMASK         ((15<<0)|(1<<6))          //PD0-PD3, PD6 D25-D28,D29
 
 #define write_8(x)   { PIOA->PIO_CODR = AMASK; PIOB->PIO_CODR = BMASK; PIOD->PIO_CODR = DMASK; \
-                        PIOA->PIO_SODR = (((x)&(3<<9))<<5); \
-                        PIOB->PIO_SODR = (((x)&(1<<8))<<18); \
-                        PIOD->PIO_SODR = (((x)&(1<<7))<<2)|(((x)&(1<<5))<<5)|(((x)&(15<<11))>>11)|(((x)&(1<<15))>>9); \
+                        PIOB->PIO_SODR = (((x)&(1<<0))<<26); \
+                        PIOA->PIO_SODR = (((x)&(3<<1))<<13); \
+                        PIOD->PIO_SODR = (((x)&(15<<3))>>3); \
+                        PIOD->PIO_SODR = (((x)&(1<<7))>>1); \
 					  }
 
 #define read_8()     ( 0\
-                        |((PIOB->PIO_PDSR & (1<<26))>>18)\
-                        |((PIOA->PIO_PDSR & (3<<14))>>5)\
-                        |((PIOD->PIO_PDSR & (15<<0))<<11)\
-                        |((PIOD->PIO_PDSR & (1<<6))<<9)\
+                        |((PIOB->PIO_PDSR & (1<<26))>>26)\
+                        |((PIOA->PIO_PDSR & (3<<14))>>13)\
+                        |((PIOD->PIO_PDSR & (15<<0))<<3)\
+                        |((PIOD->PIO_PDSR & (1<<6))<<1)\
                       )
 
 #define setWriteDir() {\
