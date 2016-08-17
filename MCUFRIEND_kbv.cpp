@@ -369,6 +369,7 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
             SS = (val & 0x40) ? (1 << 8) : 0;
             WriteCmdData(0x01, GS | SS | 0x0028);       // set Driver Output Control
             goto common_ORG;
+        case 0x7793:
         case 0x9326:
 		case 0xB509:
             _MC = 0x200, _MP = 0x201, _MW = 0x202, _SC = 0x210, _EC = 0x211, _SP = 0x212, _EP = 0x213;
@@ -660,6 +661,7 @@ void MCUFRIEND_kbv::vertScroll(int16_t top, int16_t scrollines, int16_t offset)
         WriteCmdData(0x41, vsp);        //VL#
         break;
 #endif
+    case 0x7793:
 	case 0x9326:
 	case 0xB509:
         WriteCmdData(0x401, (1 << 1) | _lcd_rev);       //VLE, REV 
@@ -706,6 +708,7 @@ void MCUFRIEND_kbv::invertDisplay(boolean i)
         WriteCmdData(0x01, _lcd_drivOut);
         break;
 #endif
+    case 0x7793:
     case 0x9326:
 	case 0xB509:
         WriteCmdData(0x401, (1 << 1) | _lcd_rev);       //.kbv kludge VLE 
@@ -2218,6 +2221,7 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
         };
         init_table16(R61505V_regValues, sizeof(R61505V_regValues));
         break;
+    case 0x7793:
     case 0xB509:
         _lcd_capable = REV_SCREEN;
         static const uint16_t R61509V_regValues[] PROGMEM = {
