@@ -374,8 +374,10 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
 		case 0xB509:
             _MC = 0x200, _MP = 0x201, _MW = 0x202, _SC = 0x210, _EC = 0x211, _SP = 0x212, _EP = 0x213;
             GS = (val & 0x80) ? (1 << 15) : 0;
-            if (_lcd_ID == 0x9326) WriteCmdData(0x400, GS | 0x3100);
-            else WriteCmdData(0x400, GS | 0x6200);
+			uint16_t NL;
+			NL = ((HEIGHT / 8) - 1) << 9;
+            if (_lcd_ID == 0x9326) NL >>= 1;
+            WriteCmdData(0x400, GS | NL);
             goto common_SS;
         default:
             _MC = 0x20, _MP = 0x21, _MW = 0x22, _SC = 0x50, _EC = 0x51, _SP = 0x52, _EP = 0x53;
