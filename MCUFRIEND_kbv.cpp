@@ -369,10 +369,15 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
             SS = (val & 0x40) ? (1 << 8) : 0;
             WriteCmdData(0x01, GS | SS | 0x0028);       // set Driver Output Control
             goto common_ORG;
-        case 0xB509:
+        case 0x7793:
+        case 0x9326:
+		case 0xB509:
             _MC = 0x200, _MP = 0x201, _MW = 0x202, _SC = 0x210, _EC = 0x211, _SP = 0x212, _EP = 0x213;
             GS = (val & 0x80) ? (1 << 15) : 0;
-            WriteCmdData(0x400, GS | 0x6200);
+			uint16_t NL;
+			NL = ((HEIGHT / 8) - 1) << 9;
+            if (_lcd_ID == 0x9326) NL >>= 1;
+            WriteCmdData(0x400, GS | NL);
             goto common_SS;
         default:
             _MC = 0x20, _MP = 0x21, _MW = 0x22, _SC = 0x50, _EC = 0x51, _SP = 0x52, _EP = 0x53;
@@ -658,6 +663,8 @@ void MCUFRIEND_kbv::vertScroll(int16_t top, int16_t scrollines, int16_t offset)
         WriteCmdData(0x41, vsp);        //VL#
         break;
 #endif
+    case 0x7793:
+	case 0x9326:
 	case 0xB509:
         WriteCmdData(0x401, (1 << 1) | _lcd_rev);       //VLE, REV 
         WriteCmdData(0x404, vsp);       //VL# 
@@ -703,7 +710,9 @@ void MCUFRIEND_kbv::invertDisplay(boolean i)
         WriteCmdData(0x01, _lcd_drivOut);
         break;
 #endif
-    case 0xB509:
+    case 0x7793:
+    case 0x9326:
+	case 0xB509:
         WriteCmdData(0x401, (1 << 1) | _lcd_rev);       //.kbv kludge VLE 
         break;
     default:
@@ -1727,6 +1736,73 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
         };
         init_table16(ILI9325_regValues, sizeof(ILI9325_regValues));
         break;
+    case 0x9326:
+        _lcd_capable = AUTO_READINC | REV_SCREEN;
+        static const uint16_t ILI9326_CPT28_regValues[] PROGMEM = {
+//************* Start Initial Sequence **********//
+         0x0702, 0x3008,     //  Set internal timing, don’t change this value
+         0x0705, 0x0036,     //  Set internal timing, don’t change this value
+         0x070B, 0x1213,     //  Set internal timing, don’t change this value
+         0x0001, 0x0100,     //  set SS and SM bit
+         0x0002, 0x0100,     //  set 1 line inversion
+         0x0003, 0x1030,     //  set GRAM write direction and BGR=1.
+         0x0008, 0x0202,     //  set the back porch and front porch
+         0x0009, 0x0000,     //  set non-display area refresh cycle ISC[3:0]
+         0x000C, 0x0000,     //  RGB interface setting
+         0x000F, 0x0000,     //  RGB interface polarity
+//*************Power On sequence ****************//
+         0x0100, 0x0000,     //  SAP, BT[3:0], AP, DSTB, SLP, STB
+         0x0102, 0x0000,     //  VREG1OUT voltage
+         0x0103, 0x0000,   // VDV[4:0] for VCOM amplitude
+        TFTLCD_DELAY, 200,   // Dis-charge capacitor power voltage
+         0x0100, 0x1190,   // SAP, BT[3:0], AP, DSTB, SLP, STB
+         0x0101, 0x0227,   // DC1[2:0], DC0[2:0], VC[2:0]
+        TFTLCD_DELAY, 50,   // Delay 50ms
+         0x0102, 0x01BD,   // VREG1OUT voltage
+        TFTLCD_DELAY, 50,   // Delay 50ms
+         0x0103, 0x2D00,   // VDV[4:0] for VCOM amplitude
+         0x0281, 0x000E,   // VCM[5:0] for VCOMH
+        TFTLCD_DELAY, 50,   //
+         0x0200, 0x0000,   // GRAM horizontal Address
+         0x0201, 0x0000,   // GRAM Vertical Address
+// ----------- Adjust the Gamma Curve ----------//
+         0x0300, 0x0000,   //
+         0x0301, 0x0707,   //
+         0x0302, 0x0606,   //
+         0x0305, 0x0000,   //
+         0x0306, 0x0D00,   //
+         0x0307, 0x0706,   //
+         0x0308, 0x0005,   //
+         0x0309, 0x0007,   //
+         0x030C, 0x0000,   //
+         0x030D, 0x000A,   //
+//------------------ Set GRAM area ---------------//
+         0x0210, 0x0000,     //  Horizontal GRAM Start Address
+         0x0211, 0x00EF,     //  Horizontal GRAM End Address
+         0x0212, 0x0000,     //  Vertical GRAM Start Address
+         0x0213, 0x01AF,     //  Vertical GRAM Start Address
+         0x0400, 0x3100,     //  Gate Scan Line 400 lines
+         0x0401, 0x0001,     //  NDL,VLE, REV
+         0x0404, 0x0000,     //  set scrolling line
+//-------------- Partial Display Control ---------//
+         0x0500, 0x0000,     // Partial Image 1 Display Position
+         0x0501, 0x0000,     // Partial Image 1 RAM Start/End Address
+         0x0502, 0x0000,     // Partial Image 1 RAM Start/End Address
+         0x0503, 0x0000,     // Partial Image 2 Display Position
+         0x0504, 0x0000,     // Partial Image 2 RAM Start/End Address
+         0x0505, 0x0000,     // Partial Image 2 RAM Start/End Address
+//-------------- Panel Control -------------------//
+         0x0010, 0x0010,     // DIVI[1:0];RTNI[4:0]
+         0x0011, 0x0600,     // NOWI[2:0];SDTI[2:0]
+         0x0020, 0x0002,     // DIVE[1:0];RTNE[5:0]
+         0x0007, 0x0173,     //  262K color and display ON
+		 };
+        init_table16(ILI9326_CPT28_regValues, sizeof(ILI9326_CPT28_regValues));
+        p16 = (int16_t *) & HEIGHT;
+        *p16 = 400;
+        p16 = (int16_t *) & WIDTH;
+        *p16 = 240;
+        break;
     case 0x9327:
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS;
         static const uint8_t ILI9327_regValues[] PROGMEM = {
@@ -2147,6 +2223,7 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
         };
         init_table16(R61505V_regValues, sizeof(R61505V_regValues));
         break;
+    case 0x7793:
     case 0xB509:
         _lcd_capable = REV_SCREEN;
         static const uint16_t R61509V_regValues[] PROGMEM = {
