@@ -1737,7 +1737,7 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
         init_table16(ILI9325_regValues, sizeof(ILI9325_regValues));
         break;
     case 0x9326:
-        _lcd_capable = AUTO_READINC | REV_SCREEN;
+        _lcd_capable = REV_SCREEN | READ_BGR;
         static const uint16_t ILI9326_CPT28_regValues[] PROGMEM = {
 //************* Start Initial Sequence **********//
          0x0702, 0x3008,     //  Set internal timing, don’t change this value
