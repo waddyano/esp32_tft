@@ -181,23 +181,28 @@ uint16_t MCUFRIEND_kbv::readID(void)
     ret = readReg(0);           //forces a reset() if called before begin()
     if (ret == 0x5408)          //the SPFD5408 fails the 0xD3D3 test.
         return 0x5408;
-    if (ret == 0x0089 || ret == 0x8989)
+    if (ret == 0x5420)          //the SPFD5420 fails the 0xD3D3 test.
+        return 0x5420;
+    if (ret == 0x8989)          //SSD1289 is always 8989
         return 0x1289;
     ret = readReg(0x67);        //HX8347-A
     if (ret == 0x4747)
         return 0x8347;
+#if defined(SUPPORT_1963) && USING_16BIT_BUS 
     ret = readReg32(0xA1);      //SSD1963: [01 57 61 01]
     if (ret == 0x6101)
         return 0x1963;
+#endif
 	ret = readReg40(0xBF);
                                 //HX8357B: [xx 01 62 83 57 FF] unsupported
-                                //R61581:  [xx 01 22 15 81]    unsupported
 	if (ret == 0x9481)          //ILI9481: [xx 02 04 94 81 FF]
         return 0x9481;
     if (ret == 0x1511)          //?R61511: [xx 02 04 15 11] not tested yet
         return 0x1511;
     if (ret == 0x1520)          //?R61520: [xx 01 22 15 20]
         return 0x1520;
+    if (ret == 0x1581)          //R61581:  [xx 01 22 15 81]
+        return 0x1581;
     if (ret == 0x1400)          //?RM68140:[xx FF 68 14 00] not tested yet
         return 0x6814;
     ret = readReg40(0xEF);      //ILI9327: [xx 02 04 93 27 FF] 
@@ -325,13 +330,13 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
             d[2] = 0x3B;
             WriteCmdParamN(0xB6, 3, d);
             goto common_MC;
-        } else if (_lcd_ID == 0x1963 || _lcd_ID == 0x9481 || _lcd_ID == 0x1511) {
+        } else if (_lcd_ID == 0x1963 || _lcd_ID == 0x9481 || _lcd_ID == 0x1511 || _lcd_ID == 0x1581) {
             if (val & 0x80)
                 val |= 0x01;    //GS
             if ((val & 0x40))
                 val |= 0x02;    //SS
             if (_lcd_ID == 0x1963) val &= ~0xC0;
-            if (_lcd_ID == 0x9481) val &= ~0xD0;
+            if (_lcd_ID == 0x9481 || _lcd_ID == 0x1581) val &= ~0xD0;
             if (_lcd_ID == 0x1511) {
                 val &= ~0x10;   //remove ML
                 val |= 0xC0;    //force penguin 180 rotation
@@ -369,14 +374,15 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
             SS = (val & 0x40) ? (1 << 8) : 0;
             WriteCmdData(0x01, GS | SS | 0x0028);       // set Driver Output Control
             goto common_ORG;
+        case 0x5420:
         case 0x7793:
         case 0x9326:
 		case 0xB509:
             _MC = 0x200, _MP = 0x201, _MW = 0x202, _SC = 0x210, _EC = 0x211, _SP = 0x212, _EP = 0x213;
             GS = (val & 0x80) ? (1 << 15) : 0;
 			uint16_t NL;
-			NL = ((HEIGHT / 8) - 1) << 9;
-            if (_lcd_ID == 0x9326) NL >>= 1;
+			NL = ((432 / 8) - 1) << 9;
+            if (_lcd_ID == 0x9326 || _lcd_ID == 0x5420) NL >>= 1;
             WriteCmdData(0x400, GS | NL);
             goto common_SS;
         default:
@@ -663,6 +669,7 @@ void MCUFRIEND_kbv::vertScroll(int16_t top, int16_t scrollines, int16_t offset)
         WriteCmdData(0x41, vsp);        //VL#
         break;
 #endif
+	case 0x5420:
     case 0x7793:
 	case 0x9326:
 	case 0xB509:
@@ -710,6 +717,7 @@ void MCUFRIEND_kbv::invertDisplay(boolean i)
         WriteCmdData(0x01, _lcd_drivOut);
         break;
 #endif
+	case 0x5420:
     case 0x7793:
     case 0x9326:
 	case 0xB509:
@@ -1736,6 +1744,7 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
         };
         init_table16(ILI9325_regValues, sizeof(ILI9325_regValues));
         break;
+	case 0x5420:
     case 0x9326:
         _lcd_capable = REV_SCREEN | READ_BGR;
         static const uint16_t ILI9326_CPT28_regValues[] PROGMEM = {
@@ -1921,6 +1930,7 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
             init_table(ILI9341_regValues_2_4, sizeof(ILI9341_regValues_2_4));   //
         }
         break;
+    case 0x1581:
     case 0x9481:
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_BGR;
         static const uint8_t ILI9481_regValues[] PROGMEM = {    // Atmel MaxTouch
