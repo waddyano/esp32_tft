@@ -1931,8 +1931,11 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
         }
         break;
     case 0x1581:
+        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_BGR | REV_SCREEN | INVERT_SS;
+		goto common_9481;
     case 0x9481:
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_BGR;
+	  common_9481:
         static const uint8_t ILI9481_regValues[] PROGMEM = {    // Atmel MaxTouch
             0x01, 0,            //Soft Reset
             TFTLCD_DELAY8, 125,
