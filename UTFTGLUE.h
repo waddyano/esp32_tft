@@ -20,7 +20,6 @@
 
 #include <Adafruit_GFX.h>
 
-//#undef _GFXFONT_H_
 #if defined(_GFXFONT_H_)
 #include <FreeDefaultFonts.h>
 #define SmallFont &FreeSmallFont
@@ -106,7 +105,7 @@ class UTFTGLUE : public MCUFRIEND_kbv
 #if !defined(_GFXFONT_H_)
 	void setFont(uint8_t* font) { MCUFRIEND_kbv::setTextSize(1);}
 #endif
-	void drawBitmap(int x, int y, int sx, int sy, uint16_t *data, int scale=1) {
+	void drawBitmap(int x, int y, int sx, int sy, const uint16_t *data, int scale=1) {
 		 uint16_t color;
 		 MCUFRIEND_kbv::setAddrWindow(x, y, x + sx*scale - 1, y + sy*scale - 1);
 		 if (scale == 1) MCUFRIEND_kbv::pushColors((const uint8_t*)data, sx * sy, 1);
