@@ -20,6 +20,7 @@
 
 #include <Adafruit_GFX.h>
 
+#undef _GFXFONT_H_     //comment this line to enable FreeFonts
 #if defined(_GFXFONT_H_)
 #include <FreeDefaultFonts.h>
 #define SmallFont &FreeSmallFont
