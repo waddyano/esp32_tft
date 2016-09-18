@@ -9,19 +9,16 @@
 
 #include "MCUFRIEND_kbv.h"
 #if defined(USE_SERIAL)
- //#include <SPI.h>
 #include "mcufriend_serial.h"
  //uint8_t running;
-#elif defined(USE_KEIL)
-#include "pin_freedom_8.h"
-#define CTL_INIT()   { RD_OUTPUT; WR_OUTPUT; CD_OUTPUT; CS_OUTPUT; RESET_OUTPUT; }
-#define WriteCmd(x)  { CD_COMMAND; write16(x); }
-#define WriteData(x) { CD_DATA; write16(x); }
+#elif defined(__MBED__)
+#include "mcufriend_mbed.h"
+#elif defined(__CC_ARM)
+#include "mcufriend_keil.h"
 #else
 #include "mcufriend_shield.h"
 #endif
 
-#define wait_ms(ms)  delay(ms)
 #define MIPI_DCS_REV1   (1<<0)
 #define AUTO_READINC    (1<<1)
 #define READ_BGR        (1<<2)
@@ -67,11 +64,11 @@ void MCUFRIEND_kbv::reset(void)
     RD_IDLE;
     WR_IDLE;
     RESET_IDLE;
-    wait_ms(50);
+    delay(50);
     RESET_ACTIVE;
-    wait_ms(100);
+    delay(100);
     RESET_IDLE;
-    wait_ms(100);
+    delay(100);
 	WriteCmdData(0xB0, 0x0000);   //R61520 needs this to read ID
 }
 
