@@ -272,9 +272,9 @@ void write_8(uint8_t x)
   #define setWriteDir() {GPIOA_PDDR |=  AMASK;GPIOC_PDDR |=  CMASK;GPIOD_PDDR |=  DMASK; }
   #define setReadDir()  {GPIOA_PDDR &= ~AMASK;GPIOC_PDDR &= ~CMASK;GPIOD_PDDR &= ~DMASK; }
 
-#define write8(x)     { write_8(x); WR_STROBE; }
+#define write8(x)     { write_8(x); WR_ACTIVE; WR_ACTIVE; WR_STROBE; }
 #define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
-#define READ_8(dst)   { RD_STROBE; dst = read_8(); RD_IDLE; }
+#define READ_8(dst)   { RD_STROBE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; dst = read_8(); RD_IDLE; }
 #define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
 
 #define PASTE(x, y)   x ## y
@@ -309,6 +309,11 @@ void write_8(uint8_t x)
 #define WR_STROBE { WR_ACTIVE; WR_IDLE; }       //PWLW=TWRL=50ns
 #define RD_STROBE RD_IDLE, RD_ACTIVE, RD_ACTIVE, RD_ACTIVE      //PWLR=TRDL=150ns, tDDR=100ns
 
+#if defined(TEENSYDUINO)
+#define CTL_INIT()   { for (int i = 2; i <= A4; i++) pinMode(i, OUTPUT); \
+                       RD_OUTPUT; WR_OUTPUT; CD_OUTPUT; CS_OUTPUT; RESET_OUTPUT; }
+#else
 #define CTL_INIT()   { RD_OUTPUT; WR_OUTPUT; CD_OUTPUT; CS_OUTPUT; RESET_OUTPUT; }
+#endif
 #define WriteCmd(x)  { CD_COMMAND; write16(x); }
 #define WriteData(x) { CD_DATA; write16(x); }
