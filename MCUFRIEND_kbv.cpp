@@ -332,6 +332,9 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
                 val |= 0x01;    //GS
             if ((val & 0x40))
                 val |= 0x02;    //SS
+            if (_lcd_ID == 0x1581) { // no Horizontal Flip
+                WriteCmdParamN(0xC0, 1, d);
+            }
             if (_lcd_ID == 0x1963) val &= ~0xC0;
             if (_lcd_ID == 0x9481 || _lcd_ID == 0x1581) val &= ~0xD0;
             if (_lcd_ID == 0x1511) {
@@ -1928,7 +1931,7 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
         }
         break;
     case 0x1581:
-        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_BGR | REV_SCREEN | INVERT_SS;
+        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_BGR;
 		goto common_9481;
     case 0x9481:
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_BGR;
