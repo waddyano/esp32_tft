@@ -212,8 +212,8 @@ uint16_t MCUFRIEND_kbv::readID(void)
         return 0x7789;
     ret = readReg32(0xD3);      //for ILI9488, 9486, 9340, 9341
     msb = ret >> 8;
-    if (msb == 0x93 || msb == 0x94)
-        return ret;             //0x9488, 9486, 9340, 9341
+    if (msb == 0x93 || msb == 0x94 || msb == 0x77)
+        return ret;             //0x9488, 9486, 9340, 9341, 7796
     if (ret == 0x00D3 || ret == 0xD3D3)
         return ret;             //16-bit write-only bus
 /*
@@ -333,6 +333,7 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
             if ((val & 0x40))
                 val |= 0x02;    //SS
             if (_lcd_ID == 0x1581) { // no Horizontal Flip
+                d[0] = (val & 0x40) ? 0x11 : 0x10; //REV | SS
                 WriteCmdParamN(0xC0, 1, d);
             }
             if (_lcd_ID == 0x1963) val &= ~0xC0;
@@ -2150,8 +2151,12 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
         p16 = (int16_t *) & WIDTH;
         *p16 = 320;
         break;
+    case 0x7796:
+        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_24BITS | READ_BGR;
+        goto common_9488;
     case 0x9488:
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_24BITS;
+      common_9488:
         static const uint8_t ILI9488_regValues_max[] PROGMEM = {        // Atmel MaxTouch
             0x01, 0,            //Soft Reset
             TFTLCD_DELAY8, 50,
