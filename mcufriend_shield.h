@@ -310,6 +310,7 @@ void write_8(uint8_t x)
 #define RD_STROBE RD_IDLE, RD_ACTIVE, RD_ACTIVE, RD_ACTIVE      //PWLR=TRDL=150ns, tDDR=100ns
 
 #if defined(TEENSYDUINO)
+#warning special pinMode() initialisation for TEENSYDUINO
 #define CTL_INIT()   { \
                        for (int i = 2; i <= 9; i++) pinMode(i, OUTPUT); \
                        for (int i = A0; i <= A4; i++) pinMode(i, OUTPUT); \
