@@ -1070,6 +1070,31 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
             (0xBE), 6, 0x06, 0xF0, 0x01, 0xF0, 0x00, 0x00,      //set PWM for B/L
             (0xD0), 1, 0x0D,
         };
+        // from UTFTv2.82 initlcd.h
+        static const uint8_t SSD1963_480_regValues[] PROGMEM = {
+            (0xE2), 3, 0x23, 0x02, 0x54,        //PLL multiplier, set PLL clock to 120M
+            (0xE0), 1, 0x01,    // PLL enable
+            TFTLCD_DELAY8, 10,
+            (0xE0), 1, 0x03,    //
+            TFTLCD_DELAY8, 10,
+            0x01, 0,            //Soft Reset
+            TFTLCD_DELAY8, 100,
+            (0xE6), 3, 0x01, 0x1F, 0xFF,        //PLL setting for PCLK, depends on resolution
+            (0xB0), 7, 0x20, 0x00, 0x01, 0xDF, 0x01, 0x0F, 0x00,        //LCD SPECIFICATION
+            (0xB4), 8, 0x02, 0x13, 0x00, 0x08, 0x2B, 0x00, 0x02, 0x00,  //HSYNC
+            (0xB6), 7, 0x01, 0x20, 0x00, 0x04, 0x0C, 0x00, 0x02,        //VSYNC
+            (0xBA), 1, 0x0F,    //GPIO[3:0] out 1
+            (0xB8), 2, 0x07, 0x01,      //GPIO3=input, GPIO[2:0]=output
+            (0xF0), 1, 0x03,    //pixel data interface
+            TFTLCD_DELAY8, 1,
+            0x28, 0,            //Display Off
+            0x11, 0,            //Sleep Out
+            TFTLCD_DELAY8, 100,
+            0x29, 0,            //Display On
+            (0xBE), 6, 0x06, 0xF0, 0x01, 0xF0, 0x00, 0x00,      //set PWM for B/L
+            (0xD0), 1, 0x0D,
+        };
+//        init_table(SSD1963_480_regValues, sizeof(SSD1963_480_regValues));
         init_table(SSD1963_800_regValues, sizeof(SSD1963_800_regValues));
         p16 = (int16_t *) & HEIGHT;
         *p16 = 480;
