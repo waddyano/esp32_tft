@@ -205,11 +205,13 @@ uint16_t MCUFRIEND_kbv::readID(void)
     ret = readReg40(0xEF);      //ILI9327: [xx 02 04 93 27 FF] 
     if (ret == 0x9327)
         return 0x9327;
-    ret = readReg32(0x04);      //ST7789V: [85 85 52] 
-    if (ret == 0x8000)          //HX8357-D
+    ret = readReg32(0x04); 
+    if (ret == 0x8000)          //HX8357-D [xx 00 80 00]
         return 0x8357;
-    if (ret == 0x8552)
+    if (ret == 0x8552)          //ST7789V: [xx 85 85 52]
         return 0x7789;
+    if (ret == 0xAC11)          //?unknown [xx 61 AC 11]
+        return 0xAC11;
     ret = readReg32(0xD3);      //for ILI9488, 9486, 9340, 9341
     msb = ret >> 8;
     if (msb == 0x93 || msb == 0x94 || msb == 0x77)
@@ -333,7 +335,7 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
             if ((val & 0x40))
                 val |= 0x02;    //SS
             if (_lcd_ID == 0x1581) { // no Horizontal Flip
-                d[0] = (val & 0x40) ? 0x11 : 0x10; //REV | SS
+                d[0] = (val & 0x40) ? 0x13 : 0x12; //REV | BGR | SS
                 WriteCmdParamN(0xC0, 1, d);
             }
             if (_lcd_ID == 0x1963) val &= ~0xC0;
@@ -1871,6 +1873,9 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
         p16 = (int16_t *) & WIDTH;
         *p16 = 240;
         break;
+    case 0xAC11:
+        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_24BITS | REV_SCREEN; //thanks viliam
+		goto common_9329;
     case 0x9302:
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS;
 		goto common_9329;
@@ -1957,7 +1962,7 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
         }
         break;
     case 0x1581:
-        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_BGR;
+        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_BGR | READ_24BITS; //thanks zdravke
 		goto common_9481;
     case 0x9481:
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_BGR;
@@ -2177,7 +2182,7 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
         *p16 = 320;
         break;
     case 0x7796:
-        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_24BITS | READ_BGR;
+        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS;   //thanks to safari1
         goto common_9488;
     case 0x9488:
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_24BITS;
