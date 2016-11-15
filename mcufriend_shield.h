@@ -122,7 +122,7 @@
 	                  PORT->Group[0].WRCONFIG.reg = (DMASK & 0xFFFF) | (1<<17) | (1<<28) | (1<<30); \
 	                  PORT->Group[0].WRCONFIG.reg = (DMASK>>16) | (1<<17) | (1<<28) | (1<<30) | (1<<31); \
                         }
-#define write8(x)     { write_8(x); WR_STROBE; }
+#define write8(x)     { write_8(x); WR_ACTIVE; WR_STROBE; }
 #define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
 #define READ_8(dst)   { RD_STROBE; dst = read_8(); RD_IDLE; }
 #define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
@@ -282,6 +282,69 @@ void write_8(uint8_t x)
 #define PIN_LOW(port, pin)    PASTE(port, _PCOR) =  (1<<(pin))
 #define PIN_HIGH(port, pin)   PASTE(port, _PSOR) =  (1<<(pin))
 #define PIN_OUTPUT(port, pin) PASTE(port, _PDDR) |= (1<<(pin))
+
+#elif defined(__STM32F1__) && defined(ARDUINO_STM_NUCLEO_F103RB) // Uno Shield on NUCLEO-F103
+#warning Uno Shield on NUCLEO-F103 REGS
+#define RD_PORT GPIOA
+#define RD_PIN  0
+#define WR_PORT GPIOA
+#define WR_PIN  1
+#define CD_PORT GPIOA
+#define CD_PIN  4
+#define CS_PORT GPIOB
+#define CS_PIN  0
+#define RESET_PORT GPIOC
+#define RESET_PIN  1
+
+// configure macros for the data pins
+  #define write_8(d) { \
+   GPIOA->regs->BSRR = 0x0700 << 16; \
+   GPIOB->regs->BSRR = 0x0438 << 16; \
+   GPIOC->regs->BSRR = 0x0080 << 16; \
+   GPIOA->regs->BSRR = (((d) & (1<<0)) << 9) \
+               | (((d) & (1<<2)) << 8) \
+               | (((d) & (1<<7)) << 1); \
+   GPIOB->regs->BSRR = (((d) & (1<<3)) << 0) \
+               | (((d) & (1<<4)) << 1) \
+               | (((d) & (1<<5)) >> 1) \
+               | (((d) & (1<<6)) << 4); \
+   GPIOC->regs->BSRR = (((d) & (1<<1)) << 6); \
+    }
+
+  #define read_8() (          (((GPIOA->regs->IDR & (1<<9)) >> 9) \
+                             | ((GPIOC->regs->IDR & (1<<7)) >> 6) \
+                             | ((GPIOA->regs->IDR & (1<<10)) >> 8) \
+                             | ((GPIOB->regs->IDR & (1<<3)) >> 0) \
+                             | ((GPIOB->regs->IDR & (1<<5)) >> 1) \
+                             | ((GPIOB->regs->IDR & (1<<4)) << 1) \
+                             | ((GPIOB->regs->IDR & (1<<10)) >> 4) \
+                             | ((GPIOA->regs->IDR & (1<<8))  >> 1)))
+
+// be wise to clear both MODER bits properly.
+#define clearModebits()  { \
+    GPIOA->regs->CRH &= ~0xFFF; GPIOB->regs->CRH &= ~0xF00; GPIOB->regs->CRL &= ~0xFFF000; GPIOC->regs->CRL &= ~0xF0000000; \
+  }
+#define setWriteDir() { \
+    clearModebits(); \
+    GPIOA->regs->CRH |=  0x333; GPIOB->regs->CRH |=  0x300; GPIOB->regs->CRL |=  0x333000; GPIOC->regs->CRL |=  0x30000000; \
+  }
+#define setReadDir()  { \
+    clearModebits(); \
+    GPIOA->regs->CRH |=  0x444; GPIOB->regs->CRH |=  0x400; GPIOB->regs->CRL |=  0x444000; GPIOC->regs->CRL |=  0x40000000; \
+  }
+
+#define write8(x)     { write_8(x); WR_ACTIVE; WR_STROBE; }
+#define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
+#define READ_8(dst)   { RD_STROBE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; dst = read_8(); RD_IDLE; }
+#define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
+
+#define PIN_MODE4(reg, pin, mode) reg=(reg&~(0xF<<((pin)<<2)))|(mode<<((pin)<<2))
+
+#define PIN_HIGH(port, pin)   (port)->regs->BSRR = (1<<(pin))
+//#define PIN_LOW(port, pin)    (port)->regs->BSRR = (1<<((pin)+16))
+#define PIN_LOW(port, pin)    (port)->regs->ODR &= ~(1<<(pin))
+#define PIN_OUTPUT(port, pin) PIN_MODE4((port)->regs->CRL, pin, 0x3)   //50MHz push-pull only 0-7
+#define PIN_INPUT(port, pin)  PIN_MODE4((port)->regs->CRL, pin, 0x4)   //digital input 
 
 #else
 #error MCU unsupported
