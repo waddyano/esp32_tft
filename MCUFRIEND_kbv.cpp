@@ -207,8 +207,11 @@ uint16_t MCUFRIEND_kbv::readID(void)
     ret = readReg40(0xEF);      //ILI9327: [xx 02 04 93 27 FF] 
     if (ret == 0x9327)
         return 0x9327;
-    ret = readReg32(0x04); 
-    if (ret == 0x8000)          //HX8357-D [xx 00 80 00]
+    uint32_t ret32 = readReg32(0x04);
+    msb = ret32 >> 16;
+    ret = ret32;	
+//    if (msb = 0x38 && ret == 0x8000) //unknown [xx 38 80 00] with D3 = 0x1602
+    if (msb = 0x00 && ret == 0x8000) //HX8357-D [xx 00 80 00]
         return 0x8357;
     if (ret == 0x8552)          //ST7789V: [xx 85 85 52]
         return 0x7789;
@@ -216,7 +219,7 @@ uint16_t MCUFRIEND_kbv::readID(void)
         return 0xAC11;
     ret = readReg32(0xD3);      //for ILI9488, 9486, 9340, 9341
     msb = ret >> 8;
-    if (msb == 0x93 || msb == 0x94 || msb == 0x77)
+    if (msb == 0x93 || msb == 0x94 || msb == 0x77 || msb == 0x16)
         return ret;             //0x9488, 9486, 9340, 9341, 7796
     if (ret == 0x00D3 || ret == 0xD3D3)
         return ret;             //16-bit write-only bus
@@ -1932,6 +1935,9 @@ case 0x4532:    // thanks Leodino
         p16 = (int16_t *) & WIDTH;
         *p16 = 240;
         break;
+    case 0x1602:
+        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | INVERT_GS | READ_24BITS; //thanks Dumper
+		goto common_9329;
     case 0xAC11:
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_24BITS | REV_SCREEN; //thanks viliam
 		goto common_9329;
