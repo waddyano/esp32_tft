@@ -211,7 +211,7 @@ uint16_t MCUFRIEND_kbv::readID(void)
     msb = ret32 >> 16;
     ret = ret32;	
 //    if (msb = 0x38 && ret == 0x8000) //unknown [xx 38 80 00] with D3 = 0x1602
-    if (msb = 0x00 && ret == 0x8000) //HX8357-D [xx 00 80 00]
+    if (msb == 0x00 && ret == 0x8000) //HX8357-D [xx 00 80 00]
         return 0x8357;
     if (ret == 0x8552)          //ST7789V: [xx 85 85 52]
         return 0x7789;
