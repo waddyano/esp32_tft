@@ -200,6 +200,8 @@ uint16_t MCUFRIEND_kbv::readID(void)
         return 0x1511;
     if (ret == 0x1520)          //?R61520: [xx 01 22 15 20]
         return 0x1520;
+    if (ret == 0x1526)          //?R61526: [xx 01 22 15 26]
+        return 0x1526;
     if (ret == 0x1581)          //R61581:  [xx 01 22 15 81]
         return 0x1581;
     if (ret == 0x1400)          //?RM68140:[xx FF 68 14 00] not tested yet
@@ -213,7 +215,9 @@ uint16_t MCUFRIEND_kbv::readID(void)
 //    if (msb = 0x38 && ret == 0x8000) //unknown [xx 38 80 00] with D3 = 0x1602
     if (msb == 0x00 && ret == 0x8000) //HX8357-D [xx 00 80 00]
         return 0x8357;
-    if (ret == 0x8552)          //ST7789V: [xx 85 85 52]
+    if (msb == 0xFF && ret == 0xFFFF) //R61526 [xx FF FF FF]
+        return 0x1526;          //subsequent begin() enables Command Access
+	if (ret == 0x8552)          //ST7789V: [xx 85 85 52]
         return 0x7789;
     if (ret == 0xAC11)          //?unknown [xx 61 AC 11]
         return 0xAC11;
@@ -463,6 +467,13 @@ void MCUFRIEND_kbv::setAddrWindow(int16_t x, int16_t y, int16_t x1, int16_t y1)
 	    if (rotation == 3) x += OFFSET_9327, x1 += OFFSET_9327;
     }
 #endif
+#if 1
+    if (_lcd_ID == 0x1526 && (rotation & 1)) {
+		int16_t dx = x1 - x, dy = y1 - y;
+		if (dy == 0) { y1++; }
+		else if (dx == 0) { x1 += dy; y1 -= dy; }
+    }
+#endif
     if (_lcd_capable & MIPI_DCS_REV1) {
         WriteCmdParam4(_MC, x >> 8, x, x1 >> 8, x1);
         WriteCmdParam4(_MP, y >> 8, y, y1 >> 8, y1);
@@ -549,7 +560,7 @@ void MCUFRIEND_kbv::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_
 #endif
     }
     CS_IDLE;
-    if (!(_lcd_capable & MIPI_DCS_REV1))
+    if (!(_lcd_capable & MIPI_DCS_REV1) || ((_lcd_ID == 0x1526) && (rotation & 1)))
         setAddrWindow(0, 0, width() - 1, height() - 1);
 }
 
@@ -995,15 +1006,30 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
 
     case 0x1520:
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_24BITS;
+        static const uint8_t R61520_regValues[] PROGMEM = {
+            0x01, 0,            //Soft Reset
+            TFTLCD_DELAY8, 120*2,  // .kbv will power up with ONLY reset, sleep out, display on
+            0x28, 0,            //Display Off
+            0xB0, 1, 0x00,      //Command Access Protect
+            0xC0, 1, 0x0A,      //DM=1, BGR=1
+            0x11, 0,            //Sleep Out
+            TFTLCD_DELAY8, 150,
+            0x29, 0,            //Display On
+            0x3A, 1, 0x55,      //Pixel read=565, write=565
+        };
+        init_table(R61520_regValues, sizeof(R61520_regValues));
+        break;
+
+	case 0x1526:
+        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_24BITS;
         static const uint8_t R61526_regValues[] PROGMEM = {
             0x01, 0,            //Soft Reset
             TFTLCD_DELAY8, 120*2,  // .kbv will power up with ONLY reset, sleep out, display on
             0x28, 0,            //Display Off
-//			0xB0, 2, 0x00, 0x00,      //Command Access Protect
-//			0xC0, 8, 0x0A, 0x4F, 0x00, 0x00, 0x02, 0x00, 0x01, 0x00,  //DM=1, BGR=1
-			0xB0, 1, 0x00,       //Command Access Protect
-			0xC0, 1, 0x0A,      //DM=1, BGR=1
-			0x11, 0,            //Sleep Out
+            0xB0, 1, 0x03,      //Command Access Protect
+            0xE2, 1, 0x3F,      //Command Write Access
+            0xC0, 1, 0x22,      //REV=0, BGR=1, SS=0
+            0x11, 0,            //Sleep Out
             TFTLCD_DELAY8, 150,
             0x29, 0,            //Display On
             0x3A, 1, 0x55,      //Pixel read=565, write=565
