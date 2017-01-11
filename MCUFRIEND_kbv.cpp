@@ -15,14 +15,14 @@
 
 #include "MCUFRIEND_kbv.h"
 #if defined(USE_SERIAL)
-#include "mcufriend_serial.h"
+#include "utility/mcufriend_serial.h"
  //uint8_t running;
 #elif defined(__MBED__)
-#include "mcufriend_mbed.h"
+#include "utility/mcufriend_mbed.h"
 #elif defined(__CC_ARM)
-#include "mcufriend_keil.h"
+#include "utility/mcufriend_keil.h"
 #else
-#include "mcufriend_shield.h"
+#include "utility/mcufriend_shield.h"
 #endif
 
 #define MIPI_DCS_REV1   (1<<0)
