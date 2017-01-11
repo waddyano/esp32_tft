@@ -1882,6 +1882,7 @@ case 0x4532:    // thanks Leodino
 //            0xF6, 3, 0x01, 0x01, 0x00,  //Interface Control needs EXTC=1 MX_EOR=1, TM=0, RIM=0
 //            0xB6, 3, 0x0A, 0x82, 0x27,  //Display Function [0A 82 27]
 //            0xB7, 1, 0x06,      //Entry Mode Set [06]
+            0x36, 1, 0x00,      //Memory Access [00] pointless but stops an empty array
         };
         table8_ads = ILI9329_regValues, table_size = sizeof(ILI9329_regValues);
         break;
