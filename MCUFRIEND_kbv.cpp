@@ -213,8 +213,13 @@ uint16_t MCUFRIEND_kbv::readID(void)
     msb = ret32 >> 16;
     ret = ret32;	
 //    if (msb = 0x38 && ret == 0x8000) //unknown [xx 38 80 00] with D3 = 0x1602
-    if (msb == 0x00 && ret == 0x8000) //HX8357-D [xx 00 80 00]
-        return 0x8357;
+    if (msb == 0x00 && ret == 0x8000) { //HX8357-D [xx 00 80 00]
+        uint8_t cmds[] = {0xFF, 0x83, 0x57};
+        pushCommand(0xB9, cmds, 3);
+        msb = readReg(0xD0);
+        if (msb == 0x99 || msb == 0x90)
+            return 0x8357;
+    }
     if (msb == 0xFF && ret == 0xFFFF) //R61526 [xx FF FF FF]
         return 0x1526;          //subsequent begin() enables Command Access
 	if (ret == 0x8552)          //ST7789V: [xx 85 85 52]
