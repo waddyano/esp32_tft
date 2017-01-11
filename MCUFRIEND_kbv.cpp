@@ -1,24 +1,28 @@
-//#define SUPPORT_0139   //costs about 238 bytes
-//#define SUPPORT_1289    //costs about 408 bytes
-#define SUPPORT_1963    //only works with 16BIT bus anyway
-//#define SUPPORT_4532          //costs about 128 bytes.  thanks Leodino
-//#define SUPPORT_4535
-#define SUPPORT_68140           //very untested
-//#define SUPPORT_8347D           //costs about 472 bytes, 0.27s
-//#define SUPPORT_8347A           //costs about +178 bytes on top of 8347D
-//#define SUPPORT_8352A           //costs about 688 bytes, 0.27s
-#define OFFSET_9327 32             //costs about 103 bytes, 0.08s
+//#define SUPPORT_0139              //not working +238 bytes
+#define SUPPORT_0154              //S6D0154 +320 bytes
+//#define SUPPORT_1289              //costs about 408 bytes
+#define SUPPORT_1963              //only works with 16BIT bus anyway
+//#define SUPPORT_4532              //LGDP4532 +120 bytes.  thanks Leodino
+#define SUPPORT_4535              //LGDP4535 +180 bytes
+#define SUPPORT_68140             //RM68140 +52 bytes defaults to PIXFMT=0x55
+#define SUPPORT_7781              //ST7781 +172 bytes
+//#define SUPPORT_8347D             //HX8347-D, HX8347-G, HX8347-I +520 bytes, 0.27s
+//#define SUPPORT_8347A             //HX8347-A +500 bytes, 0.27s
+//#define SUPPORT_8352A             //HX8352A +486 bytes, 0.27s
+//#define SUPPORT_9326_5420         //ILI9326, SPFD5420 +246 bytes
+#define SUPPORT_B509_7793         //R61509, ST7793 +244 bytes
+#define OFFSET_9327 32            //costs about 103 bytes, 0.08s
 
 #include "MCUFRIEND_kbv.h"
 #if defined(USE_SERIAL)
-#include "mcufriend_serial.h"
+#include "utility/mcufriend_serial.h"
  //uint8_t running;
 #elif defined(__MBED__)
-#include "mcufriend_mbed.h"
+#include "utility/mcufriend_mbed.h"
 #elif defined(__CC_ARM)
-#include "mcufriend_keil.h"
+#include "utility/mcufriend_keil.h"
 #else
-#include "mcufriend_shield.h"
+#include "utility/mcufriend_shield.h"
 #endif
 
 #define MIPI_DCS_REV1   (1<<0)
@@ -380,19 +384,24 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
     // cope with 9320 variants
     else {
         switch (_lcd_ID) {
+#if defined(SUPPORT_0139) || defined(SUPPORT_0154)
 #ifdef SUPPORT_0139
         case 0x0139:
             _SC = 0x46, _EC = 0x46, _SP = 0x48, _EP = 0x47;
             goto common_S6D;
 #endif
+#ifdef SUPPORT_0154
         case 0x0154:
             _SC = 0x37, _EC = 0x36, _SP = 0x39, _EP = 0x38;
+            goto common_S6D;
+#endif
           common_S6D:
             _MC = 0x20, _MP = 0x21, _MW = 0x22;
             GS = (val & 0x80) ? (1 << 9) : 0;
             SS = (val & 0x40) ? (1 << 8) : 0;
             WriteCmdData(0x01, GS | SS | 0x0028);       // set Driver Output Control
             goto common_ORG;
+#endif
         case 0x5420:
         case 0x7793:
         case 0x9326:
@@ -685,11 +694,13 @@ void MCUFRIEND_kbv::vertScroll(int16_t top, int16_t scrollines, int16_t offset)
         WriteCmdData(0x43, vsp - top);  //SST
         break;
 #endif
+#ifdef SUPPORT_0154
     case 0x0154:
         WriteCmdData(0x31, sea);        //SEA
         WriteCmdData(0x32, top);        //SSA
         WriteCmdData(0x33, vsp - top);  //SST
         break;
+#endif
 #ifdef SUPPORT_1289
     case 0x1289:
         WriteCmdData(0x41, vsp);        //VL#
@@ -796,6 +807,8 @@ static void init_table16(const void *table, int16_t size)
 void MCUFRIEND_kbv::begin(uint16_t ID)
 {
     int16_t *p16;               //so we can "write" to a const protected variable.
+    const uint8_t *table8_ads = NULL;
+    int16_t table_size;
     reset();
     _lcd_xor = 0;
     if (ID == 0)
@@ -871,13 +884,6 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
             0x000c, 0x0000,     //Interface Control: system i/f
             0x0040, 0x0000,     //Scan Line
             0x0041, 0x0000,     //Vertical Scroll Control
-            0x0042, 0x013f,     //Screen 1 End
-            0x0043, 0x0000,     //Screen 1 start
-            0x0044, 0x00ef,     //Screen 2 end
-            0x0045, 0x0000,     //Screen 2 start
-            0x0046, 0xef00,     //Horiz address H=end, L=start
-            0x0047, 0x013f,     //Vert end
-            0x0048, 0x0000,     //Vert start
             0x0007, 0x0014,     //Display Control: SPT=1, REV=1
             0x0007, 0x0016,     //Display Control: SPT=1, REV=1, display on
             0x0007, 0x0017,     //Display Control: SPT=1, REV=1, display on, GON
@@ -885,6 +891,8 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
         init_table16(S6D0139_regValues, sizeof(S6D0139_regValues));
         break;
 #endif
+
+#ifdef SUPPORT_0154
     case 0x0154:
         _lcd_capable = AUTO_READINC | REV_SCREEN;
         static const uint16_t S6D0154_regValues[] PROGMEM = {
@@ -931,15 +939,11 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
             TFTLCD_DELAY, 40,
             0x0007, 0x0013,     /* GRAM Address Set */
             0x0007, 0x0017,     /* Display Control DISPLAY ON */
-
-            0x0036, 0x00EF,
-            0x0037, 0x0000,
-            0x0038, 0x013F,
-            0x0039, 0x0000,
         };
         init_table16(S6D0154_regValues, sizeof(S6D0154_regValues));
 
         break;
+#endif
 
 #ifdef SUPPORT_1289
     case 0x1289:
@@ -995,16 +999,9 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
     case 0x1511:                // Unknown from Levy
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1;   //extra read_8(dummy)
         static const uint8_t R61511_regValues[] PROGMEM = {
-            0x01, 0,            //Soft Reset
-            TFTLCD_DELAY8, 120*2,  // .kbv will power up with ONLY reset, sleep out, display on
-            0x28, 0,            //Display Off
 			0xB0, 1, 0x00,       //Command Access Protect
-			0x11, 0,            //Sleep Out
-            TFTLCD_DELAY8, 150,
-            0x29, 0,            //Display On
-            0x3A, 1, 0x55,      //Pixel read=565, write=565
         };
-        init_table(R61511_regValues, sizeof(R61511_regValues));
+        table8_ads = R61511_regValues, table_size = sizeof(R61511_regValues);
         p16 = (int16_t *) & HEIGHT;
         *p16 = 480;
         p16 = (int16_t *) & WIDTH;
@@ -1014,34 +1011,20 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
     case 0x1520:
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_24BITS;
         static const uint8_t R61520_regValues[] PROGMEM = {
-            0x01, 0,            //Soft Reset
-            TFTLCD_DELAY8, 120*2,  // .kbv will power up with ONLY reset, sleep out, display on
-            0x28, 0,            //Display Off
             0xB0, 1, 0x00,      //Command Access Protect
             0xC0, 1, 0x0A,      //DM=1, BGR=1
-            0x11, 0,            //Sleep Out
-            TFTLCD_DELAY8, 150,
-            0x29, 0,            //Display On
-            0x3A, 1, 0x55,      //Pixel read=565, write=565
         };
-        init_table(R61520_regValues, sizeof(R61520_regValues));
+        table8_ads = R61520_regValues, table_size = sizeof(R61520_regValues);
         break;
 
 	case 0x1526:
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_24BITS;
         static const uint8_t R61526_regValues[] PROGMEM = {
-            0x01, 0,            //Soft Reset
-            TFTLCD_DELAY8, 120*2,  // .kbv will power up with ONLY reset, sleep out, display on
-            0x28, 0,            //Display Off
             0xB0, 1, 0x03,      //Command Access Protect
             0xE2, 1, 0x3F,      //Command Write Access
             0xC0, 1, 0x22,      //REV=0, BGR=1, SS=0
-            0x11, 0,            //Sleep Out
-            TFTLCD_DELAY8, 150,
-            0x29, 0,            //Display On
-            0x3A, 1, 0x55,      //Pixel read=565, write=565
         };
-        init_table(R61526_regValues, sizeof(R61526_regValues));
+        table8_ads = R61526_regValues, table_size = sizeof(R61526_regValues);
         break;
 
 #if defined(SUPPORT_1963) && USING_16BIT_BUS 
@@ -1049,8 +1032,6 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | READ_NODUMMY | INVERT_SS | INVERT_RGB;
         // from NHD 5.0" 8-bit
         static const uint8_t SSD1963_NHD_50_regValues[] PROGMEM = {
-            0x01, 0,            //Soft Reset
-            TFTLCD_DELAY8, 100,
             (0xE0), 1, 0x01,    // PLL enable
             TFTLCD_DELAY8, 10,
             (0xE0), 1, 0x03,    // Lock PLL
@@ -1063,12 +1044,9 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
             (0xB6), 7, 0x02, 0x0D, 0x00, 0x20, 0x01, 0x00, 0x00,        //VSYNC
             (0x13), 0,          //Enter Normal mode
             (0x38), 0,          //Exit Idle mode
-            0x29, 0,            //Display On
         };
         // from NHD 7.0" 8-bit
         static const uint8_t SSD1963_NHD_70_regValues[] PROGMEM = {
-            0x01, 0,            //Soft Reset
-            TFTLCD_DELAY8, 120,
             (0xE2), 3, 0x1D, 0x02, 0x04,        //PLL multiplier, set PLL clock to 120M
             (0xE0), 1, 0x01,    // PLL enable
             TFTLCD_DELAY8, 10,
@@ -1083,7 +1061,6 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
             (0xB6), 7, 0x02, 0x0D, 0x00, 0x20, 0x01, 0x00, 0x00,        //VSYNC
             (0x13), 0,          //Enter Normal mode
             (0x38), 0,          //Exit Idle mode
-            0x29, 0,            //Display On
         };
         // from UTFTv2.81 initlcd.h
         static const uint8_t SSD1963_800_regValues[] PROGMEM = {
@@ -1134,8 +1111,8 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
             (0xBE), 6, 0x06, 0xF0, 0x01, 0xF0, 0x00, 0x00,      //set PWM for B/L
             (0xD0), 1, 0x0D,
         };
-//        init_table(SSD1963_480_regValues, sizeof(SSD1963_480_regValues));
-        init_table(SSD1963_800_regValues, sizeof(SSD1963_800_regValues));
+//        table8_ads = SSD1963_480_regValues, table_size = sizeof(SSD1963_480_regValues);
+        table8_ads = SSD1963_800_regValues, table_size = sizeof(SSD1963_800_regValues);
         p16 = (int16_t *) & HEIGHT;
         *p16 = 480;
         p16 = (int16_t *) & WIDTH;
@@ -1252,19 +1229,9 @@ case 0x4532:    // thanks Leodino
     case 0x6814:
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS;
 		static const uint8_t RM68140_regValues_max[] PROGMEM = {        //
-            0x01, 0,            //Soft Reset
-            TFTLCD_DELAY8, 50,
-            0x28, 0,            //Display Off
-#if USING_16BIT_BUS
             0x3A, 1, 0x55,      //Pixel format .kbv my Mega Shield
-#else
-            0x3A, 1, 0x66,      //Pixel format Attila's Uno Shield
-#endif
-            0x11, 0,            //Sleep Out
-            TFTLCD_DELAY8, 150,
-            0x29, 0,            //Display On
         };
-        init_table(RM68140_regValues_max, sizeof(RM68140_regValues_max));
+        table8_ads = RM68140_regValues_max, table_size = sizeof(RM68140_regValues_max);
         p16 = (int16_t *) & HEIGHT;
         *p16 = 480;
         p16 = (int16_t *) & WIDTH;
@@ -1272,6 +1239,7 @@ case 0x4532:    // thanks Leodino
         break;
 #endif
 
+#ifdef SUPPORT_7781
     case 0x7783:
         _lcd_capable = AUTO_READINC | REV_SCREEN | INVERT_GS;
         static const uint16_t ST7781_regValues[] PROGMEM = {
@@ -1308,10 +1276,6 @@ case 0x4532:    // thanks Leodino
             0x0039, 0x0000,     // Gamma Control 10
             0x003C, 0x0203,     // Gamma Control 13
             0x003D, 0x0403,     // Gamma Control 14
-            0x0050, 0x0000,     // Window Horizontal RAM Address Start (R50h)
-            0x0051, 240 - 1,    // Window Horizontal RAM Address End (R51h)
-            0x0052, 0X0000,     // Window Vertical RAM Address Start (R52h)
-            0x0053, 320 - 1,    // Window Vertical RAM Address End (R53h)
             0x0060, 0xA700,     // Driver Output Control (R60h) .kbv was 0xa700
             0x0061, 0x0001,     // Driver Output Control (R61h)
             0x0090, 0X0029,     // Panel Interface Control 1 (R90h)
@@ -1322,15 +1286,11 @@ case 0x4532:    // thanks Leodino
         };
         init_table16(ST7781_regValues, sizeof(ST7781_regValues));
         break;
+#endif
+
     case 0x7789:
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_24BITS;
         static const uint8_t ST7789_regValues[] PROGMEM = {
-            0x01, 0,            //Soft Reset
-            (0x11), 0,          //exit SLEEP mode
-            TFTLCD_DELAY8, 100, // if from Sleep
-            (0x36), 1, 0x80,    //MADCTL: memory data access control
-            //        (0x3A), 1, 0x66,      //COLMOD: Interface Pixel format *** I use 262K-colors in 18bit/pixel format when using 8-bit interface to allow 3-bytes per pixel
-            (0x3A), 1, 0x55,    //COLMOD: Interface Pixel format  *** I use 65K-colors in 16bit/pixel (5-6-5) format when using 16-bit interface to allow 1-byte per pixel
             (0xB2), 5, 0x0C, 0x0C, 0x00, 0x33, 0x33,    //PORCTRK: Porch setting [08 08 00 22 22] PSEN=0 anyway
             (0xB7), 1, 0x35,    //GCTRL: Gate Control [35]
             (0xBB), 1, 0x2B,    //VCOMS: VCOM setting VCOM=1.175 [20] VCOM=0.9
@@ -1342,17 +1302,8 @@ case 0x4532:    // thanks Leodino
             (0xD0), 2, 0xA4, 0xA1,      //PWCTRL1: Power Control 1 [A4 A1]
             (0xE0), 14, 0xD0, 0x00, 0x05, 0x0E, 0x15, 0x0D, 0x37, 0x43, 0x47, 0x09, 0x15, 0x12, 0x16, 0x19,     //PVGAMCTRL: Positive Voltage Gamma control        
             (0xE1), 14, 0xD0, 0x00, 0x05, 0x0D, 0x0C, 0x06, 0x2D, 0x44, 0x40, 0x0E, 0x1C, 0x18, 0x16, 0x19,     //NVGAMCTRL: Negative Voltage Gamma control
-            (0x2A), 4, 0x00, 0x00, 0x00, 0xEF,  //X address set
-            (0x2B), 4, 0x00, 0x00, 0x01, 0x3F,  //Y address set
-            0x29, 0,            //Display On
-            TFTLCD_DELAY8, 10,
         };
         static const uint8_t ST7789_regValues_arcain6[] PROGMEM = {
-            0x01, 0,            //Soft Reset
-            (0x11), 0,          //exit SLEEP mode
-            TFTLCD_DELAY8, 100, // if from Sleep
-            (0x36), 1, 0x00,    //MADCTL: memory data access control
-            (0x3A), 1, 0x05,    //COLMOD: Interface Pixel format  *** I use 65K-colors in 16bit/pixel (5-6-5) format when using 16-bit interface to allow 1-byte per pixel
             (0xB2), 5, 0x0C, 0x0C, 0x00, 0x33, 0x33,    //PORCTRK: Porch setting [08 08 00 22 22] PSEN=0 anyway
             (0xB7), 1, 0x35,    //GCTRL: Gate Control [35]
             (0xBB), 1, 0x35,    //VCOMS: VCOM setting VCOM=??? [20] VCOM=0.9
@@ -1367,13 +1318,10 @@ case 0x4532:    // thanks Leodino
             (0xD0), 2, 0xA4, 0xA1,      //PWCTRL1: Power Control 1 [A4 A1]
             (0xE0), 14, 0xD0, 0x00, 0x06, 0x09, 0x0B, 0x2A, 0x3C, 0x55, 0x4B, 0x08, 0x16, 0x14, 0x19, 0x20,     //PVGAMCTRL: Positive Voltage Gamma control        
             (0xE1), 14, 0xD0, 0x00, 0x06, 0x09, 0x0B, 0x29, 0x36, 0x54, 0x4B, 0x0D, 0x16, 0x14, 0x21, 0x20,     //NVGAMCTRL: Negative Voltage Gamma control
-            //        (0x2A), 4, 0x00, 0x00, 0x00, 0xEF,      //X address set
-            //        (0x2B), 4, 0x00, 0x00, 0x01, 0x3F,      //Y address set
-            0x29, 0,            //Display On
-            TFTLCD_DELAY8, 10,
         };
-        init_table(ST7789_regValues, sizeof(ST7789_regValues)); //
+        table8_ads = ST7789_regValues, table_size = sizeof(ST7789_regValues); //
         break;
+
 #ifdef SUPPORT_8347D
     case 0x4747:       //HX8347-D
         _lcd_capable = REV_SCREEN | MIPI_DCS_REV1 | MV_AXIS | INVERT_SS;
@@ -1422,11 +1370,6 @@ case 0x4532:    // thanks Leodino
             0x28, 1, 0x3F,      //GON=1, DTE=1, D=1100
 
             0x16, 1, 0x18,
-            //Set GRAM Area
-            0x02, 2, 0x00, 0x00,        //Column Start
-            0x04, 2, 0x00, 0xEF,        //Column End
-            0x06, 2, 0x00, 0x00,        //Row Start
-            0x08, 2, 0x01, 0x3F,        //Row End
         };
         init_table(HX8347G_2_regValues, sizeof(HX8347G_2_regValues));
         break;
@@ -1435,7 +1378,7 @@ case 0x4532:    // thanks Leodino
 #ifdef SUPPORT_8352A
 	case 0x5252:       //HX8352-A
         _lcd_capable = MIPI_DCS_REV1 | MV_AXIS;
-		is8347 = 1;
+        is8347 = 1;
         static const uint8_t HX8352A_regValues[] PROGMEM = {
             0x83, 1, 0x02,      //Test Mode: TESTM=1
             0x85, 1, 0x03,      //VDD ctl  : VDC_SEL=3 [05]
@@ -1472,11 +1415,6 @@ case 0x4532:    // thanks Leodino
             0x16, 1, 0x1C,      //Memaccess: GS=1, BGR=1, SS=1 
             0x01, 1, 0x06,      //Disp Mode: INVON=1, NORON=1 [02]
             0x55, 1, 0x06,      //SM_PANEL=0, SS_PANEL=0, GS_PANEL=1, REV_PANEL=1, BGR_PANEL=0
-            //Set GRAM Area
-            0x02, 2, 0x00, 0x00,        //Column Start
-            0x04, 2, 0x00, 0xEF,        //Column End
-            0x06, 2, 0x00, 0x00,        //Row Start
-            0x08, 2, 0x01, 0x8F,        //Row End
         };
         init_table(HX8352A_regValues, sizeof(HX8352A_regValues));
         p16 = (int16_t *) & HEIGHT;
@@ -1490,11 +1428,6 @@ case 0x4532:    // thanks Leodino
         static const uint8_t HX8347A_CMO32_regValues[] PROGMEM = {
             //  VENDOR Gamma for 3.2"
             (0x46), 12, 0xA4, 0x53, 0x00, 0x44, 0x04, 0x67, 0x33, 0x77, 0x12, 0x4C, 0x46, 0x44,
-            //240x320 window setting
-            (0x02), 2, 0x00, 0x00,      // Column address start2
-            (0x04), 2, 0x00, 0xEF,      // Column address end2
-            (0x06), 2, 0x00, 0x00,      // Row address start2
-            (0x08), 2, 0x01, 0x3F,      // Row address end2
             // Display Setting
             (0x01), 1, 0x06,    // IDMON=0, INVON=1, NORON=1, PTLON=0
             (0x16), 1, 0x48,    // MY=0, MX=0, MV=0, ML=1, BGR=0, TEON=0
@@ -1543,11 +1476,6 @@ case 0x4532:    // thanks Leodino
         static const uint8_t HX8347A_CMO24_regValues[] PROGMEM = {
             //  VENDOR Gamma for 2.4"
             (0x46), 12, 0x94, 0x41, 0x00, 0x33, 0x23, 0x45, 0x44, 0x77, 0x12, 0xCC, 0x46, 0x82,
-            //240x320 window setting
-            (0x02), 2, 0x00, 0x00,      // Column address start2
-            (0x04), 2, 0x00, 0xEF,      // Column address end2
-            (0x06), 2, 0x00, 0x00,      // Row address start2
-            (0x08), 2, 0x01, 0x3F,      // Row address end2
             // Display Setting
             (0x01), 1, 0x06,    // IDMON=0, INVON=1, NORON=1, PTLON=0
             (0x16), 1, 0x48,    // MY=0, MX=0, MV=0, ML=1, BGR=0, TEON=0
@@ -1595,11 +1523,6 @@ case 0x4532:    // thanks Leodino
         static const uint8_t HX8347A_ITDB02_regValues[] PROGMEM = {
             //  VENDOR Gamma ITDB02 same as CMO32.   Delays are shorter than AN01
             (0x46), 12, 0xA4, 0x53, 0x00, 0x44, 0x04, 0x67, 0x33, 0x77, 0x12, 0x4C, 0x46, 0x44,
-            //240x320 window setting
-            (0x02), 2, 0x00, 0x00,      // Column address start2
-            (0x04), 2, 0x00, 0xEF,      // Column address end2
-            (0x06), 2, 0x00, 0x00,      // Row address start2
-            (0x08), 2, 0x01, 0x3F,      // Row address end2
             // Display Setting
             (0x01), 1, 0x06,    // IDMON=0, INVON=1, NORON=1, PTLON=0
             (0x16), 1, 0xC8,    // MY=0, MX=0, MV=0, ML=1, BGR=0, TEON=0 .itead
@@ -1646,10 +1569,6 @@ case 0x4532:    // thanks Leodino
         static const uint8_t HX8347A_NHD_regValues[] PROGMEM = {
             //Gamma Setting NHD
             (0x46), 12, 0x94, 0x41, 0x00, 0x33, 0x23, 0x45, 0x44, 0x77, 0x12, 0xCC, 0x46, 0x82,
-            (0x02), 2, 0x00, 0x00,      //COLSTARTH
-            (0x04), 2, 0x00, 0xEF,      //COLENDH
-            (0x06), 2, 0x00, 0x00,      //ROWSTARTH
-            (0x08), 2, 0x01, 0x3F,      //ROWENDH
             (0x01), 1, 0x06,    //Display Mode [06]
             (0x16), 1, 0xC8,    //MADCTL [00] MY=1, MX=1, BGR=1
 //            (0x70), 1, 0x05,    //Panel [06] 16-bit
@@ -1701,15 +1620,9 @@ case 0x4532:    // thanks Leodino
     case 0x8357:
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | REV_SCREEN | READ_24BITS;
         static const uint8_t HX8357D_regValues[] PROGMEM = {
-	    	0x01, 0,            //Soft Reset
-            TFTLCD_DELAY8, 50,
-            0x28, 0,            //Display Off
-            0x3A, 1, 0x55,      //Interlace Pixel
-            0x11, 0,            //Sleep Out
-            TFTLCD_DELAY8, 50,
-            0x29, 0,            //Display On
+            0xB0, 1, 0x00,              // unlocks E0, F0
         };
-        init_table(HX8357D_regValues, sizeof(HX8357D_regValues));
+        table8_ads = HX8357D_regValues, table_size = sizeof(HX8357D_regValues);
         p16 = (int16_t *) & HEIGHT;
         *p16 = 480;
         p16 = (int16_t *) & WIDTH;
@@ -1761,10 +1674,6 @@ case 0x4532:    // thanks Leodino
             0x003C, 0x0704,
             0x003D, 0x0807,
             //-----Set RAM area-----------------------
-            0x0050, 0x0000,
-            0x0051, 0x00EF,
-            0x0052, 0x0000,
-            0x0053, 0x013F,
             0x0060, 0xA700,     //GS=1
             0x0061, 0x0001,
             0x006A, 0x0000,
@@ -1794,11 +1703,11 @@ case 0x4532:    // thanks Leodino
         _lcd_capable = 0 | REV_SCREEN | INVERT_GS | AUTO_READINC;
         goto common_93x5;
     case 0x9328:
-	case 0x9325:
+    case 0x9325:
         _lcd_capable = 0 | REV_SCREEN | INVERT_GS;
         goto common_93x5;
     case 0x9331:
-	case 0x9335:
+    case 0x9335:
         _lcd_capable = 0 | REV_SCREEN;
       common_93x5:
         static const uint16_t ILI9325_regValues[] PROGMEM = {
@@ -1846,10 +1755,6 @@ case 0x4532:    // thanks Leodino
             0x003D, 0x0808,
 
             //------------------ Set GRAM area ---------------//
-            0x0050, 0x0000,     // Horizontal GRAM Start Address
-            0x0051, 0x00EF,     // Horizontal GRAM End Address
-            0x0052, 0x0000,     // Vertical GRAM Start Address
-            0x0053, 0x013F,     // Vertical GRAM Start Address
             0x0060, 0x2700,     // Gate Scan Line GS=0 [0xA700] 
             0x0061, 0x0001,     // NDL,VLE, REV .kbv
             0x006A, 0x0000,     // set scrolling line
@@ -1867,6 +1772,8 @@ case 0x4532:    // thanks Leodino
         };
         init_table16(ILI9325_regValues, sizeof(ILI9325_regValues));
         break;
+
+#if defined(SUPPORT_9326_5420)
 	case 0x5420:
     case 0x9326:
         _lcd_capable = REV_SCREEN | READ_BGR;
@@ -1909,10 +1816,6 @@ case 0x4532:    // thanks Leodino
          0x030C, 0x0000,   //
          0x030D, 0x000A,   //
 //------------------ Set GRAM area ---------------//
-         0x0210, 0x0000,     //  Horizontal GRAM Start Address
-         0x0211, 0x00EF,     //  Horizontal GRAM End Address
-         0x0212, 0x0000,     //  Vertical GRAM Start Address
-         0x0213, 0x01AF,     //  Vertical GRAM Start Address
          0x0400, 0x3100,     //  Gate Scan Line 400 lines
          0x0401, 0x0001,     //  NDL,VLE, REV
          0x0404, 0x0000,     //  set scrolling line
@@ -1935,15 +1838,13 @@ case 0x4532:    // thanks Leodino
         p16 = (int16_t *) & WIDTH;
         *p16 = 240;
         break;
+#endif
+
     case 0x9327:
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS;
         static const uint8_t ILI9327_regValues[] PROGMEM = {
-            0x01, 0,            //Soft Reset
-            0x28, 0,            //Display Off
-            //            0xE0, 1, 0x20,      //NV Memory Write [00]
-            0x11, 0,            //Sleep Out
-            TFTLCD_DELAY8, 100,
             0xB0, 1, 0x00,      //Disable Protect for cmds B1-DF, E0-EF, F0-FF 
+            //            0xE0, 1, 0x20,      //NV Memory Write [00]
             //            0xD1, 3, 0x00, 0x71, 0x19,  //VCOM control [00 40 0F]
             //            0xD0, 3, 0x07, 0x01, 0x08,  //Power Setting [07 04 8C]
             0xC1, 4, 0x10, 0x10, 0x02, 0x02,    //Display Timing [10 10 02 02]
@@ -1955,14 +1856,8 @@ case 0x4532:    // thanks Leodino
             0xCA, 1, 0x00,      //DGC LUT ???
             0xEA, 1, 0x80,      //3-Gamma Function Enable
             //                     0xB0, 1, 0x03,      //Enable Protect
-            0x36, 1, 0x48,      // Memory Access
-            0x3A, 1, 0x55,      //Pixel read=565, write=565
-            0x2A, 4, 0x00, 0x00, 0x00, 0xEF,    // wid: 0, 239
-            0x2B, 4, 0x00, 0x00, 0x01, 0x8F,    // ht: 0, 399
-            0x30, 4, 0x00, 0x00, 0x01, 0x8F,    // Partial Area: 0, 399
-            0x29, 0,            //Display On
         };
-        init_table(ILI9327_regValues, sizeof(ILI9327_regValues));
+        table8_ads = ILI9327_regValues, table_size = sizeof(ILI9327_regValues);
         p16 = (int16_t *) & HEIGHT;
         *p16 = 400;
         p16 = (int16_t *) & WIDTH;
@@ -1984,25 +1879,15 @@ case 0x4532:    // thanks Leodino
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | INVERT_SS | REV_SCREEN;
 	  common_9329:
         static const uint8_t ILI9329_regValues[] PROGMEM = {
-            0x01, 0,            //Soft Reset
-            TFTLCD_DELAY8, 50,  // .kbv will power up with ONLY reset, sleep out, display on
-            0x28, 0,            //Display Off
 //            0xF6, 3, 0x01, 0x01, 0x00,  //Interface Control needs EXTC=1 MX_EOR=1, TM=0, RIM=0
 //            0xB6, 3, 0x0A, 0x82, 0x27,  //Display Function [0A 82 27]
 //            0xB7, 1, 0x06,      //Entry Mode Set [06]
-			0x11, 0,            //Sleep Out
-            TFTLCD_DELAY8, 150,
-            0x29, 0,            //Display On
-            0x3A, 1, 0x55,      //Pixel read=565, write=565
         };
-        init_table(ILI9329_regValues, sizeof(ILI9329_regValues));
+        table8_ads = ILI9329_regValues, table_size = sizeof(ILI9329_regValues);
         break;
     case 0x9341:
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_24BITS;
         static const uint8_t ILI9341_regValues_2_4[] PROGMEM = {        // BOE 2.4"
-            0x01, 0,            // software reset
-            TFTLCD_DELAY8, 50,  // .kbv will power up with ONLY reset, sleep out, display on
-            0x28, 0,            //Display Off
             0xF6, 3, 0x01, 0x01, 0x00,  //Interface Control needs EXTC=1 MV_EOR=0, TM=0, RIM=0
             0xCF, 3, 0x00, 0x81, 0x30,  //Power Control B [00 81 30]
             0xED, 4, 0x64, 0x03, 0x12, 0x81,    //Power On Seq [55 01 23 01]
@@ -2023,15 +1908,8 @@ case 0x4532:    // thanks Leodino
             0x26, 1, 0x01,      //Gamma Set [01]
             0xE0, 15, 0x0f, 0x26, 0x24, 0x0b, 0x0e, 0x09, 0x54, 0xa8, 0x46, 0x0c, 0x17, 0x09, 0x0f, 0x07, 0x00,
             0xE1, 15, 0x00, 0x19, 0x1b, 0x04, 0x10, 0x07, 0x2a, 0x47, 0x39, 0x03, 0x06, 0x06, 0x30, 0x38, 0x0f,
-            0x11, 0,            //Sleep Out
-            TFTLCD_DELAY8, 150,
-            0x29, 0,            //Display On
-            0x3A, 1, 0x55,      //Pixel Format [66]
         };
         static const uint8_t ILI9341_regValues_ada[] PROGMEM = {        // Adafruit_TFTLCD only works with EXTC=0
-            0x01, 0,            // software reset
-            TFTLCD_DELAY8, 50,
-            0x28, 0,            //Display Off
             //                     0xF6, 3, 0x00, 0x01, 0x00,  //Interface Control needs EXTC=1 TM=0, RIM=0
             //            0xF6, 3, 0x01, 0x01, 0x03,  //Interface Control needs EXTC=1 RM=1, RIM=1
             0xF6, 3, 0x09, 0x01, 0x03,  //Interface Control needs EXTC=1 RM=0, RIM=1
@@ -2044,19 +1922,15 @@ case 0x4532:    // thanks Leodino
             0x36, 1, 0x88,      //Memory Access [00]
             0xB1, 2, 0x00, 0x1B,        //Frame Control [00 1B]
             0xB7, 1, 0x07,      //Entry Mode [00]
-            0x11, 0,            //Sleep Out
-            TFTLCD_DELAY8, 150,
-            0x29, 0,            //Display On
-            0x3A, 1, 0x55,      //Pixel Format [66]
         };
 #if !defined(USE_SERIAL)
         if (readReg32(0xD3) == 0x0000) {        //weird DealExtreme EXTC=0 shield
-            init_table(ILI9341_regValues_ada, sizeof(ILI9341_regValues_ada));
+            table8_ads = ILI9341_regValues_ada, table_size = sizeof(ILI9341_regValues_ada);
             _lcd_capable |= REV_SCREEN | READ_BGR;
         } else
 #endif
         {
-            init_table(ILI9341_regValues_2_4, sizeof(ILI9341_regValues_2_4));   //
+            table8_ads = ILI9341_regValues_2_4, table_size = sizeof(ILI9341_regValues_2_4);   //
         }
         break;
     case 0x1581:
@@ -2066,10 +1940,6 @@ case 0x4532:    // thanks Leodino
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_BGR;
 	  common_9481:
         static const uint8_t ILI9481_regValues[] PROGMEM = {    // Atmel MaxTouch
-            0x01, 0,            //Soft Reset
-            TFTLCD_DELAY8, 125,
-            0x11, 0,            //Sleep Out
-            TFTLCD_DELAY8, 20,
             0xB0, 1, 0x00,              // unlocks E0, F0
             0xB3, 4, 0x02, 0x00, 0x00, 0x00, //Frame Memory, interface [02 00 00 00]
 			0xB4, 1, 0x00,              // Frame mode [00]
@@ -2084,19 +1954,8 @@ case 0x4532:    // thanks Leodino
 			0xC6, 1, 0x02,      //Interface Control [02]
             0xC8, 12, 0x00, 0x32, 0x36, 0x45, 0x06, 0x16, 0x37, 0x75, 0x77, 0x54, 0x0C, 0x00,
 			0xCC, 1, 0x00,      //Panel Control [00]
-//            0x36, 1, 0x0A,      //Memory Access [00]
-
-            0x3A, 1, 0x55,      //Interlace Pixel Format [XX]
-            0x11, 0,            //Sleep Out
-            TFTLCD_DELAY8, 120,
-            0x29, 0,            //Display On
-            TFTLCD_DELAY8, 25,
         };
         static const uint8_t ILI9481_CPT29_regValues[] PROGMEM = {    // 320x430
-            0x01, 0,            //Soft Reset
-            TFTLCD_DELAY8, 125,
-            0x11, 0,            //Sleep Out
-            TFTLCD_DELAY8, 20,
             0xB0, 1, 0x00,
             0xD0, 3, 0x07, 0x42, 0x1C,  // Set Power [00 43 18]
             0xD1, 3, 0x00, 0x02, 0x0F,  // Set VCOM  [00 00 00] x0.695, x1.00
@@ -2107,21 +1966,8 @@ case 0x4532:    // thanks Leodino
             0xE4, 1, 0xA0,
             0xF0, 1, 0x01,
             0xF3, 2, 0x02, 0x1A,			
-            0x36, 1, 0x0A,      //Memory Access [00]
-            0x2A, 4, 0x00, 0x00, 0x01, 0x3F,
-            0x2B, 4, 0x00, 0x00, 0x01, 0xAD,		
-
-            0x3A, 1, 0x55,      //Interlace Pixel Format [XX]
-            0x11, 0,            //Sleep Out
-            TFTLCD_DELAY8, 120,
-            0x29, 0,            //Display On
-            TFTLCD_DELAY8, 25,
         };
         static const uint8_t ILI9481_PVI35_regValues[] PROGMEM = {    // 320x480
-            0x01, 0,            //Soft Reset
-            TFTLCD_DELAY8, 125,
-            0x11, 0,            //Sleep Out
-            TFTLCD_DELAY8, 20,
             0xB0, 1, 0x00,
             0xD0, 3, 0x07, 0x41, 0x1D,  // Set Power [00 43 18]
             0xD1, 3, 0x00, 0x2B, 0x1F,  // Set VCOM  [00 00 00] x0.900, x1.32
@@ -2132,19 +1978,8 @@ case 0x4532:    // thanks Leodino
             0xE4, 1, 0xA0,
             0xF0, 1, 0x01,
             0xF3, 2, 0x40, 0x0A,			
-            0x36, 1, 0x0A,      //Memory Access [00]
-
-            0x3A, 1, 0x55,      //Interlace Pixel Format [XX]
-            0x11, 0,            //Sleep Out
-            TFTLCD_DELAY8, 120,
-            0x29, 0,            //Display On
-            TFTLCD_DELAY8, 25,
         };
         static const uint8_t ILI9481_AUO317_regValues[] PROGMEM = {    // 320x480
-            0x01, 0,            //Soft Reset
-            TFTLCD_DELAY8, 125,
-            0x11, 0,            //Sleep Out
-            TFTLCD_DELAY8, 20,
             0xB0, 1, 0x00,
             0xD0, 3, 0x07, 0x40, 0x1D,  // Set Power [00 43 18]
             0xD1, 3, 0x00, 0x18, 0x13,  // Set VCOM  [00 00 00] x0.805, x1.08
@@ -2154,19 +1989,8 @@ case 0x4532:    // thanks Leodino
             0xC8, 12, 0x00, 0x44, 0x06, 0x44, 0x0A, 0x08, 0x17, 0x33, 0x77, 0x44, 0x08, 0x0C,
             0xE4, 1, 0xA0,
             0xF0, 1, 0x01,			
-            0x36, 1, 0x0A,      //Memory Access [00]
-
-            0x3A, 1, 0x55,      //Interlace Pixel Format [XX]
-            0x11, 0,            //Sleep Out
-            TFTLCD_DELAY8, 120,
-            0x29, 0,            //Display On
-            TFTLCD_DELAY8, 25,
         };
         static const uint8_t ILI9481_CMO35_regValues[] PROGMEM = {    // 320480
-            0x01, 0,            //Soft Reset
-            TFTLCD_DELAY8, 125,
-            0x11, 0,            //Sleep Out
-            TFTLCD_DELAY8, 20,
             0xB0, 1, 0x00,
             0xD0, 3, 0x07, 0x41, 0x1D,  // Set Power [00 43 18] 07,41,1D
             0xD1, 3, 0x00, 0x1C, 0x1F,  // Set VCOM  [00 00 00] x0.825, x1.32 1C,1F
@@ -2179,18 +2003,8 @@ case 0x4532:    // thanks Leodino
             0xE4, 1, 0xA0,      //?SETCABC on Himax
             0x36, 1, 0x48,      //Memory Access [00]
             0xB4, 1, 0x11,			
-
-            0x3A, 1, 0x55,      //Interlace Pixel Format [XX]
-            0x11, 0,            //Sleep Out
-            TFTLCD_DELAY8, 120,
-            0x29, 0,            //Display On
-            TFTLCD_DELAY8, 25,
         };
         static const uint8_t ILI9481_RGB_regValues[] PROGMEM = {    // 320x480
-            0x01, 0,            //Soft Reset
-            TFTLCD_DELAY8, 125,
-            0x11, 0,            //Sleep Out
-            TFTLCD_DELAY8, 20,
             0xB0, 1, 0x00,
             0xD0, 3, 0x07, 0x41, 0x1D,  // SETPOWER [00 43 18]
             0xD1, 3, 0x00, 0x2B, 0x1F,  // SETVCOM  [00 00 00] x0.900, x1.32
@@ -2207,23 +2021,13 @@ case 0x4532:    // thanks Leodino
 			0xB4, 1, 0x00,      //SETDISPLAY
 //			0xB3, 4, 0x00, 0x01, 0x06, 0x01,  //SETGRAM simple example
 			0xB3, 4, 0x00, 0x01, 0x06, 0x30,  //jpegs example
-            0x36, 1, 0x48,      //Memory Access [00]
-            0x3A, 1, 0x66,      //Interlace Pixel Format [XX]
-			0x20, 0,            //INVOFF
-//			0x21, 0,            //INVON
-
-//            0x3A, 1, 0x55,      //Interlace Pixel Format [XX]
-            0x11, 0,            //Sleep Out
-            TFTLCD_DELAY8, 120,
-            0x29, 0,            //Display On
-            TFTLCD_DELAY8, 25,
         };
-        init_table(ILI9481_regValues, sizeof(ILI9481_regValues));
-//        init_table(ILI9481_CPT29_regValues, sizeof(ILI9481_CPT29_regValues));
-//        init_table(ILI9481_PVI35_regValues, sizeof(ILI9481_PVI35_regValues));
-//        init_table(ILI9481_AUO317_regValues, sizeof(ILI9481_AUO317_regValues));
-//        init_table(ILI9481_CMO35_regValues, sizeof(ILI9481_CMO35_regValues));
-//        init_table(ILI9481_RGB_regValues, sizeof(ILI9481_RGB_regValues));
+        table8_ads = ILI9481_regValues, table_size = sizeof(ILI9481_regValues);
+//        table8_ads = ILI9481_CPT29_regValues, table_size = sizeof(ILI9481_CPT29_regValues);
+//        table8_ads = ILI9481_PVI35_regValues, table_size = sizeof(ILI9481_PVI35_regValues);
+//        table8_ads = ILI9481_AUO317_regValues, table_size = sizeof(ILI9481_AUO317_regValues);
+//        table8_ads = ILI9481_CMO35_regValues, table_size = sizeof(ILI9481_CMO35_regValues);
+//        table8_ads = ILI9481_RGB_regValues, table_size = sizeof(ILI9481_RGB_regValues);
         p16 = (int16_t *) & HEIGHT;
         *p16 = 480;
         p16 = (int16_t *) & WIDTH;
@@ -2232,9 +2036,6 @@ case 0x4532:    // thanks Leodino
     case 0x9486:
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | REV_SCREEN;
         static const uint8_t ILI9486_regValues[] PROGMEM = {
-	    	0x01, 0,            //Soft Reset
-            TFTLCD_DELAY8, 50,
-            0x28, 0,            //Display Off
             0xC0, 2, 0x0d, 0x0d,        //Power Control 1 [0E 0E]
             0xC1, 2, 0x43, 0x00,        //Power Control 2 [43 00]
             0xC2, 1, 0x00,      //Power Control 3 [33]
@@ -2265,15 +2066,8 @@ case 0x4532:    // thanks Leodino
 			0xE0, 15, 0x0F, 0x10, 0x08, 0x05, 0x09, 0x05, 0x37, 0x98, 0x26, 0x07, 0x0F, 0x02, 0x09, 0x07, 0x00, 
 			0xE1, 15, 0x0F, 0x38, 0x36, 0x0D, 0x10, 0x08, 0x59, 0x76, 0x48, 0x0A, 0x16, 0x0A, 0x37, 0x2F, 0x00, 
 #endif
-			0x20, 0,            // Display Inversion OFF
-            0x36, 1, 0x0A,      //Memory Access
-            0x3A, 1, 0x55,      //Interlace Pixel
-            //            0x21, 0,            //Invert display !!!
-            0x11, 0,            //Sleep Out
-            TFTLCD_DELAY8, 50,
-            0x29, 0,            //Display On
         };
-        init_table(ILI9486_regValues, sizeof(ILI9486_regValues));
+        table8_ads = ILI9486_regValues, table_size = sizeof(ILI9486_regValues);
         p16 = (int16_t *) & HEIGHT;
         *p16 = 480;
         p16 = (int16_t *) & WIDTH;
@@ -2286,9 +2080,6 @@ case 0x4532:    // thanks Leodino
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_24BITS;
       common_9488:
         static const uint8_t ILI9488_regValues_max[] PROGMEM = {        // Atmel MaxTouch
-            0x01, 0,            //Soft Reset
-            TFTLCD_DELAY8, 50,
-            0x28, 0,            //Display Off
             0xC0, 2, 0x10, 0x10,        //Power Control 1 [0E 0E]
             0xC1, 1, 0x41,      //Power Control 2 [43]
             0xC5, 4, 0x00, 0x22, 0x80, 0x40,    //VCOM  Control 1 [00 40 00 40]
@@ -2300,18 +2091,15 @@ case 0x4532:    // thanks Leodino
             0xB7, 1, 0xC6,      //Entry Mode      [06]
             0x3A, 1, 0x55,      //Interlace Pixel Format [XX]
             0xF7, 4, 0xA9, 0x51, 0x2C, 0x82,    //Adjustment Control 3 [A9 51 2C 82]
-            0x11, 0,            //Sleep Out
-            TFTLCD_DELAY8, 150,
-            0x29, 0,            //Display On
         };
-        init_table(ILI9488_regValues_max, sizeof(ILI9488_regValues_max));
+        table8_ads = ILI9488_regValues_max, table_size = sizeof(ILI9488_regValues_max);
         p16 = (int16_t *) & HEIGHT;
         *p16 = 480;
         p16 = (int16_t *) & WIDTH;
         *p16 = 320;
         break;
     case 0xB505:                //R61505V
-	case 0xC505:                //R61505W
+    case 0xC505:                //R61505W
         _lcd_capable = 0 | REV_SCREEN | READ_LOWHIGH;
         static const uint16_t R61505V_regValues[] PROGMEM = {
             0x0000, 0x0000,
@@ -2353,10 +2141,6 @@ case 0x4532:    // thanks Leodino
             //            0x000C, 0x0001,   //RIM=1 [0000]
             0x000D, 0x0000,     // [0000]
             0x000E, 0x0030,     //VEM=3 VCOM equalize [0000]
-            0x0050, 0x0000,     //Display window area setting
-            0x0051, 0x00EF,
-            0x0052, 0x0000,
-            0x0053, 0x013F,
             0x0061, 0x0001,
             0x006A, 0x0000,
             0x0080, 0x0000,
@@ -2369,6 +2153,8 @@ case 0x4532:    // thanks Leodino
         };
         init_table16(R61505V_regValues, sizeof(R61505V_regValues));
         break;
+
+#if defined(SUPPORT_B509_7793)
     case 0x7793:
     case 0xB509:
         _lcd_capable = REV_SCREEN;
@@ -2433,8 +2219,25 @@ case 0x4532:    // thanks Leodino
         p16 = (int16_t *) & HEIGHT;
         *p16 = 400;
         break;
+#endif
     }
     _lcd_rev = ((_lcd_capable & REV_SCREEN) != 0);
+    if (table8_ads != NULL) {
+        static const uint8_t reset_off[] PROGMEM = {
+            0x01, 0,            //Soft Reset
+            TFTLCD_DELAY8, 150,  // .kbv will power up with ONLY reset, sleep out, display on
+            0x28, 0,            //Display Off
+            0x3A, 1, 0x55,      //Pixel read=565, write=565.
+        };
+        static const uint8_t wake_on[] PROGMEM = {
+			0x11, 0,            //Sleep Out
+            TFTLCD_DELAY8, 150,
+            0x29, 0,            //Display On
+        };
+		init_table(&reset_off, sizeof(reset_off));
+	    init_table(table8_ads, table_size);   //can change PIXFMT
+		init_table(&wake_on, sizeof(wake_on));
+    }
     setRotation(0);             //PORTRAIT
     invertDisplay(false);
 }
