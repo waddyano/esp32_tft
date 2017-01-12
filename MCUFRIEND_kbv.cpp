@@ -2099,6 +2099,7 @@ case 0x4532:    // thanks Leodino
         p16 = (int16_t *) & WIDTH;
         *p16 = 320;
         break;
+    case 0x1505:                //R61505
     case 0xB505:                //R61505V
     case 0xC505:                //R61505W
         _lcd_capable = 0 | REV_SCREEN | READ_LOWHIGH;
