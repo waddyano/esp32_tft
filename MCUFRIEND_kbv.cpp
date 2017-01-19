@@ -144,7 +144,7 @@ uint32_t readReg40(uint16_t reg)
     return ((uint32_t) h << 24) | (m << 8) | (l >> 8);
 }
 
-uint16_t MCUFRIEND_kbv::readReg(uint16_t reg)
+uint16_t MCUFRIEND_kbv::readReg(uint16_t reg, int8_t index)
 {
     uint16_t ret;
     uint8_t lo;
@@ -155,7 +155,7 @@ uint16_t MCUFRIEND_kbv::readReg(uint16_t reg)
     setReadDir();
     CD_DATA;
     //    READ_16(ret);
-    ret = read16bits();
+    do { ret = read16bits(); }while (--index >= 0);  //need to test with SSD1963
     RD_IDLE;
     CS_IDLE;
     setWriteDir();
@@ -227,6 +227,8 @@ uint16_t MCUFRIEND_kbv::readID(void)
             return 0x8357;
     }
     if (msb == 0xFF && ret == 0xFFFF) //R61526 [xx FF FF FF]
+        return 0x1526;          //subsequent begin() enables Command Access
+    if (ret == 0x1526)          //R61526 [xx 06 15 26] if I have written NVM
         return 0x1526;          //subsequent begin() enables Command Access
 	if (ret == 0x8552)          //ST7789V: [xx 85 85 52]
         return 0x7789;
@@ -770,7 +772,7 @@ void MCUFRIEND_kbv::invertDisplay(boolean i)
 #define TFTLCD_DELAY8 0xFF
 static void init_table(const void *table, int16_t size)
 {
-    uint8_t *p = (uint8_t *) table, dat[16];
+    uint8_t *p = (uint8_t *) table, dat[24];            //R61526 has GAMMA[22] 
     while (size > 0) {
         uint8_t cmd = pgm_read_byte(p++);
         uint8_t len = pgm_read_byte(p++);
@@ -1020,9 +1022,10 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
 	case 0x1526:
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_24BITS;
         static const uint8_t R61526_regValues[] PROGMEM = {
-            0xB0, 1, 0x03,      //Command Access Protect
+            0xB0, 1, 0x03,      //Command Access 
             0xE2, 1, 0x3F,      //Command Write Access
             0xC0, 1, 0x22,      //REV=0, BGR=1, SS=0
+            0xE2, 1, 0x00,      //Command Write Protect
         };
         table8_ads = R61526_regValues, table_size = sizeof(R61526_regValues);
         break;

@@ -32,7 +32,7 @@ class MCUFRIEND_kbv : public Adafruit_GFX {
 	virtual void     setRotation(uint8_t r);
     virtual void     invertDisplay(boolean i);
 
-	uint16_t readReg(uint16_t reg);
+	uint16_t readReg(uint16_t reg, int8_t index=0);
 	uint32_t readReg32(uint16_t reg);
 	int16_t  readGRAM(int16_t x, int16_t y, uint16_t *block, int16_t w, int16_t h);
 	uint16_t readPixel(int16_t x, int16_t y) { uint16_t color; readGRAM(x, y, &color, 1, 1); return color; }
