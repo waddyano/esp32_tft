@@ -12,6 +12,7 @@
 //#define USE_DUE_16BIT_SHIELD        //RD on PA15 (D24) 
 //#define USE_BOBCACHELOT_TEENSY
 //#define USE_FRDM_K20
+//#define USE_OPENSMART_SHIELD_PINOUT //thanks Michel53
 
 #if 0
 #elif defined(__AVR_ATmega328P__) && defined(USE_SSD1289_SHIELD_UNO)    //on UNO
@@ -845,6 +846,76 @@ static inline void write_8(uint8_t val)
 #define PIN_LOW(port, pin)    PASTE(port, _PCOR) =  (1<<(pin))
 #define PIN_HIGH(port, pin)   PASTE(port, _PSOR) =  (1<<(pin))
 #define PIN_OUTPUT(port, pin) PASTE(port, _PDDR) |= (1<<(pin))
+
+#elif defined(__AVR_ATmega328P__) && defined(USE_OPENSMART_SHIELD_PINOUT)
+#define RD_PORT PORTC
+#define RD_PIN  0
+#define WR_PORT PORTC
+#define WR_PIN  1
+#define CD_PORT PORTC
+#define CD_PIN  2
+#define CS_PORT PORTC
+#define CS_PIN  3
+#define RESET_PORT PORTC
+#define RESET_PIN  4
+
+#define BMASK         B00101111
+#define DMASK         B11010000
+
+#define write_8(x) {                          \
+        PORTD = (PORTD & ~DMASK) | ((x) & DMASK); \
+        PORTB = (PORTB & ~BMASK) | ((x) & BMASK);} // STROBEs are defined later
+
+#define read_8()   ((PIND & DMASK) | (PINB & BMASK))
+
+#define setWriteDir() { DDRD |=  DMASK; DDRB |=  BMASK; }
+#define setReadDir()  { DDRD &= ~DMASK; DDRB &= ~BMASK; }
+
+
+#define write8(x)     { write_8(x); WR_STROBE; }
+#define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
+#define READ_8(dst)   { RD_STROBE; dst = read_8(); RD_IDLE; }
+#define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
+
+#define PIN_LOW(p, b)        (p) &= ~(1<<(b))
+#define PIN_HIGH(p, b)       (p) |= (1<<(b))
+#define PIN_OUTPUT(p, b)     *(&p-1) |= (1<<(b))
+
+#elif defined(__AVR_ATmega2560__) && defined(USE_OPENSMART_SHIELD_PINOUT)
+#define RD_PORT PORTF
+#define RD_PIN  0
+#define WR_PORT PORTF
+#define WR_PIN  1
+#define CD_PORT PORTF
+#define CD_PIN  2
+#define CS_PORT PORTF
+#define CS_PIN  3
+#define RESET_PORT PORTF
+#define RESET_PIN  4
+
+#define BMASK         B10110000 //D13, D11, D10
+#define GMASK         0x20      //D4
+#define HMASK         0x78      //D6, D7, D8, D9
+
+#define write_8(x) {  \
+        PORTH = (PORTH&~HMASK)|(((x)&B11000000)>>3)|(((x)&B00000011)<<5); \
+        PORTB = (PORTB&~BMASK)|(((x)&B00101100)<<2); \
+        PORTG = (PORTG&~GMASK)|(((x)&B00010000)<<1); \
+    }
+#define read_8()(\
+                 ((PINH & B00011000) << 3) | ((PINB & BMASK) >> 2) | \
+                 ((PING & GMASK) >> 1) | ((PINH & B01100000) >> 5) )
+#define setWriteDir() { DDRH |=  HMASK; DDRB |=  BMASK; DDRG |=  GMASK; }
+#define setReadDir()  { DDRH &= ~HMASK; DDRB &= ~BMASK; DDRG &= ~GMASK; }
+
+#define write8(x)     { write_8(x); WR_STROBE; }
+#define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
+#define READ_8(dst)   { RD_STROBE; dst = read_8(); RD_IDLE; }
+#define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
+
+#define PIN_LOW(p, b)        (p) &= ~(1<<(b))
+#define PIN_HIGH(p, b)       (p) |= (1<<(b))
+#define PIN_OUTPUT(p, b)     *(&p-1) |= (1<<(b))
 
 #else
 #define USE_SPECIAL_FAIL
