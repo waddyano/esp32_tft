@@ -1,12 +1,24 @@
 CHANGE HISTORY:
 
 Will Never Happen:
-    R61520 vert scroll is not possible
+    R61520, R61526 vert scroll is not possible
 	ST7781 vert scroll is not implemented
-    ILI9320, 9325, ... can never vert scroll sub-window 
+    ILI9320, 9325, ... can never vert scroll sub-window i.e. no Band Scroll
 
 To Be Fixed:
-	GLUE Demo seems ok now
+	R61505, 0x1511, HX8347-A, S6D0139
+
+v2.9.4-beta:
+    readReg() accepts an optional index argument
+	pushColors() from Flash accepts an optional bigend argument
+	added UC8230, R61505, HX8367-A	
+	
+v2.9.3:
+    added R61526
+	file structure changed
+
+v2.9.1:
+    added HX8357-D, R61581, 
 
 v2.9: posted 05 May 2016
     MCUFRIEND_kbv.cpp:  
