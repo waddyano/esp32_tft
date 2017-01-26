@@ -615,7 +615,7 @@ void MCUFRIEND_kbv::pushColors(uint8_t * block, int16_t n, bool first)
     CS_IDLE;
 }
 
-void MCUFRIEND_kbv::pushColors(const uint8_t * block, int16_t n, bool first)
+void MCUFRIEND_kbv::pushColors(const uint8_t * block, int16_t n, bool first, bool bigend) //costs 28 bytes
 {
     uint16_t color;
     uint8_t h, l;
@@ -627,7 +627,7 @@ void MCUFRIEND_kbv::pushColors(const uint8_t * block, int16_t n, bool first)
     while (n-- > 0) {
         l = pgm_read_byte(block++);
         h = pgm_read_byte(block++);
-        color = h << 8 | l;
+        color = (bigend) ? (l << 8 ) | h : (h << 8) | l;
         write16(color);
     }
     CS_IDLE;
