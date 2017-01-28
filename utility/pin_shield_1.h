@@ -310,11 +310,11 @@
   #define D7_PORT PTC
   #define D7_PIN  4
   #define D8_PORT PTA
-  #define D8_PIN  13
+  #define D8_PIN  12
   #define D9_PORT PTA
-  #define D9_PIN  5
+  #define D9_PIN  2
   #define D10_PORT PTC
-  #define D10_PIN  0
+  #define D10_PIN  2
   #define D11_PORT PTD
   #define D11_PIN  2
   #define D12_PORT PTD
