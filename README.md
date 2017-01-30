@@ -1,20 +1,25 @@
 #MCUFRIEND_kbv 
 Library for Uno 2.4, 2.8, 3.5, 3.6, 3.95 inch mcufriend  Shields
 
-1. Install "Adafruit_GFX.h" library from GitHub into your User libraries folder if not already there.
+1. The Arduino Library Manager should find and install MCUFRIEND_kbv library
 
-2. Unzip the attached "MCUFRIEND_kbv.zip" into your User libraries folder.
+2. Install the Adafruit_GFX library if not already in your User libraries.
 
 3. Insert your Mcufriend style display shield into UNO.   Only 28-pin shields are supported.
 
-4. Start your Arduino IDE.
-
-5. Build any of the Examples from the File->Examples->Mcufriend_kbv menu.  e.g.
+4. Build any of the Examples from the File->Examples->Mcufriend_kbv menu.  e.g.
 
 graphictest_kbv.ino: shows all the methods.
 
 LCD_ID_readreg.ino:  diagnostic check to identify unsupported controllers.
 
+MCUFRIEND_kbv inherits all the methods from the 
+[url=https://learn.adafruit.com/adafruit-gfx-graphics-library/overview]Adafruit_GFX class[/url] and 
+[url=https://www.arduino.cc/en/Serial/Print]Print class[/url]
+
+The only "new" methods are hardware related: 
+vertScroll(), readGRAM(), readPixel(), setAddrWindow(), pushColors(), readID(), begin()
+readReg(), pushCommand() access the controller registers
 
 HOW TO INSTALL AND USE: is now in "mcufriend_how_to.txt"
 
