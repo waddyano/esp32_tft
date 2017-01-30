@@ -19,7 +19,7 @@
  //uint8_t running;
 #elif defined(__MBED__)
 #include "utility/mcufriend_mbed.h"
-#elif defined(__CC_ARM)
+#elif defined(__CC_ARM) || defined(__CROSSWORKS_ARM)
 #include "utility/mcufriend_keil.h"
 #else
 #include "utility/mcufriend_shield.h"
