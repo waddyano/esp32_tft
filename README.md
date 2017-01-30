@@ -19,7 +19,11 @@ and Print class: https://www.arduino.cc/en/Serial/Print
 
 The only "new" methods are hardware related: 
 vertScroll(), readGRAM(), readPixel(), setAddrWindow(), pushColors(), readID(), begin()
+
 readReg(), pushCommand() access the controller registers
+
+The File layout changed with v2.9.3.   If replacing a pre-v2.9.3 library:
+Please leave IDE.  Delete the existing MCUFRIEND_kbv folder.  Start the IDE.  Install from Library Manager.
 
 HOW TO INSTALL AND USE: is now in "mcufriend_how_to.txt"
 
