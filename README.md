@@ -13,9 +13,9 @@ graphictest_kbv.ino: shows all the methods.
 
 LCD_ID_readreg.ino:  diagnostic check to identify unsupported controllers.
 
-MCUFRIEND_kbv inherits all the methods from the 
-[url=https://learn.adafruit.com/adafruit-gfx-graphics-library/overview]Adafruit_GFX class[/url] and 
-[url=https://www.arduino.cc/en/Serial/Print]Print class[/url]
+MCUFRIEND_kbv inherits all the methods from 
+the Adafruit_GFX class: https://learn.adafruit.com/adafruit-gfx-graphics-library/overview 
+and Print class: https://www.arduino.cc/en/Serial/Print
 
 The only "new" methods are hardware related: 
 vertScroll(), readGRAM(), readPixel(), setAddrWindow(), pushColors(), readID(), begin()
