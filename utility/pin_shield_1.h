@@ -240,6 +240,57 @@
 #define PIN_INPUT(port, pin)  (port)->PDDR &= ~(1u<<(pin))
 #define PIN_READ(port, pin)   (port)->PDIR & (1u<<(pin))
 
+#elif defined(MKL26Z4)
+  #include <MKL26Z4.h>
+  #define D0_PORT PTA
+  #define D0_PIN  1
+  #define D1_PORT PTA
+  #define D1_PIN  2
+  #define D2_PORT PTD
+  #define D2_PIN  3      //PTD4 on KL25
+  #define D3_PORT PTA
+  #define D3_PIN  12
+  #define D4_PORT PTA
+  #define D4_PIN  4
+  #define D5_PORT PTA
+  #define D5_PIN  5
+  #define D6_PORT PTC
+  #define D6_PIN  8
+  #define D7_PORT PTC
+  #define D7_PIN  9
+  #define D8_PORT PTA
+  #define D8_PIN  13
+  #define D9_PORT PTD
+  #define D9_PIN  2      //PTD5 on KL25
+  #define D10_PORT PTD
+  #define D10_PIN  4      //PTD0
+  #define D11_PORT PTD
+  #define D11_PIN  6      //PTD2
+  #define D12_PORT PTD
+  #define D12_PIN  7      //PTD3
+  #define D13_PORT PTD
+  #define D13_PIN  5      //PTD1
+  #define A0_PORT PTB
+  #define A0_PIN  0
+  #define A1_PORT PTB
+  #define A1_PIN  1
+  #define A2_PORT PTB
+  #define A2_PIN  2
+  #define A3_PORT PTB
+  #define A3_PIN  3
+  #define A4_PORT PTC
+  #define A4_PIN  2
+  #define A5_PORT PTC
+  #define A5_PIN  1
+// Shield Control macros.   Deliberately avoid the IOSET registers
+#define PIN_LOW(port, pin)    (port)->PCOR =  (1<<(pin))
+#define PIN_HIGH(port, pin)   (port)->PSOR =  (1<<(pin))
+//#define PIN_LOW(port, pin)    (port)->PDOR &= ~(1<<(pin))
+//#define PIN_HIGH(port, pin)   (port)->PDOR |=  (1<<(pin))
+#define PIN_OUTPUT(port, pin) (port)->PDDR |= (1<<(pin))
+#define PIN_INPUT(port, pin)  (port)->PDDR &= ~(1u<<(pin))
+#define PIN_READ(port, pin)   (port)->PDIR & (1u<<(pin))
+
 #elif defined(MKL05Z4)
   #include <MKL05Z4.h>
   #define D0_PORT PTB

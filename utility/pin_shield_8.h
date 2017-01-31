@@ -142,6 +142,32 @@
   #define setReadDir()  {PTA->PDDR &= ~0x3030;PTC->PDDR &= ~0x0300;PTD->PDDR &= ~0x0030; }
 #endif
 
+#elif defined(MKL26Z4)
+  #include <MKL26Z4.h>
+// configure macros for the data pins
+#define AMASK ((1<<13)|(1<<12)|(1<<5)|(1<<4))
+#define CMASK ((1<<9)|(1<<8))
+#define DMASK ((1<<3)|(1<<2))    //PTD5, PTD4 on KL25Z
+  #define write_8(d) { \
+   PTA->PCOR = AMASK; PTC->PCOR = CMASK; PTD->PCOR = DMASK; \
+   PTA->PSOR =      (((d) & (1<<0)) << 13) \
+                  | (((d) & (1<<3)) << 9) \
+                  | (((d) & (1<<4)) >> 0) \
+                  | (((d) & (1<<5)) >> 0); \
+   PTC->PSOR =      (((d) & (1<<6)) << 2) \
+                  | (((d) & (1<<7)) << 2); \
+   PTD->PSOR =      (((d) & (1<<1)) << 1) \
+                  | (((d) & (1<<2)) << 1); \
+  } 
+  #define read_8() (          (((PTA->PDIR & (1<<13)) >> 13) \
+                             | ((PTA->PDIR & (1<<12)) >> 9) \
+                             | ((PTA->PDIR & (3<<4))  >> 0) \
+                             | ((PTC->PDIR & (3<<8))  >> 2) \
+                             | ((PTD->PDIR & (1<<3))  >> 1) \
+                             | ((PTD->PDIR & (1<<2))  >> 1)))
+  #define setWriteDir() {PTA->PDDR |=  AMASK;PTC->PDDR |=  CMASK;PTD->PDDR |=  DMASK; }
+  #define setReadDir()  {PTA->PDDR &= ~AMASK;PTC->PDDR &= ~CMASK;PTD->PDDR &= ~DMASK; }
+
 #elif defined(MKL05Z4) || defined(TARGET_KL05Z)
   #include <MKL05Z4.h>
 // configure macros for the data pins
