@@ -20,12 +20,12 @@
 #define RESET_PORT PORTC
 #define RESET_PIN  4
 
-#define DMASK         0x03
-#define NMASK         ~DMASK
-#define write_8(x)    { PORTB = (PORTB & NMASK) | ((x) & DMASK); PORTD = (PORTD & DMASK) | ((x) & NMASK); }
-#define read_8()      ( (PINB & DMASK) | (PIND & NMASK) )
-#define setWriteDir() { DDRB = (DDRB & NMASK) | DMASK; DDRD = (DDRD & DMASK) | NMASK;  }
-#define setReadDir()  { DDRB = (DDRB & NMASK) & NMASK; DDRD = (DDRD & DMASK) & DMASK;  }
+#define BMASK         0x03              //more intuitive style for mixed Ports
+#define DMASK         0xFC              //does exactly the same as previous
+#define write_8(x)    { PORTB = (PORTB & ~BMASK) | ((x) & BMASK); PORTD = (PORTD & ~DMASK) | ((x) & DMASK); }
+#define read_8()      ( (PINB & BMASK) | (PIND & DMASK) )
+#define setWriteDir() { DDRB |=  BMASK; DDRD |=  DMASK; }
+#define setReadDir()  { DDRB &= ~BMASK; DDRD &= ~DMASK; }
 #define write8(x)     { write_8(x); WR_STROBE; }
 #define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
 #define READ_8(dst)   { RD_STROBE; dst = read_8(); RD_IDLE; }
