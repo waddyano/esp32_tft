@@ -2094,6 +2094,7 @@ case 0x4532:    // thanks Leodino
     case 0x7796:
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS;   //thanks to safari1
         goto common_9488;
+    case 0x9487:                //with thanks to Charlyf
     case 0x9488:
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_24BITS;
       common_9488:
