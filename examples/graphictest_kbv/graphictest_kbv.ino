@@ -88,15 +88,13 @@ void setup(void) {
     //    while (!Serial) ;   //hangs a Leonardo until you connect a Serial
     if (!Serial) delay(5000);           //allow some time for Leonardo
     Serial.println("Serial took " + String((millis() - when)) + "ms to start");
-    static uint16_t identifier;
-    //    tft.reset();                 //we can't read ID on 9341 until begin()
-    g_identifier = tft.readID(); //
+    //    tft.reset();                 //hardware reset
+    uint16_t ID = tft.readID(); //
     Serial.print("ID = 0x");
-    Serial.println(g_identifier, HEX);
-    if (g_identifier == 0x00D3 || g_identifier == 0xD3D3) g_identifier = 0x9481; // write-only shield
-    if (g_identifier == 0xFFFF) g_identifier = 0x9341; // serial
-//    g_identifier = 0x9329;                             // force ID
-    tft.begin(g_identifier);
+    Serial.println(ID, HEX);
+    if (ID == 0x00D3 == 0xD3D3) ID = 0x9481; // write-only shield
+//    ID = 0x9329;                             // force ID
+    tft.begin(ID);
 }
 
 #if defined(MCUFRIEND_KBV_H_)
@@ -133,17 +131,23 @@ void windowScroll(int16_t x, int16_t y, int16_t wid, int16_t ht, int16_t dx, int
         }
 }
 
+void printmsg(int row, const char *msg)
+{
+    tft.setTextColor(YELLOW, BLACK);
+    tft.setCursor(0, row);
+    tft.println(msg);
+}
+
 void loop(void) {
     uint8_t aspect;
     uint16_t pixel;
-    char *aspectname[] = {
+    const char *aspectname[] = {
         "PORTRAIT", "LANDSCAPE", "PORTRAIT_REV", "LANDSCAPE_REV"
     };
-    char *colorname[] = { "BLUE", "GREEN", "RED", "GRAY" };
+    const char *colorname[] = { "BLUE", "GREEN", "RED", "GRAY" };
     uint16_t colormask[] = { 0x001F, 0x07E0, 0xF800, 0xFFFF };
-    uint16_t dx, rgb, n, wid, ht;
+    uint16_t dx, rgb, n, wid, ht, msglin;
     tft.setRotation(0);
-//    for (uint8_t i = 0; i < 2; i++) showhanzi(0, 0, i), delay(1000);
     runtests();
     delay(2000);
     if (tft.height() > 64) {
@@ -152,13 +156,15 @@ void loop(void) {
             tft.setRotation(aspect);
             wid = tft.width();
             ht = tft.height();
+            msglin = (ht > 160) ? 200 : 112;
             testText();
             dx = wid / 32;
             for (n = 0; n < 32; n++) {
                 rgb = n * 8;
                 rgb = tft.color565(rgb, rgb, rgb);
-                tft.fillRect(n * dx, 48, dx, 64, rgb & colormask[aspect]);
+                tft.fillRect(n * dx, 48, dx, 63, rgb & colormask[aspect]);
             }
+            tft.drawRect(0, 48 + 63, wid, 1, WHITE);
             tft.setTextSize(2);
             tft.setTextColor(colormask[aspect], BLACK);
             tft.setCursor(0, 72);
@@ -166,17 +172,25 @@ void loop(void) {
             tft.setTextColor(WHITE);
             tft.println(" COLOR GRADES");
             tft.setTextColor(WHITE, BLACK);
-            tft.setCursor(0, 184);
-            tft.println(aspectname[aspect]);
+            printmsg(184, aspectname[aspect]);
             delay(1000);
             tft.drawPixel(0, 0, YELLOW);
             pixel = tft.readPixel(0, 0);
+            tft.setTextSize((ht > 160) ? 2 : 1); //for messages
 #if defined(MCUFRIEND_KBV_H_)
+#if 1
             extern const uint8_t penguin[];
             tft.setAddrWindow(wid - 40 - 40, 20 + 0, wid - 1 - 40, 20 + 39);
             tft.pushColors(penguin, 1600, 1);
-            tft.setTextColor(WHITE, BLACK);
-            tft.println("VERTICAL SCROLL UP");
+#else
+            extern const uint8_t wifi_full[];
+            tft.setAddrWindow(wid - 40 - 40, 20 + 0, wid - 40 - 40 + 31, 20 + 31);
+            tft.pushColors(wifi_full, 1024, 1, true);
+#endif
+            tft.setAddrWindow(0, 0, wid - 1, ht - 1);
+            if (aspect & 1) tft.drawRect(wid - 1, 0, 1, ht, WHITE);
+            else tft.drawRect(0, ht - 1, wid, 1, WHITE);
+            printmsg(msglin, "VERTICAL SCROLL UP");
             uint16_t maxscroll;
             if (tft.getRotation() & 1) maxscroll = wid;
             else maxscroll = ht;
@@ -184,37 +198,36 @@ void loop(void) {
                 tft.vertScroll(0, maxscroll, i);
                 delay(10);
             }
-            tft.vertScroll(0, maxscroll, 0);
-            tft.setCursor(0, 200);
-            tft.println("VERTICAL SCROLL DN");
+            delay(1000);
+			printmsg(msglin, "VERTICAL SCROLL DN");
             for (uint16_t i = 1; i <= maxscroll; i++) {
                 tft.vertScroll(0, maxscroll, 0 - (int16_t)i);
                 delay(10);
             }
+			tft.vertScroll(0, maxscroll, 0);
+            printmsg(msglin, "SCROLL DISABLED   ");
+
             delay(1000);
-            tft.vertScroll(0, maxscroll, 0);
             if ((aspect & 1) == 0) { //Portrait
-                tft.setCursor(0, 200);
                 tft.setTextColor(BLUE, BLACK);
-                tft.println("ONLY THE COLOR BAND");
+                printmsg(msglin, "ONLY THE COLOR BAND");
                 for (uint16_t i = 1; i <= 64; i++) {
                     tft.vertScroll(48, 64, i);
                     delay(20);
                 }
                 delay(1000);
-                tft.vertScroll(0, maxscroll, 0);
             }
 #endif
-            tft.setCursor(0, 200);
             tft.setTextColor(YELLOW, BLACK);
             if (pixel == YELLOW) {
-                tft.println("SOFTWARE SCROLL    ");
+                printmsg(msglin, "SOFTWARE SCROLL    ");
 #if 0
+                // diagonal scroll of block
                 for (int16_t i = 45, dx = 2, dy = 1; i > 0; i -= dx) {
                     windowScroll(24, 8, 90, 40, dx, dy, scrollbuf);
                 }
 #else
-                // scroll a whole width of the screen
+                // plain horizontal scroll of block
                 n = (wid > 320) ? 320 : wid;
                 for (int16_t i = n, dx = 4, dy = 0; i > 0; i -= dx) {
                     windowScroll(0, 200, n, 16, dx, dy, scrollbuf);
@@ -232,7 +245,7 @@ void loop(void) {
             delay(5000);
         }
     }
-    tft.println("INVERT DISPLAY");
+    printmsg(msglin, "INVERT DISPLAY ");
     tft.invertDisplay(true);
     delay(2000);
     tft.invertDisplay(false);
@@ -272,7 +285,7 @@ void runtests(void)
 #if defined(MCUFRIEND_KBV_H_)
         tft.print("MCUFRIEND ");
 #if MCUFRIEND_KBV_H_ != 0
-        tft.print(0.01 * MCUFRIEND_KBV_H_, 1);
+        tft.print(0.01 * MCUFRIEND_KBV_H_, 2);
 #else
         tft.print("for");
 #endif
@@ -304,8 +317,8 @@ void runtests(void)
     g_identifier = tft.readID();
     tft.print("ID: 0x");
     tft.println(tft.readID(), HEX);
-    tft.print("Reg(00):0x");
-    tft.println(tft.readReg(0x00), HEX);
+//    tft.print("Reg(00):0x");
+//    tft.println(tft.readReg(0x00), HEX);
     tft.print("F_CPU:");
     tft.print(0.000001 * F_CPU);
 #if defined(__OPTIMIZE_SIZE__)
