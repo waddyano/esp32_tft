@@ -182,10 +182,14 @@ void loop(void) {
             extern const uint8_t penguin[];
             tft.setAddrWindow(wid - 40 - 40, 20 + 0, wid - 1 - 40, 20 + 39);
             tft.pushColors(penguin, 1600, 1);
-#else
+#elif 1
             extern const uint8_t wifi_full[];
             tft.setAddrWindow(wid - 40 - 40, 20 + 0, wid - 40 - 40 + 31, 20 + 31);
             tft.pushColors(wifi_full, 1024, 1, true);
+#elif 1
+            extern const uint8_t icon_40x40[];
+            tft.setAddrWindow(wid - 40 - 40, 20 + 0, wid - 1 - 40, 20 + 39);
+            tft.pushColors(icon_40x40, 1600, 1);
 #endif
             tft.setAddrWindow(0, 0, wid - 1, ht - 1);
             if (aspect & 1) tft.drawRect(wid - 1, 0, 1, ht, WHITE);
