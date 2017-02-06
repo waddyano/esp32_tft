@@ -92,7 +92,7 @@ void setup(void) {
     uint16_t ID = tft.readID(); //
     Serial.print("ID = 0x");
     Serial.println(ID, HEX);
-    if (ID == 0x00D3 == 0xD3D3) ID = 0x9481; // write-only shield
+    if (ID == 0xD3D3) ID = 0x9481; // write-only shield
 //    ID = 0x9329;                             // force ID
     tft.begin(ID);
 }
