@@ -192,11 +192,15 @@ uint16_t MCUFRIEND_kbv::readID(void)
     ret = readReg(0x67);        //HX8347-A
     if (ret == 0x4747)
         return 0x8347;
-#if defined(SUPPORT_1963) && USING_16BIT_BUS 
+//#if defined(SUPPORT_1963) && USING_16BIT_BUS 
     ret = readReg32(0xA1);      //SSD1963: [01 57 61 01]
     if (ret == 0x6101)
         return 0x1963;
-#endif
+    if (ret == 0xFFFF)          //R61526: [xx FF FF FF]
+        return 0x1526;          //subsequent begin() enables Command Access
+//    if (ret == 0xFF00)          //R61520: [xx FF FF 00]
+//        return 0x1520;          //subsequent begin() enables Command Access
+//#endif
 	ret = readReg40(0xBF);
                                 //HX8357B: [xx 01 62 83 57 FF] unsupported
 	if (ret == 0x9481)          //ILI9481: [xx 02 04 94 81 FF]
@@ -227,8 +231,8 @@ uint16_t MCUFRIEND_kbv::readID(void)
 #endif
             return 0x8357;
     }
-    if (msb == 0xFF && ret == 0xFFFF) //R61526 [xx FF FF FF]
-        return 0x1526;          //subsequent begin() enables Command Access
+//    if (msb == 0xFF && ret == 0xFFFF) //R61526 [xx FF FF FF]
+//        return 0x1526;          //subsequent begin() enables Command Access
     if (ret == 0x1526)          //R61526 [xx 06 15 26] if I have written NVM
         return 0x1526;          //subsequent begin() enables Command Access
 	if (ret == 0x8552)          //ST7789V: [xx 85 85 52]
