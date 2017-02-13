@@ -232,7 +232,7 @@ void write_8(uint8_t x)
 #define PIN_HIGH(p, b)       (p) |= (1<<(b))
 #define PIN_OUTPUT(p, b)     *(&p-1) |= (1<<(b))
 
-#elif defined(MK20DX128) || defined(MK20DX256) || defined(MK64FX512) || defined(MK66FX1M0) // regular UNO shield on a Teensy 3.x
+#elif defined(__MK20DX128__) || defined(__MK20DX256__) || defined(__MK64FX512__) || defined(__MK66FX1M0__) // regular UNO shield on a Teensy 3.x
 #warning regular UNO shield on a Teensy 3.x
 
 #if defined(__MK20DX128__) || defined(__MK20DX256__) // Teensy3.0 || 3.2 96MHz
@@ -244,6 +244,8 @@ void write_8(uint8_t x)
 #elif defined(__MK66FX1M0__) // Teensy3.6 180MHz untested.   delays can possibly be reduced.
 #define WRITE_DELAY { WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; }
 #define READ_DELAY  { RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; }
+#else
+#error unspecified delays
 #endif
 
 #define RD_PORT GPIOD
@@ -283,9 +285,9 @@ void write_8(uint8_t x)
                    | ((GPIOD_PDIR & (1 << 2)) << 5)))
 #define setWriteDir() {GPIOA_PDDR |= AMASK;GPIOC_PDDR |= CMASK;GPIOD_PDDR |= DMASK; }
 #define setReadDir() {GPIOA_PDDR &= ~AMASK;GPIOC_PDDR &= ~CMASK;GPIOD_PDDR &= ~DMASK; }
-#define write8(x) { write_8(x); WR_DELAY; WR_STROBE; } //PJ adjusted
+#define write8(x) { write_8(x); WRITE_DELAY; WR_STROBE; } //PJ adjusted
 #define write16(x) { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
-#define READ_8(dst) { RD_STROBE; RD_DELAY; dst = read_8(); RD_IDLE; } //PJ adjusted
+#define READ_8(dst) { RD_STROBE; READ_DELAY; dst = read_8(); RD_IDLE; } //PJ adjusted
 #define READ_16(dst) { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
 
 #define PASTE(x, y) x ## y
