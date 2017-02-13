@@ -232,55 +232,66 @@ void write_8(uint8_t x)
 #define PIN_HIGH(p, b)       (p) |= (1<<(b))
 #define PIN_OUTPUT(p, b)     *(&p-1) |= (1<<(b))
 
-#elif defined(__MK20DX128__) || defined(__MK20DX256__) // regular UNO shield on a Teensy 3.x
+#elif defined(MK20DX128) || defined(MK20DX256) || defined(MK64FX512) || defined(MK66FX1M0) // regular UNO shield on a Teensy 3.x
 #warning regular UNO shield on a Teensy 3.x
+
+#if defined(__MK20DX128__) || defined(__MK20DX256__) // Teensy3.0 || 3.2 96MHz
+#define WRITE_DELAY { WR_ACTIVE; WR_ACTIVE; }
+#define READ_DELAY  { RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; }
+#elif defined(__MK64FX512__) // Teensy3.5 120MHz thanks to PeteJohno
+#define WRITE_DELAY { WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; }
+#define READ_DELAY  { RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; }
+#elif defined(__MK66FX1M0__) // Teensy3.6 180MHz untested.   delays can possibly be reduced.
+#define WRITE_DELAY { WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; }
+#define READ_DELAY  { RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; }
+#endif
+
 #define RD_PORT GPIOD
-#define RD_PIN  1
+#define RD_PIN 1
 #define WR_PORT GPIOC
-#define WR_PIN  0
+#define WR_PIN 0
 #define CD_PORT GPIOB
-#define CD_PIN  0
+#define CD_PIN 0
 #define CS_PORT GPIOB
-#define CS_PIN  1
+#define CS_PIN 1
 #define RESET_PORT GPIOB
-#define RESET_PIN  3
+#define RESET_PIN 3
 
 // configure macros for the data pins
 #define AMASK ((1<<12)|(1<<13))
 #define CMASK ((1<<3))
 #define DMASK ((1<<0)|(1<<2)|(1<<3)|(1<<4)|(1<<7))
 
-  #define write_8(d) { \
-   GPIOA_PCOR = AMASK; GPIOC_PCOR = CMASK; GPIOD_PCOR = DMASK; \
-   GPIOA_PSOR = (((d) & (1<<3)) << 9) \
-              | (((d) & (1<<4)) << 9); \
-   GPIOC_PSOR = (((d) & (1<<1)) << 2); \
-   GPIOD_PSOR = (((d) & (1<<0)) << 3) \
-              | (((d) & (1<<2)) >> 2) \
-              | (((d) & (1<<5)) << 2) \
-              | (((d) & (1<<6)) >> 2) \
-              | (((d) & (1<<7)) >> 5); \
-  } 
-  #define read_8() (          (((GPIOD_PDIR & (1<<3)) >> 3) \
-                             | ((GPIOC_PDIR & (1<<3)) >> 2) \
-                             | ((GPIOD_PDIR & (1<<0)) << 2) \
-                             | ((GPIOA_PDIR & (1<<12)) >> 9) \
-                             | ((GPIOA_PDIR & (1<<13)) >> 9) \
-                             | ((GPIOD_PDIR & (1<<7))  >> 2) \
-                             | ((GPIOD_PDIR & (1<<4))  << 2) \
-                             | ((GPIOD_PDIR & (1<<2))  << 5)))
-  #define setWriteDir() {GPIOA_PDDR |=  AMASK;GPIOC_PDDR |=  CMASK;GPIOD_PDDR |=  DMASK; }
-  #define setReadDir()  {GPIOA_PDDR &= ~AMASK;GPIOC_PDDR &= ~CMASK;GPIOD_PDDR &= ~DMASK; }
+#define write_8(d) { \
+        GPIOA_PCOR = AMASK; GPIOC_PCOR = CMASK; GPIOD_PCOR = DMASK; \
+        GPIOA_PSOR = (((d) & (1 << 3)) << 9) \
+                     | (((d) & (1 << 4)) << 9); \
+        GPIOC_PSOR = (((d) & (1 << 1)) << 2); \
+        GPIOD_PSOR = (((d) & (1 << 0)) << 3) \
+                     | (((d) & (1 << 2)) >> 2) \
+                     | (((d) & (1 << 5)) << 2) \
+                     | (((d) & (1 << 6)) >> 2) \
+                     | (((d) & (1 << 7)) >> 5); \
+        }
+#define read_8() ((((GPIOD_PDIR & (1<<3)) >> 3) \
+                   | ((GPIOC_PDIR & (1 << 3)) >> 2) \
+                   | ((GPIOD_PDIR & (1 << 0)) << 2) \
+                   | ((GPIOA_PDIR & (1 << 12)) >> 9) \
+                   | ((GPIOA_PDIR & (1 << 13)) >> 9) \
+                   | ((GPIOD_PDIR & (1 << 7)) >> 2) \
+                   | ((GPIOD_PDIR & (1 << 4)) << 2) \
+                   | ((GPIOD_PDIR & (1 << 2)) << 5)))
+#define setWriteDir() {GPIOA_PDDR |= AMASK;GPIOC_PDDR |= CMASK;GPIOD_PDDR |= DMASK; }
+#define setReadDir() {GPIOA_PDDR &= ~AMASK;GPIOC_PDDR &= ~CMASK;GPIOD_PDDR &= ~DMASK; }
+#define write8(x) { write_8(x); WR_DELAY; WR_STROBE; } //PJ adjusted
+#define write16(x) { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
+#define READ_8(dst) { RD_STROBE; RD_DELAY; dst = read_8(); RD_IDLE; } //PJ adjusted
+#define READ_16(dst) { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
 
-#define write8(x)     { write_8(x); WR_ACTIVE; WR_ACTIVE; WR_STROBE; }
-#define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
-#define READ_8(dst)   { RD_STROBE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; dst = read_8(); RD_IDLE; }
-#define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
+#define PASTE(x, y) x ## y
 
-#define PASTE(x, y)   x ## y
-
-#define PIN_LOW(port, pin)    PASTE(port, _PCOR) =  (1<<(pin))
-#define PIN_HIGH(port, pin)   PASTE(port, _PSOR) =  (1<<(pin))
+#define PIN_LOW(port, pin) PASTE(port, _PCOR) = (1<<(pin))
+#define PIN_HIGH(port, pin) PASTE(port, _PSOR) = (1<<(pin))
 #define PIN_OUTPUT(port, pin) PASTE(port, _PDDR) |= (1<<(pin))
 
 #elif defined(__STM32F1__) && defined(ARDUINO_STM_NUCLEO_F103RB) // Uno Shield on NUCLEO-F103
