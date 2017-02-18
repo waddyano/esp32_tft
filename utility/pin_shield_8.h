@@ -15,7 +15,7 @@
 
 #if 0
 
-#elif defined(NUCLEO) || defined(TARGET_NUCLEO_F072RB) || defined(TARGET_NUCLEO_F401RE) || defined(TARGET_NUCLEO_F411RE) || defined(TARGET_NUCLEO_F103RB)
+#elif defined(NUCLEO) || defined(TARGET_NUCLEO_F072RB) || defined(TARGET_NUCLEO_F401RE) || defined(TARGET_NUCLEO_F411RE) || defined(TARGET_NUCLEO_F103RB) || defined(TARGET_NUCLEO_L476RG)
 #if __MBED__
 #warning MBED knows everything
 #elif defined(STM32F072xB)
@@ -66,7 +66,7 @@
                           GPIOA->MODER |=  0x150000; GPIOB->MODER |=  0x100540; GPIOC->MODER |=  0x4000; }
   #define setReadDir()  { GPIOA->MODER &= ~0x3F0000; GPIOB->MODER &= ~0x300FC0; GPIOC->MODER &= ~0xC000; }
 #endif
-	
+    
 
 #elif __TARGET_PROCESSOR == LPC1768
   #include <LPC17xx.h>
@@ -191,8 +191,12 @@
   #define setReadDir()  { PTA->PDDR &= ~0x1C00; PTB->PDDR &= ~0x0CE0; }
 
 
-#elif defined(MK20D7) && defined(TEENSY)
+#elif (defined(MK20D7) && defined(TEENSY)) || defined(TARGET_TEENSY3_1)
+#if __MBED__
+#warning MBED knows everything
+#else
   #include <MK20D5.h>
+#endif
 // configure macros for the data pins
 #define AMASK ((1<<12)|(1<<13))
 #define CMASK ((1<<3))

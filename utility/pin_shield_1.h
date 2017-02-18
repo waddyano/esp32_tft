@@ -14,7 +14,7 @@
 
 #if 0
 
-#elif defined(NUCLEO) || defined(TARGET_NUCLEO_F072RB) || defined(TARGET_NUCLEO_F401RE) || defined(TARGET_NUCLEO_F411RE) || defined(TARGET_NUCLEO_F103RB)
+#elif defined(NUCLEO) || defined(TARGET_NUCLEO_F072RB) || defined(TARGET_NUCLEO_F401RE) || defined(TARGET_NUCLEO_F411RE) || defined(TARGET_NUCLEO_F103RB) || defined(TARGET_NUCLEO_L476RG)
 #define PIN_MODE2(reg, pin, mode) reg=(reg&~(0x3<<((pin)<<1)))|(mode<<((pin)<<1))
 #if __MBED__
 #warning MBED knows everything
@@ -137,8 +137,12 @@
 #define PIN_INPUT(port, pin)  (port)->FIODIR &= ~(1u<<(pin))
 #define PIN_READ(port, pin)   (port)->FIOPIN & (1u<<(pin))
 
-#elif defined(MK20D7) && defined(TEENSY)
+#elif (defined(MK20D7) && defined(TEENSY)) || defined(TARGET_TEENSY3_1)
+#if __MBED__
+#warning MBED knows everything
+#else
   #include <MK20D5.h>
+#endif
   #define D0_PORT PTB
   #define D0_PIN  16
   #define D1_PORT PTB
