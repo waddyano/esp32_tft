@@ -310,7 +310,7 @@ static inline void write_8(uint8_t val)
 #define read_8()      ( PINA )
 #define setWriteDir() { DDRA = 0xFF; }
 #define setReadDir()  { DDRA = 0x00; }
-#define write8(x)     { write_8(x); WR_STROBE; }
+#define write8(x)     { write_8(x); WR_ACTIVE; WR_STROBE; } // HX8357-D is slower
 #define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
 #define READ_8(dst)   { RD_STROBE; dst = read_8(); RD_IDLE; }
 #define READ_16(dst)  { RD_STROBE; dst = read_8(); RD_IDLE; RD_STROBE; dst = (dst<<8) | read_8(); RD_IDLE; }
@@ -751,8 +751,8 @@ static inline void write_8(uint8_t val)
 						PIOD->PIO_ODR = DMASK; \
 					  }
 
-// ILI9486 is slower than ILI9481
-#define write8(x)     { write_8(x); WR_ACTIVE; WR_ACTIVE; WR_STROBE; WR_IDLE; WR_IDLE; }
+// ILI9486 is slower than ILI9481. HX8357-D is slower
+#define write8(x)     { write_8(x); WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; WR_STROBE; WR_IDLE; WR_IDLE; }
 #define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
 #define READ_8(dst)   { RD_STROBE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; dst = read_8(); RD_IDLE; RD_IDLE; RD_IDLE; }
 #define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
