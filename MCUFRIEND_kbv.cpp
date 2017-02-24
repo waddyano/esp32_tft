@@ -202,7 +202,8 @@ uint16_t MCUFRIEND_kbv::readID(void)
 //        return 0x1520;          //subsequent begin() enables Command Access
 //#endif
 	ret = readReg40(0xBF);
-                                //HX8357B: [xx 01 62 83 57 FF] unsupported
+	if (ret == 0x8357)          //HX8357B: [xx 01 62 83 57 FF]
+        return 0x8357;
 	if (ret == 0x9481)          //ILI9481: [xx 02 04 94 81 FF]
         return 0x9481;
     if (ret == 0x1511)          //?R61511: [xx 02 04 15 11] not tested yet
@@ -223,13 +224,13 @@ uint16_t MCUFRIEND_kbv::readID(void)
     ret = ret32;	
 //    if (msb = 0x38 && ret == 0x8000) //unknown [xx 38 80 00] with D3 = 0x1602
     if (msb == 0x00 && ret == 0x8000) { //HX8357-D [xx 00 80 00]
-#if 0
+#if 1
         uint8_t cmds[] = {0xFF, 0x83, 0x57};
         pushCommand(0xB9, cmds, 3);
         msb = readReg(0xD0);
         if (msb == 0x99 || msb == 0x90)
 #endif
-            return 0x8357;
+            return 0x9090;      //BIG CHANGE: HX8357-D was 0x8357
     }
 //    if (msb == 0xFF && ret == 0xFFFF) //R61526 [xx FF FF FF]
 //        return 0x1526;          //subsequent begin() enables Command Access
@@ -1635,7 +1636,7 @@ case 0x4532:    // thanks Leodino
         break;
 #endif
 
-    case 0x8357:
+    case 0x9090:                //BIG CHANGE: HX8357-D was 0x8357
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | REV_SCREEN | READ_24BITS;
         static const uint8_t HX8357D_regValues[] PROGMEM = {
             0xB0, 1, 0x00,              // unlocks E0, F0
@@ -1958,6 +1959,9 @@ case 0x4532:    // thanks Leodino
         break;
     case 0x1581:
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_BGR | READ_24BITS; //thanks zdravke
+		goto common_9481;
+    case 0x8357:                //BIG CHANGE: HX8357-B is now 0x8357
+        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS;  // thanks pAy79
 		goto common_9481;
     case 0x9481:
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_BGR;
