@@ -1961,7 +1961,7 @@ case 0x4532:    // thanks Leodino
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_BGR | READ_24BITS; //thanks zdravke
 		goto common_9481;
     case 0x8357:                //BIG CHANGE: HX8357-B is now 0x8357
-        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS;  // thanks pAy79
+        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | REV_SCREEN;  // thanks pAy79
 		goto common_9481;
     case 0x9481:
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_BGR;
