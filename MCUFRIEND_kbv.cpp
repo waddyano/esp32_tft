@@ -357,7 +357,7 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
             d[2] = 0x3B;
             WriteCmdParamN(0xB6, 3, d);
             goto common_MC;
-        } else if (_lcd_ID == 0x1963 || _lcd_ID == 0x9481 || _lcd_ID == 0x1511 || _lcd_ID == 0x1581) {
+        } else if (_lcd_ID == 0x1963 || _lcd_ID == 0x9481 || _lcd_ID == 0x1511 || _lcd_ID == 0x1581 || _lcd_ID == 0x8357) {
             if (val & 0x80)
                 val |= 0x01;    //GS
             if ((val & 0x40))
@@ -367,7 +367,7 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
                 WriteCmdParamN(0xC0, 1, d);
             }
             if (_lcd_ID == 0x1963) val &= ~0xC0;
-            if (_lcd_ID == 0x9481 || _lcd_ID == 0x1581) val &= ~0xD0;
+            if (_lcd_ID == 0x9481 || _lcd_ID == 0x1581 || _lcd_ID == 0x8357) val &= ~0xD0;
             if (_lcd_ID == 0x1511) {
                 val &= ~0x10;   //remove ML
                 val |= 0xC0;    //force penguin 180 rotation
