@@ -41,8 +41,7 @@
 #define FLIP_VERT       (1<<13)
 #define FLIP_HORIZ      (1<<14)
 
-#if (defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__) || defined(__SAM3X8E__))\
- && (defined(USE_MEGA_16BIT_SHIELD) || defined(USE_DUE_16BIT_SHIELD))
+#if (defined(USES_16BIT_BUS))   //only comes from SPECIALs
 #define USING_16BIT_BUS 1
 #else
 #define USING_16BIT_BUS 0
