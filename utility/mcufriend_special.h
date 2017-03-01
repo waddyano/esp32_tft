@@ -13,6 +13,7 @@
 //#define USE_BOBCACHELOT_TEENSY
 //#define USE_FRDM_K20
 //#define USE_OPENSMART_SHIELD_PINOUT //thanks Michel53
+//#define USE_ELECHOUSE_DUE_16BIT_SHIELD    //Untested yet
 
 #if 0
 #elif defined(__AVR_ATmega328P__) && defined(USE_SSD1289_SHIELD_UNO)    //on UNO
@@ -266,6 +267,7 @@ static inline void write_8(uint8_t val)
 
 #elif defined(__AVR_ATmega2560__) && defined(USE_MEGA_16BIT_SHIELD)
 #warning USE_MEGA_16BIT_SHIELD
+#define USES_16BIT_BUS
 #define RD_PORT PORTL
 #define RD_PIN  6        //PL6 (D43).   Graham has PA15 (D24) on Due Shield 
 #define WR_PORT PORTG
@@ -628,8 +630,46 @@ static inline void write_8(uint8_t val)
 #define PIN_HIGH(port, pin)   (port)->PIO_SODR = (1<<(pin))
 #define PIN_OUTPUT(port, pin) (port)->PIO_OER = (1<<(pin))
 
-#elif defined(__SAM3X8E__) && defined(USE_MEGA_16BIT_SHIELD)  //regular CTE shield on DUE
+#elif defined(__SAM3X8E__) && defined(USE_ELECHOUSE_DUE_16BIT_SHIELD)  //ELECHOUSE_DUE shield on DUE
+#warning USE_ELECHOUSE_DUE_16BIT_SHIELD
+#define USES_16BIT_BUS
+// configure macros for the control pins
+#define RD_PORT PIOA
+#define RD_PIN  15     //D24 Graham
+#define WR_PORT PIOA
+#define WR_PIN  14     //D23
+#define CD_PORT PIOB
+#define CD_PIN  26     //D22
+#define CS_PORT PIOA
+#define CS_PIN  7      //D31
+#define RESET_PORT PIOC
+#define RESET_PIN  1   //D33
+// configure macros for data bus 
+// DB0..DB7 on PIOC2..PIOC9,  DB8..DB15 on PIOC12..PIOC19
+// 
+#define CMASKH        (0xFF00<<4)
+#define CMASKL        (0x00FF<<2)
+#define CMASK         (CMASKH | CMASKL)
+#define write_8(x)    { PIOC->PIO_CODR = CMASKL; PIOC->PIO_SODR = (((x)&0x00FF)<<2); }
+#define write_16(x)   { PIOC->PIO_CODR = CMASK; \
+                        PIOC->PIO_SODR = (((x)&0x00FF)<<2)|(((x)&0xFF00)<<4); }
+#define read_16()     (((PIOC->PIO_PDSR & CMASKH)>>4)|((PIOC->PIO_PDSR & CMASKL)>>2) )
+#define read_8()      (read_16() & 0xFF)
+#define setWriteDir() { PIOC->PIO_OER = CMASK; PIOC->PIO_PER = CMASK; }
+#define setReadDir()  { PMC->PMC_PCER0 = (1 << ID_PIOC); PIOC->PIO_ODR = CMASK; }
+#define write8(x)     { write16(x & 0xFF); }
+#define write16(x)    { write_16(x); WR_ACTIVE; WR_STROBE; WR_IDLE; WR_IDLE; }
+#define READ_16(dst)  { RD_STROBE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; dst = read_16(); RD_IDLE; RD_IDLE; RD_IDLE; }
+#define READ_8(dst)   { READ_16(dst); dst &= 0xFF; }
+
+// Shield Control macros.
+#define PIN_LOW(port, pin)    (port)->PIO_CODR = (1<<(pin))
+#define PIN_HIGH(port, pin)   (port)->PIO_SODR = (1<<(pin))
+#define PIN_OUTPUT(port, pin) (port)->PIO_OER = (1<<(pin))
+
+#elif defined(__SAM3X8E__) && defined(USE_MEGA_16BIT_SHIELD)  //regular MEGA shield on DUE
 #warning USE_MEGA_16BIT_SHIELD
+#define USES_16BIT_BUS
 // configure macros for the control pins
 #define RD_PORT PIOA
 #define RD_PIN  20     //D43
