@@ -215,6 +215,9 @@ uint16_t MCUFRIEND_kbv::readID(void)
         return 0x1581;
     if (ret == 0x1400)          //?RM68140:[xx FF 68 14 00] not tested yet
         return 0x6814;
+    ret = readReg32(0xD4);
+    if (ret == 0x5310)          //NT35310: [xx 01 53 10]
+        return 0x5310;
     ret = readReg40(0xEF);      //ILI9327: [xx 02 04 93 27 FF] 
     if (ret == 0x9327)
         return 0x9327;
@@ -1242,6 +1245,18 @@ case 0x4532:    // thanks Leodino
         init_table16(LGDP4535_regValues, sizeof(LGDP4535_regValues));
         break;
 #endif
+
+    case 0x5310:
+        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | INVERT_SS | INVERT_RGB | READ_24BITS;
+        static const uint8_t NT35310_regValues[] PROGMEM = {        //
+            TFTLCD_DELAY8, 10,    //just some dummy
+        };
+        table8_ads = NT35310_regValues, table_size = sizeof(NT35310_regValues);
+        p16 = (int16_t *) & HEIGHT;
+        *p16 = 480;
+        p16 = (int16_t *) & WIDTH;
+        *p16 = 320;
+        break;
 
 #ifdef SUPPORT_68140
     case 0x6814:
