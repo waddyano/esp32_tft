@@ -431,6 +431,43 @@ void write_8(uint8_t x)
 #define PIN_OUTPUT(port, pin) GP_OUT(port, CRL, 0xF<<((pin)<<2))   //50MHz push-pull only 0-7
 #define PIN_INPUT(port, pin)  GP_INP(port, CRL, 0xF<<((pin)<<2))   //digital input 
 
+#elif defined(__STM32F1__) && defined(ARDUINO_GENERIC_STM32F103C) // Uno Shield on BLUEPILL_ADAPTER
+#warning Uno Shield on BLUEPILL_ADAPTER
+// be wise to clear all four mode bits properly.
+#define GROUP_MODE(port, reg, mask, val)  {port->regs->reg = (port->regs->reg & ~(mask)) | ((mask)&(val)); }
+#define GP_OUT(port, reg, mask)           GROUP_MODE(port, reg, mask, 0x33333333)
+#define GP_INP(port, reg, mask)           GROUP_MODE(port, reg, mask, 0x44444444)
+
+#define RD_PORT GPIOB
+#define RD_PIN  5
+#define WR_PORT GPIOB
+#define WR_PIN  6
+#define CD_PORT GPIOB
+#define CD_PIN  7
+#define CS_PORT GPIOB
+#define CS_PIN  8
+#define RESET_PORT GPIOB
+#define RESET_PIN  9
+
+// configure macros for the data pins
+// MANOLO8888's wiring scheme is far simpler:
+#define write_8(d)    { GPIOA->regs->BSRR = 0x00FF << 16; GPIOA->regs->BSRR = (d) & 0xFF; }
+#define read_8()      (GPIOA->regs->IDR & 0xFF)
+//                                         PA7 ..PA0
+#define setWriteDir() {GP_OUT(GPIOA, CRL, 0xFFFFFFFF); }
+#define setReadDir()  {GP_INP(GPIOA, CRL, 0xFFFFFFFF); }
+
+#define write8(x)     { write_8(x); WR_ACTIVE; WR_STROBE; }
+#define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
+#define READ_8(dst)   { RD_STROBE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; dst = read_8(); RD_IDLE; }
+#define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
+
+#define PIN_HIGH(port, pin)   (port)->regs->BSRR = (1<<(pin))
+#define PIN_LOW(port, pin)    (port)->regs->BSRR = (1<<((pin)+16))
+//#define PIN_LOW(port, pin)    (port)->regs->ODR &= ~(1<<(pin))
+#define PIN_OUTPUT(port, pin) gpio_set_mode(port, pin, GPIO_OUTPUT_PP)        //50MHz push-pull on 0-15
+#define PIN_INPUT(port, pin)  gpio_set_mode(port, pin, GPIO_INPUT_FLOATING)   //digital input 
+
 #else
 #error MCU unsupported
 #endif                          // regular UNO shields on Arduino boards
