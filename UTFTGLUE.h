@@ -123,7 +123,7 @@ class UTFTGLUE : public MCUFRIEND_kbv
 		 char buf[20]; dtostrf(num, length, dec, buf); settextcursor(buf, x, y); MCUFRIEND_kbv::print(buf);
 		 }
 #if !defined(_GFXFONT_H_)
-	void setFont(uint8_t* font) { MCUFRIEND_kbv::setTextSize(_fontsize = (font == BigFont) ? 2 : 1);}
+	void setFont(uint8_t* font) { MCUFRIEND_kbv::setTextSize(_fontsize = 1);}
 #endif
 	void drawBitmap(int x, int y, int sx, int sy, const uint16_t *data, int scale=1) {
 		 uint16_t color;
