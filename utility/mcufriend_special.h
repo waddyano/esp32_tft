@@ -596,6 +596,7 @@ static inline void write_8(uint8_t val)
 
 #elif defined(__SAM3X8E__) && defined(USE_DUE_16BIT_SHIELD)  //regular CTE shield on DUE
 #warning USE_DUE_16BIT_SHIELD
+#define USES_16BIT_BUS
 // configure macros for the control pins
 #define RD_PORT PIOA
 #define RD_PIN  15     //D24 Graham
