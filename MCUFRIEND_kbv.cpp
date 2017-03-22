@@ -1,6 +1,7 @@
 //#define SUPPORT_0139              //not working +238 bytes
 #define SUPPORT_0154              //S6D0154 +320 bytes
 //#define SUPPORT_1289              //costs about 408 bytes
+//#define SUPPORT_1580              //R61580 Untested
 #define SUPPORT_1963              //only works with 16BIT bus anyway
 //#define SUPPORT_4532              //LGDP4532 +120 bytes.  thanks Leodino
 #define SUPPORT_4535              //LGDP4535 +180 bytes
@@ -1048,8 +1049,69 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
         table8_ads = R61526_regValues, table_size = sizeof(R61526_regValues);
         break;
 
+#ifdef SUPPORT_1580
+    case 0x1580:
+        _lcd_capable = 0 | REV_SCREEN | READ_BGR;
+        static const uint16_t R61580_regValues[] PROGMEM = {
+            // Synchronization after reset
+            TFTLCD_DELAY, 2,
+            0x0000, 0x0000,
+            0x0000, 0x0000,
+            0x0000, 0x0000,
+            0x0000, 0x0000,
+
+            // Setup display
+            0x00A4, 0x0001,          // CALB=1
+            TFTLCD_DELAY, 2,
+            0x0060, 0xA700,          // Driver Output Control
+            0x0008, 0x0808,          // Display Control BP=8, FP=8
+            0x0030, 0x0111,          // y control
+            0x0031, 0x2410,          // y control
+            0x0032, 0x0501,          // y control
+            0x0033, 0x050C,          // y control
+            0x0034, 0x2211,          // y control
+            0x0035, 0x0C05,          // y control
+            0x0036, 0x2105,          // y control
+            0x0037, 0x1004,          // y control
+            0x0038, 0x1101,          // y control
+            0x0039, 0x1122,          // y control
+            0x0090, 0x0019,          // 80Hz
+            0x0010, 0x0530,          // Power Control
+            0x0011, 0x0237,
+            0x0012, 0x01BF,
+            0x0013, 0x1300,
+            TFTLCD_DELAY, 100,
+
+            0x0001, 0x0100,
+            0x0002, 0x0200,
+            0x0003, 0x1030,
+            0x0009, 0x0001,
+            0x000A, 0x0008,
+            0x000C, 0x0001,
+            0x000D, 0xD000,
+            0x000E, 0x0030,
+            0x000F, 0x0000,
+            0x0020, 0x0000,
+            0x0021, 0x0000,
+            0x0029, 0x0077,
+            0x0050, 0x0000,
+            0x0051, 0xD0EF,
+            0x0052, 0x0000,
+            0x0053, 0x013F,
+            0x0061, 0x0001,
+            0x006A, 0x0000,
+            0x0080, 0x0000,
+            0x0081, 0x0000,
+            0x0082, 0x005F,
+            0x0093, 0x0701,
+            0x0007, 0x0100,
+        };
+        init_table16(R61580_regValues, sizeof(R61580_regValues));
+        break;
+#endif
+
 #if defined(SUPPORT_1963) && USING_16BIT_BUS 
-	case 0x1963:
+    case 0x1963:
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | READ_NODUMMY | INVERT_SS | INVERT_RGB;
         // from NHD 5.0" 8-bit
         static const uint8_t SSD1963_NHD_50_regValues[] PROGMEM = {
@@ -1109,6 +1171,54 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
             (0xD0), 1, 0x0D,
         };
         // from UTFTv2.82 initlcd.h
+        static const uint8_t SSD1963_800NEW_regValues[] PROGMEM = {
+            (0xE2), 3, 0x1E, 0x02, 0x54,        //PLL multiplier, set PLL clock to 120M
+            (0xE0), 1, 0x01,    // PLL enable
+            TFTLCD_DELAY8, 10,
+            (0xE0), 1, 0x03,    //
+            TFTLCD_DELAY8, 10,
+            0x01, 0,            //Soft Reset
+            TFTLCD_DELAY8, 100,
+            (0xE6), 3, 0x03, 0xFF, 0xFF,        //PLL setting for PCLK, depends on resolution
+            (0xB0), 7, 0x24, 0x00, 0x03, 0x1F, 0x01, 0xDF, 0x00,        //LCD SPECIFICATION
+            (0xB4), 8, 0x03, 0xA0, 0x00, 0x2E, 0x30, 0x00, 0x0F, 0x00,  //HSYNC HT=928, HPS=46, HPW=48, LPS=15
+            (0xB6), 7, 0x02, 0x0D, 0x00, 0x10, 0x10, 0x00, 0x08,        //VSYNC VT=525, VPS=16, VPW=16, FPS=8
+            (0xBA), 1, 0x0F,    //GPIO[3:0] out 1
+            (0xB8), 2, 0x07, 0x01,      //GPIO3=input, GPIO[2:0]=output
+            (0xF0), 1, 0x03,    //pixel data interface
+            TFTLCD_DELAY8, 1,
+            0x28, 0,            //Display Off
+            0x11, 0,            //Sleep Out
+            TFTLCD_DELAY8, 100,
+            0x29, 0,            //Display On
+            (0xBE), 6, 0x06, 0xF0, 0x01, 0xF0, 0x00, 0x00,      //set PWM for B/L
+            (0xD0), 1, 0x0D,
+        };
+        // from UTFTv2.82 initlcd.h
+        static const uint8_t SSD1963_800ALT_regValues[] PROGMEM = {
+            (0xE2), 3, 0x23, 0x02, 0x04,        //PLL multiplier, set PLL clock to 120M
+            (0xE0), 1, 0x01,    // PLL enable
+            TFTLCD_DELAY8, 10,
+            (0xE0), 1, 0x03,    //
+            TFTLCD_DELAY8, 10,
+            0x01, 0,            //Soft Reset
+            TFTLCD_DELAY8, 100,
+            (0xE6), 3, 0x04, 0x93, 0xE0,        //PLL setting for PCLK, depends on resolution
+            (0xB0), 7, 0x00, 0x00, 0x03, 0x1F, 0x01, 0xDF, 0x00,        //LCD SPECIFICATION
+            (0xB4), 8, 0x03, 0xA0, 0x00, 0x2E, 0x30, 0x00, 0x0F, 0x00,  //HSYNC HT=928, HPS=46, HPW=48, LPS=15
+            (0xB6), 7, 0x02, 0x0D, 0x00, 0x10, 0x10, 0x00, 0x08,        //VSYNC VT=525, VPS=16, VPW=16, FPS=8
+            (0xBA), 1, 0x0F,    //GPIO[3:0] out 1
+            (0xB8), 2, 0x07, 0x01,      //GPIO3=input, GPIO[2:0]=output
+            (0xF0), 1, 0x03,    //pixel data interface
+            TFTLCD_DELAY8, 1,
+            0x28, 0,            //Display Off
+            0x11, 0,            //Sleep Out
+            TFTLCD_DELAY8, 100,
+            0x29, 0,            //Display On
+            (0xBE), 6, 0x06, 0xF0, 0x01, 0xF0, 0x00, 0x00,      //set PWM for B/L
+            (0xD0), 1, 0x0D,
+        };
+        // from UTFTv2.82 initlcd.h
         static const uint8_t SSD1963_480_regValues[] PROGMEM = {
             (0xE2), 3, 0x23, 0x02, 0x54,        //PLL multiplier, set PLL clock to 120M
             (0xE0), 1, 0x01,    // PLL enable
@@ -1134,6 +1244,10 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
         };
 //        table8_ads = SSD1963_480_regValues, table_size = sizeof(SSD1963_480_regValues);
         table8_ads = SSD1963_800_regValues, table_size = sizeof(SSD1963_800_regValues);
+//        table8_ads = SSD1963_NHD_50_regValues, table_size = sizeof(SSD1963_NHD_50_regValues);
+//        table8_ads = SSD1963_NHD_70_regValues, table_size = sizeof(SSD1963_NHD_70_regValues);
+//        table8_ads = SSD1963_800NEW_regValues, table_size = sizeof(SSD1963_800NEW_regValues);
+//        table8_ads = SSD1963_800ALT_regValues, table_size = sizeof(SSD1963_800ALT_regValues);
         p16 = (int16_t *) & HEIGHT;
         *p16 = 480;
         p16 = (int16_t *) & WIDTH;
