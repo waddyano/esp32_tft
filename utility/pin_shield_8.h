@@ -15,6 +15,20 @@
 
 #if 0
 
+#elif defined(STM32F103x8) // Uno Shield on BLUEPILL_ADAPTER
+#warning Uno Shield on BLUEPILL_ADAPTER
+
+// configure macros for the data pins
+#define write_8(d)    { GPIOA->BSRR = 0x00FF << 16; GPIOA->BSRR = (d) & 0xFF; }
+#define read_8()      (GPIOA->IDR & 0xFF)
+
+#define GROUP_MODE(port, reg, mask, val)  {port->reg = (port->reg & ~(mask)) | ((mask)&(val)); }
+#define GP_OUT(port, reg, mask)           GROUP_MODE(port, reg, mask, 0x33333333)
+#define GP_INP(port, reg, mask)           GROUP_MODE(port, reg, mask, 0x44444444)
+//                                         PA7 ..PA0
+#define setWriteDir() {GP_OUT(GPIOA, CRL, 0xFFFFFFFF); }
+#define setReadDir()  {GP_INP(GPIOA, CRL, 0xFFFFFFFF); }
+
 #elif defined(NUCLEO) || defined(TARGET_NUCLEO_F072RB) || defined(TARGET_NUCLEO_F401RE) || defined(TARGET_NUCLEO_F411RE) || defined(TARGET_NUCLEO_F103RB) || defined(TARGET_NUCLEO_L476RG)
 #if __MBED__
 #warning MBED knows everything

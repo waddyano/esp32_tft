@@ -13,6 +13,64 @@
 #warning Using pin_SHIELD_1.h
 
 #if 0
+#elif defined(STM32F103x8)
+#define PIN_MODE2(reg, pin, mode) reg=(reg&~(0x3<<((pin)<<1)))|(mode<<((pin)<<1))
+  #if defined(__CC_ARM)
+  #include <STM32F10X.h>
+  #else
+  #include <STM32F1XX.h>
+  #endif
+  #define D0_PORT GPIOA
+  #define D0_PIN  3
+  #define D1_PORT GPIOA
+  #define D1_PIN  2
+  #define D2_PORT GPIOA
+  #define D2_PIN  2
+  #define D3_PORT GPIOA
+  #define D3_PIN  3
+  #define D4_PORT GPIOA
+  #define D4_PIN  4
+  #define D5_PORT GPIOA
+  #define D5_PIN  5
+  #define D6_PORT GPIOA
+  #define D6_PIN  6
+  #define D7_PORT GPIOA
+  #define D7_PIN  7
+  #define D8_PORT GPIOA
+  #define D8_PIN  0
+  #define D9_PORT GPIOC
+  #define D9_PIN  1
+  #define D10_PORT GPIOA
+  #define D10_PIN  15
+  #define D11_PORT GPIOB
+  #define D11_PIN  5
+  #define D12_PORT GPIOB
+  #define D12_PIN  4
+  #define D13_PORT GPIOB
+  #define D13_PIN  3
+  #define A0_PORT GPIOB
+  #define A0_PIN  5
+  #define A1_PORT GPIOB
+  #define A1_PIN  6
+  #define A2_PORT GPIOB
+  #define A2_PIN  7
+  #define A3_PORT GPIOB
+  #define A3_PIN  8
+  #define A4_PORT GPIOB
+  #define A4_PIN  9
+  #define A5_PORT GPIOB
+  #define A5_PIN  10
+// Shield Control macros
+#define PIN_LOW(port, pin)    (port)->BSRR = (1<<((pin)+16))
+#define PIN_HIGH(port, pin)   (port)->BSRR = (1<<(pin))
+//#define PIN_LOW(port, pin)    (port)->ODR &= ~(1<<(pin))
+//#define PIN_HIGH(port, pin)   (port)->ODR |=  (1<<(pin))
+#define PIN_READ(port, pin)   (port)->IDR & (1<<(pin))
+  #warning STM32F103x8 ******************************
+#define PIN_MODE4(reg, pin, mode) reg=(reg&~(0xF<<((pin)<<2)))|(mode<<((pin)<<2))
+#define PIN_OUTPUT(port, pin) PIN_MODE4((port)->CRL, pin, 0x3)   //50MHz push-pull only 0-7
+#define PIN_INPUT(port, pin)  PIN_MODE4((port)->CRL, pin, 0x4)   //digital input 
+
 
 #elif defined(NUCLEO) || defined(TARGET_NUCLEO_F072RB) || defined(TARGET_NUCLEO_F401RE) || defined(TARGET_NUCLEO_F411RE) || defined(TARGET_NUCLEO_F103RB) || defined(TARGET_NUCLEO_L476RG)
 #define PIN_MODE2(reg, pin, mode) reg=(reg&~(0x3<<((pin)<<1)))|(mode<<((pin)<<1))
