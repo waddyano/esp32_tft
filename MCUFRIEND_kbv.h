@@ -10,19 +10,12 @@
 #include "Adafruit_GFX.h"
 #endif
 
-#ifndef A0
-#define A0 PB5
-#define A1 PB6
-#define A2 PB7
-#define A3 PB8
-#define A4 PB9
-#endif
-
 class MCUFRIEND_kbv : public Adafruit_GFX {
 
 	public:
 #if defined USE_GFX_KBV
 	MCUFRIEND_kbv();
+	MCUFRIEND_kbv(int CS=0, int RS=0, int WR=0, int RD=0, int RST=0);  //dummy arguments 
 #else
 	MCUFRIEND_kbv(int CS=A3, int RS=A2, int WR=A1, int RD=A0, int RST=A4);
 #endif
