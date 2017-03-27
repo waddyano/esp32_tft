@@ -12,6 +12,7 @@
 //#define SUPPORT_8347A             //HX8347-A +500 bytes, 0.27s
 //#define SUPPORT_8352A             //HX8352A +486 bytes, 0.27s
 //#define SUPPORT_9326_5420         //ILI9326, SPFD5420 +246 bytes
+//#define SUPPORT_9806
 #define SUPPORT_B509_7793         //R61509, ST7793 +244 bytes
 #define OFFSET_9327 32            //costs about 103 bytes, 0.08s
 
@@ -245,7 +246,7 @@ uint16_t MCUFRIEND_kbv::readID(void)
         return 0xAC11;
     ret = readReg32(0xD3);      //for ILI9488, 9486, 9340, 9341
     msb = ret >> 8;
-    if (msb == 0x93 || msb == 0x94 || msb == 0x77 || msb == 0x16)
+    if (msb == 0x93 || msb == 0x94 || msb == 0x98 || msb == 0x77 || msb == 0x16)
         return ret;             //0x9488, 9486, 9340, 9341, 7796
     if (ret == 0x00D3 || ret == 0xD3D3)
         return ret;             //16-bit write-only bus
@@ -788,7 +789,7 @@ void MCUFRIEND_kbv::invertDisplay(boolean i)
 }
 
 #define TFTLCD_DELAY 0xFFFF
-#define TFTLCD_DELAY8 0xFF
+#define TFTLCD_DELAY8 0x7F
 static void init_table(const void *table, int16_t size)
 {
     uint8_t *p = (uint8_t *) table, dat[24];            //R61526 has GAMMA[22] 
@@ -2375,6 +2376,40 @@ case 0x4532:    // thanks Leodino
         init_table16(R61509V_regValues, sizeof(R61509V_regValues));
         p16 = (int16_t *) & HEIGHT;
         *p16 = 400;
+        break;
+#endif
+
+#ifdef SUPPORT_9806
+    case 0x9806:
+        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_24BITS;
+        // from ZinggJM
+        static const uint8_t ILI9806_regValues[] PROGMEM = {
+            (0xFF), 3, /* EXTC Command Set enable register*/ 0xFF, 0x98, 0x06,
+            (0xBA), 1, /* SPI Interface Setting*/0xE0,
+            (0xBC), 21, /* GIP 1*/0x03, 0x0F, 0x63, 0x69, 0x01, 0x01, 0x1B, 0x11, 0x70, 0x73, 0xFF, 0xFF, 0x08, 0x09, 0x05, 0x00, 0xEE, 0xE2, 0x01, 0x00, 0xC1,
+            (0xBD), 8, /* GIP 2*/0x01, 0x23, 0x45, 0x67, 0x01, 0x23, 0x45, 0x67,
+            (0xBE), 9, /* GIP 3*/0x00, 0x22, 0x27, 0x6A, 0xBC, 0xD8, 0x92, 0x22, 0x22,
+            (0xC7), 1, /* Vcom*/0x1E,
+            (0xED), 3, /* EN_volt_reg*/0x7F, 0x0F, 0x00,
+            (0xC0), 3, /* Power Control 1*/0xE3, 0x0B, 0x00,
+            (0xFC), 1, 0x08,
+            (0xDF), 6, /* Engineering Setting*/0x00, 0x00, 0x00, 0x00, 0x00, 0x02,
+            (0xF3), 1, /* DVDD Voltage Setting*/0x74,
+            (0xB4), 3, /* Display Inversion Control*/0x00, 0x00, 0x00,
+            (0xF7), 1, /* 480x854*/0x81,
+            (0xB1), 3, /* Frame Rate*/0x00, 0x10, 0x14,
+            (0xF1), 3, /* Panel Timing Control*/0x29, 0x8A, 0x07,
+            (0xF2), 4, /*Panel Timing Control*/0x40, 0xD2, 0x50, 0x28,
+            (0xC1), 4, /* Power Control 2*/0x17, 0x85, 0x85, 0x20,
+            (0xE0), 16, 0x00, 0x0C, 0x15, 0x0D, 0x0F, 0x0C, 0x07, 0x05, 0x07, 0x0B, 0x10, 0x10, 0x0D, 0x17, 0x0F, 0x00,
+            (0xE1), 16, 0x00, 0x0D, 0x15, 0x0E, 0x10, 0x0D, 0x08, 0x06, 0x07, 0x0C, 0x11, 0x11, 0x0E, 0x17, 0x0F, 0x00,
+            (0x35), 1, /*Tearing Effect ON*/0x00,
+        };
+        table8_ads = ILI9806_regValues, table_size = sizeof(ILI9806_regValues);
+        p16 = (int16_t *) & HEIGHT;
+        *p16 = 480;
+        p16 = (int16_t *) & WIDTH;
+        *p16 = 854;
         break;
 #endif
     }
