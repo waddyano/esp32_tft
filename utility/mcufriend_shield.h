@@ -324,7 +324,33 @@ void write_8(uint8_t x)
         else { GP_INP(port, CRH, 0xF<<((pin&7)<<2)); } \
     }
 
+#if 0
 #if defined(ARDUINO_GENERIC_STM32F103C) || defined(ARDUINO_NUCLEO_F103C8)
+#warning Uno Shield on MY BLUEPILL
+#define RD_PORT GPIOB
+#define RD_PIN  1
+#define WR_PORT GPIOB
+#define WR_PIN  0
+#define CD_PORT GPIOA
+#define CD_PIN  7
+#define CS_PORT GPIOA
+#define CS_PIN  6
+#define RESET_PORT GPIOA
+#define RESET_PIN  5
+
+// configure macros for the data pins
+#define AMASK 0x060F
+#define BMASK 0x00C0
+#define write_8(d)    { GPIOA->REGS(BSRR) = AMASK << 16; GPIOB->REGS(BSRR) = BMASK << 16; \
+                       GPIOA->REGS(BSRR) = (((d) & 3) << 9) | (((d) & 0xF0) >> 4); \
+                       GPIOB->REGS(BSRR) = (((d) & 0x0C) << 4); \
+                       }
+#define read_8()      (((GPIOA->REGS(IDR) & (3<<9)) >> 9) | ((GPIOA->REGS(IDR) & (0x0F)) << 4) | ((GPIOB->REGS(IDR) & (3<<6)) >> 4))
+//                                     PA10,PA9                     PA3-PA0                         PB7,PB6  
+#define setWriteDir() {GP_OUT(GPIOA, CRH, 0xFF0); GP_OUT(GPIOA, CRL, 0xFFFF); GP_OUT(GPIOB, CRL, 0xFF000000); }
+#define setReadDir()  {GP_INP(GPIOA, CRH, 0xFF0); GP_INP(GPIOA, CRL, 0xFFFF); GP_INP(GPIOB, CRL, 0xFF000000); }
+
+#elif defined(ARDUINO_GENERIC_STM32F103C) || defined(ARDUINO_NUCLEO_F103C8)
 #warning Uno Shield on BLUEPILL
 #define RD_PORT GPIOB
 #define RD_PIN  5
