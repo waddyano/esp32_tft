@@ -325,7 +325,7 @@ void write_8(uint8_t x)
     }
 
 #if 0
-#if defined(ARDUINO_GENERIC_STM32F103C) || defined(ARDUINO_NUCLEO_F103C8)
+#elif defined(ARDUINO_GENERIC_STM32F103C) || defined(ARDUINO_NUCLEO_F103C8)
 #warning Uno Shield on MY BLUEPILL
 #define RD_PORT GPIOB
 #define RD_PIN  1
