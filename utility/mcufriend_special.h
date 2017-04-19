@@ -14,6 +14,7 @@
 //#define USE_FRDM_K20
 //#define USE_OPENSMART_SHIELD_PINOUT //thanks Michel53
 //#define USE_ELECHOUSE_DUE_16BIT_SHIELD    //Untested yet
+#define USE_MY_BLUEPILL
 
 #if 0
 #elif defined(__AVR_ATmega328P__) && defined(USE_SSD1289_SHIELD_UNO)    //on UNO
@@ -68,22 +69,22 @@
 
 #elif defined(__AVR_ATxmega128A1__)   // Home made shield with Xplained
 #warning Home made shield with Xplained
-#define RD_PORT VPORT3
+#define RD_PORT VPORT0  //PF0.    VPORT0=F, 1=B, 2=C, 3=D
 #define RD_PIN  0
-#define WR_PORT VPORT3
+#define WR_PORT VPORT0
 #define WR_PIN  1
-#define CD_PORT VPORT3
+#define CD_PORT VPORT0
 #define CD_PIN  2
-#define CS_PORT VPORT3
+#define CS_PORT VPORT0
 #define CS_PIN  3
-#define RESET_PORT VPORT3
+#define RESET_PORT VPORT0
 #define RESET_PIN  4
 
 // VPORTs are very fast.   CBI, SBI are only one cycle.    Hence all those RD_ACTIVEs
 // ILI9320 data sheet says tDDR=100ns.    We need 218ns to read REGs correctly.
 #define write_8(x)    { VPORT2.OUT = x; }
 #define read_8()      ( VPORT2.IN )
-#define setWriteDir() { PORTCFG.VPCTRLB=PORTCFG_VP3MAP_PORTF_gc | PORTCFG_VP2MAP_PORTC_gc; VPORT2.DIR = 0xFF; }
+#define setWriteDir() { PORTCFG.VPCTRLA=0x15; PORTCFG.VPCTRLB=0x32; VPORT2.DIR = 0xFF; }
 #define setReadDir()  { VPORT2.DIR = 0x00; }
 #define write8(x)     { write_8(x); WR_STROBE; }
 #define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
@@ -93,15 +94,15 @@
 #define PIN_LOW(p, b)        (p).OUT &= ~(1<<(b))
 #define PIN_HIGH(p, b)       (p).OUT |= (1<<(b))
 #define PIN_OUTPUT(p, b)     (p).DIR |= (1<<(b))
-#elif defined(__AVR_ATxmega32A4U__)   // Home made shield with Batsocks module
+#elif defined(__AVR_ATxmega32A4U__) || defined(__AVR_ATxmega128A4U__) // Home made shield with Batsocks module
 #warning Home made shield with Batsocks module
-#define RD_PORT VPORT3
+#define RD_PORT VPORT1   //PB0.   VPORT0=A, 1=B, 2=C, 3=D
 #define RD_PIN  0
-#define WR_PORT VPORT3
+#define WR_PORT VPORT1
 #define WR_PIN  1
-#define CD_PORT VPORT3
+#define CD_PORT VPORT1
 #define CD_PIN  2
-#define CS_PORT VPORT3
+#define CS_PORT VPORT1
 #define CS_PIN  3
 #define RESET_PORT PORTE
 #define RESET_PIN  0
@@ -111,7 +112,7 @@
 // S6D0154 data sheet says tDDR=250ns.    We need ~500ns to read REGs correctly.
 #define write_8(x)    { VPORT2.OUT = x; }
 #define read_8()      ( VPORT2.IN )
-#define setWriteDir() { PORTCFG.VPCTRLB=PORTCFG_VP13MAP_PORTB_gc | PORTCFG_VP02MAP_PORTC_gc; VPORT2.DIR = 0xFF; }
+#define setWriteDir() { PORTCFG.VPCTRLA=0x10; PORTCFG.VPCTRLB=0x32; VPORT2.DIR = 0xFF; }
 #define setReadDir()  { VPORT2.DIR = 0x00; }
 #define write8(x)     { write_8(x); WR_STROBE; }
 #define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
@@ -957,6 +958,61 @@ static inline void write_8(uint8_t val)
 #define PIN_LOW(p, b)        (p) &= ~(1<<(b))
 #define PIN_HIGH(p, b)       (p) |= (1<<(b))
 #define PIN_OUTPUT(p, b)     *(&p-1) |= (1<<(b))
+
+#elif defined(USE_MY_BLUEPILL) && (defined(ARDUINO_GENERIC_STM32F103C) || defined(ARDUINO_NUCLEO_F103C8))
+#warning Uno Shield on MY BLUEPILL
+
+#if defined(ARDUINO_NUCLEO_F103C8)   //regular CMSIS libraries
+#define REGS(x) x
+#define GPIO_INIT()   { RCC->APB2ENR |= RCC_APB2ENR_IOPAEN | RCC_APB2ENR_IOPBEN | RCC_APB2ENR_IOPCEN | RCC_APB2ENR_IOPDEN | RCC_APB2ENR_AFIOEN; \
+        AFIO->MAPR |= AFIO_MAPR_SWJ_CFG_1;}
+#else                                                                  //weird Maple libraries
+#define REGS(x) regs->x
+#endif
+
+#define WRITE_DELAY { }
+#define READ_DELAY  { RD_ACTIVE; }
+#define GROUP_MODE(port, reg, mask, val)  {port->REGS(reg) = (port->REGS(reg) & ~(mask)) | ((mask)&(val)); }
+#define GP_OUT(port, reg, mask)           GROUP_MODE(port, reg, mask, 0x33333333)
+#define GP_INP(port, reg, mask)           GROUP_MODE(port, reg, mask, 0x44444444)
+#define PIN_OUTPUT(port, pin) {\
+        if (pin < 8) {GP_OUT(port, CRL, 0xF<<((pin)<<2));} \
+        else {GP_OUT(port, CRH, 0xF<<((pin&7)<<2));} \
+    }
+#define PIN_INPUT(port, pin) { \
+        if (pin < 8) { GP_INP(port, CRL, 0xF<<((pin)<<2)); } \
+        else { GP_INP(port, CRH, 0xF<<((pin&7)<<2)); } \
+    }
+#define PIN_HIGH(port, pin)   (port)-> REGS(BSRR) = (1<<(pin))
+#define PIN_LOW(port, pin)    (port)-> REGS(BSRR) = (1<<((pin)+16))
+
+#define RD_PORT GPIOB
+#define RD_PIN  1
+#define WR_PORT GPIOB
+#define WR_PIN  0
+#define CD_PORT GPIOA
+#define CD_PIN  7
+#define CS_PORT GPIOA
+#define CS_PIN  6
+#define RESET_PORT GPIOA
+#define RESET_PIN  5
+
+// configure macros for the data pins
+#define AMASK 0x060F
+#define BMASK 0x00C0
+#define write_8(d)    { GPIOA->REGS(BSRR) = AMASK << 16; GPIOB->REGS(BSRR) = BMASK << 16; \
+                       GPIOA->REGS(BSRR) = (((d) & 3) << 9) | (((d) & 0xF0) >> 4); \
+                       GPIOB->REGS(BSRR) = (((d) & 0x0C) << 4); \
+                       }
+#define read_8()      (((GPIOA->REGS(IDR) & (3<<9)) >> 9) | ((GPIOA->REGS(IDR) & (0x0F)) << 4) | ((GPIOB->REGS(IDR) & (3<<6)) >> 4))
+//                                     PA10,PA9                     PA3-PA0                         PB7,PB6  
+#define setWriteDir() {GP_OUT(GPIOA, CRH, 0xFF0); GP_OUT(GPIOA, CRL, 0xFFFF); GP_OUT(GPIOB, CRL, 0xFF000000); }
+#define setReadDir()  {GP_INP(GPIOA, CRH, 0xFF0); GP_INP(GPIOA, CRL, 0xFFFF); GP_INP(GPIOB, CRL, 0xFF000000); }
+
+#define write8(x)     { write_8(x); WRITE_DELAY; WR_STROBE; }
+#define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
+#define READ_8(dst)   { RD_STROBE; READ_DELAY; dst = read_8(); RD_IDLE; }
+#define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
 
 #else
 #define USE_SPECIAL_FAIL
