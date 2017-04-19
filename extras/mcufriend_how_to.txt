@@ -23,7 +23,7 @@ HX8347-D 240x320  ID=0x4747 #define SUPPORT_8347D
 HX8347-G 240x320  ID=0x7575 #define SUPPORT_8347D
 HX8347-I 240x320  ID=0x9595 #define SUPPORT_8347D
 HX8352-A 240x400  ID=0x5252 #define SUPPORT_8352A
-HX8357-B 320x480  ID=0x8357
+HX8357-B 320x480  ID=0x8357 (needs testing)
 HX8357-D 320x480  ID=0x9090 (ID has changed from 0x8357)
 HX8367-A 240x320  ID=0x6767 #define SUPPORT_8347D
 ILI9302  240x320  ID=0x9302 
@@ -91,5 +91,12 @@ The Resistive TouchScreen does not work on the Due.   It seems to be upset by sh
 16. The GLUE_Demo_320x240.ino sketch uses a "GLUE" class to display a UTFT sketch on supported mcufriend shields.   
     It is NOT perfect.   Please report any problems.    It is designed as a CONVENIENCE for legacy UTFT code.   
     Please use MCUFRIEND_kbv method()s in new code. 
+
+17. If you do not have a standard Uno Shield, you can add a SPECIAL to the mcufriend_special.h
+    Edit mcufriend_shield.h:  #define USE_SPECIAL
+    Edit mcufriend_special.h: e.g. #define USE_MEGA_16BIT_SHIELD
+    If your "special" is write-only,  the library can not read the ID.  It always returns 0xD3D3
+	
+18. Please run LCD_ID_readreg.ino to verify your non-standard wiring.  Paste the defines to a Forum message.
 
 CHANGE HISTORY: is now in "mcufriend_history.txt"
