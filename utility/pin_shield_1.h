@@ -13,6 +13,62 @@
 //#warning Using pin_SHIELD_1.h
 
 #if 0
+#elif defined(MY_BLUEPILL)
+#define PIN_MODE2(reg, pin, mode) reg=(reg&~(0x3<<((pin)<<1)))|(mode<<((pin)<<1))
+  #if defined(__CC_ARM)
+  #include <STM32F10X.h>
+  #else
+  #include <STM32F1XX.h>
+  #endif
+  #define D0_PORT GPIOB
+  #define D0_PIN  11
+  #define D1_PORT GPIOB
+  #define D1_PIN  10
+  #define D2_PORT GPIOB
+  #define D2_PIN  6
+  #define D3_PORT GPIOB
+  #define D3_PIN  7
+  #define D4_PORT GPIOA
+  #define D4_PIN  0
+  #define D5_PORT GPIOA
+  #define D5_PIN  1
+  #define D6_PORT GPIOA
+  #define D6_PIN  2
+  #define D7_PORT GPIOA
+  #define D7_PIN  3
+  #define D8_PORT GPIOA
+  #define D8_PIN  9
+  #define D9_PORT GPIOA
+  #define D9_PIN  10
+  #define D10_PORT GPIOB
+  #define D10_PIN  12
+  #define D11_PORT GPIOB
+  #define D11_PIN  15
+  #define D12_PORT GPIOB
+  #define D12_PIN  14
+  #define D13_PORT GPIOB
+  #define D13_PIN  13
+  #define A0_PORT GPIOB
+  #define A0_PIN  1
+  #define A1_PORT GPIOB
+  #define A1_PIN  0
+  #define A2_PORT GPIOA
+  #define A2_PIN  7
+  #define A3_PORT GPIOA
+  #define A3_PIN  6
+  #define A4_PORT GPIOA
+  #define A4_PIN  5
+  #define A5_PORT GPIOB
+  #define A5_PIN  4
+// Shield Control macros
+#define PIN_LOW(port, pin)    (port)->BSRR = (1<<((pin)+16))
+#define PIN_HIGH(port, pin)   (port)->BSRR = (1<<(pin))
+#define PIN_READ(port, pin)   (port)->IDR & (1<<(pin))
+#define PIN_MODE4(reg, pin, mode) reg=(reg&~(0xF<<((pin)<<2)))|(mode<<((pin)<<2))
+#define PIN_OUTPUT(port, pin) {if (pin > 7) PIN_MODE4((port)->CRH, (pin&7), 0x3); else  PIN_MODE4((port)->CRL, pin, 0x3); } //50MHz push-pull only 0-7
+#define PIN_INPUT(port, pin) {if (pin > 7) PIN_MODE4((port)->CRH, (pin&7), 0x4); else  PIN_MODE4((port)->CRL, pin, 0x4); }  //input
+
+
 #elif defined(BLUEPILL)
 #define PIN_MODE2(reg, pin, mode) reg=(reg&~(0x3<<((pin)<<1)))|(mode<<((pin)<<1))
   #if defined(__CC_ARM)
