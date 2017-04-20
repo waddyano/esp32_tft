@@ -130,22 +130,6 @@ static uint16_t read16bits(void)
     return (ret << 8) | lo;
 }
 
-uint32_t readReg40(uint16_t reg)
-{
-    uint16_t h, m, l;
-    CS_ACTIVE;
-    WriteCmd(reg);
-    setReadDir();
-    CD_DATA;
-    h = read16bits();
-    m = read16bits();
-    l = read16bits();
-    RD_IDLE;
-    CS_IDLE;
-    setWriteDir();
-    return ((uint32_t) h << 24) | (m << 8) | (l >> 8);
-}
-
 uint16_t MCUFRIEND_kbv::readReg(uint16_t reg, int8_t index)
 {
     uint16_t ret;
@@ -156,6 +140,7 @@ uint16_t MCUFRIEND_kbv::readReg(uint16_t reg, int8_t index)
     WriteCmd(reg);
     setReadDir();
     CD_DATA;
+    delay(1);    //1us should be adequate
     //    READ_16(ret);
     do { ret = read16bits(); }while (--index >= 0);  //need to test with SSD1963
     RD_IDLE;
@@ -166,17 +151,17 @@ uint16_t MCUFRIEND_kbv::readReg(uint16_t reg, int8_t index)
 
 uint32_t MCUFRIEND_kbv::readReg32(uint16_t reg)
 {
-    uint16_t h, l;
-    CS_ACTIVE;
-    WriteCmd(reg);
-    setReadDir();
-    CD_DATA;
-    h = read16bits();
-    l = read16bits();
-    RD_IDLE;
-    CS_IDLE;
-    setWriteDir();
+    uint16_t h = readReg(reg, 0);
+    uint16_t l = readReg(reg, 1);
     return ((uint32_t) h << 16) | (l);
+}
+
+uint32_t MCUFRIEND_kbv::readReg40(uint16_t reg)
+{
+    uint16_t h = readReg(reg, 0);
+    uint16_t m = readReg(reg, 1);
+    uint16_t l = readReg(reg, 2);
+    return ((uint32_t) h << 24) | (m << 8) | (l >> 8);
 }
 
 uint16_t MCUFRIEND_kbv::readID(void)
@@ -439,9 +424,6 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
                 if (rotation == 1 || rotation == 2) {
                     val ^= 0x08;        // change BGR bit for LANDSCAPE and PORTRAIT_REV
                 }
-                if (rotation == 1 || rotation == 2) {
-                    _lcd_capable &= ~READ_BGR;   //remove the attribute in LANDSCAPE, PORTRAIT_REV 
-                } else _lcd_capable |= READ_BGR; //force the attribute in PORTRAIT, LANDSCAPE_REV
             }               
 #endif
             if (val & 0x08)
@@ -1777,9 +1759,59 @@ case 0x4532:    // thanks Leodino
         *p16 = 320;
         break;
 
+#ifdef SUPPORT_8230
     case 0x8230:    //thanks Auzman
-        _lcd_capable = 0 | REV_SCREEN | INVERT_GS | INVERT_RGB;
-        goto common_9320;
+        _lcd_capable = 0 | REV_SCREEN | INVERT_GS | INVERT_RGB | READ_BGR;
+        static const uint16_t UC8230_regValues[] PROGMEM = {
+            //After pin Reset wait at least 100ms
+            TFTLCD_DELAY, 100, //at least 100ms
+            0x0046, 0x0002, //MTP Disable
+            0x0010, 0x1590,
+            0x0011, 0x0227,
+            0x0012, 0x80ff,
+            0x0013, 0x9c31,
+            TFTLCD_DELAY, 10, //at least 10ms
+            0x0002, 0x0300, //set N-line = 1
+            0x0003, 0x1030, //set GRAM writing direction & BGR=1
+            0x0060, 0xa700, //GS; gate scan: start position & drive line Q'ty
+            0x0061, 0x0001, //REV, NDL, VLE
+            /*--------------------Gamma control------------------------*/
+            0x0030, 0x0303,
+            0x0031, 0x0303,
+            0x0032, 0x0303,
+            0x0033, 0x0300,
+            0x0034, 0x0003,
+            0x0035, 0x0303,
+            0x0036, 0x1400,
+            0x0037, 0x0303,
+            0x0038, 0x0303,
+            0x0039, 0x0303,
+            0x003a, 0x0300,
+            0x003b, 0x0003,
+            0x003c, 0x0303,
+            0x003d, 0x1400,
+            //-----------------------------------------------------------//
+            0x0020, 0x0000, //GRAM horizontal address
+            0x0021, 0x0000, //GRAM vertical address
+            //************** Partial Display control*********************//
+            0x0080, 0x0000,
+            0x0081, 0x0000,
+            0x0082, 0x0000,
+            0x0083, 0x0000,
+            0x0084, 0x0000,
+            0x0085, 0x0000,
+            //-----------------------------------------------------------//
+            0x0092, 0x0200,
+            0x0093, 0x0303,
+            0x0090, 0x0010, //set clocks/Line
+            0x0000, 0x0001,
+            TFTLCD_DELAY, 200, // Delay 200 ms
+            0x0007, 0x0173, //Display on setting
+        };
+        init_table16(UC8230_regValues, sizeof(UC8230_regValues));
+        break;
+#endif
+//        goto common_9320;
     case 0x5408:
         _lcd_capable = 0 | REV_SCREEN | READ_BGR | INVERT_GS;
         goto common_9320;
