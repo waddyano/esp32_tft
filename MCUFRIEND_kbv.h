@@ -35,7 +35,6 @@ class MCUFRIEND_kbv : public Adafruit_GFX {
     virtual void     invertDisplay(boolean i);
 
 	uint16_t readReg(uint16_t reg, int8_t index=0);
-	uint32_t readReg32(uint16_t reg);
 	int16_t  readGRAM(int16_t x, int16_t y, uint16_t *block, int16_t w, int16_t h);
 	uint16_t readPixel(int16_t x, int16_t y) { uint16_t color; readGRAM(x, y, &color, 1, 1); return color; }
 	void     setAddrWindow(int16_t x, int16_t y, int16_t x1, int16_t y1);
@@ -44,9 +43,13 @@ class MCUFRIEND_kbv : public Adafruit_GFX {
 	void     pushColors(const uint8_t *block, int16_t n, bool first, bool bigend = false);
     void     vertScroll(int16_t top, int16_t scrollines, int16_t offset);
 
+    protected:
+	uint32_t readReg32(uint16_t reg);
+	uint32_t readReg40(uint16_t reg);
+    uint16_t  _lcd_xor, _lcd_capable;
+
 	private:
 	uint16_t _lcd_ID, _lcd_rev, _lcd_madctl, _lcd_drivOut, _MC, _MP, _MW, _SC, _EC, _SP, _EP;
-    uint16_t  _lcd_xor, _lcd_capable;
 };
 
 #endif
