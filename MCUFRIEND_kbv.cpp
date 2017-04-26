@@ -901,21 +901,21 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
         _lcd_capable = AUTO_READINC | REV_SCREEN;
         static const uint16_t S6D0154_regValues[] PROGMEM = {
             0x0011, 0x001A,
-            0x0012, 0x3121,
-            0x0013, 0x006C,
-            0x0014, 0x4249,
+            0x0012, 0x3121,     //BT=3, DC1=1, DC2=2, DC3=1
+            0x0013, 0x006C,     //GVD=108
+            0x0014, 0x4249,     //VCM=66, VML=73
 
-            0x0010, 0x0800,
+            0x0010, 0x0800,     //SAP=8
             TFTLCD_DELAY, 10,
-            0x0011, 0x011A,
+            0x0011, 0x011A,     //APON=0, PON=1, AON=0, VCI1_EN=1, VC=10
             TFTLCD_DELAY, 10,
-            0x0011, 0x031A,
+            0x0011, 0x031A,     //APON=0, PON=3, AON=0, VCI1_EN=1, VC=10
             TFTLCD_DELAY, 10,
-            0x0011, 0x071A,
+            0x0011, 0x071A,     //APON=0, PON=7, AON=0, VCI1_EN=1, VC=10
             TFTLCD_DELAY, 10,
-            0x0011, 0x0F1A,
+            0x0011, 0x0F1A,     //APON=0, PON=15, AON=0, VCI1_EN=1, VC=10
             TFTLCD_DELAY, 10,
-            0x0011, 0x0F3A,
+            0x0011, 0x0F3A,     //APON=0, PON=15, AON=1, VCI1_EN=1, VC=10 
             TFTLCD_DELAY, 30,
 
             0x0001, 0x0128,
@@ -939,10 +939,10 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
                0x0058,0x0010,
                0x0059,0x1000,
              */
-            0x0007, 0x0012,
+            0x0007, 0x0012,     //GON=1, REV=0, D=2
             TFTLCD_DELAY, 40,
-            0x0007, 0x0013,     /* GRAM Address Set */
-            0x0007, 0x0017,     /* Display Control DISPLAY ON */
+            0x0007, 0x0013,     //GON=1, REV=0, D=3
+            0x0007, 0x0017,     //GON=1, REV=1, D=3 DISPLAY ON 
         };
         init_table16(S6D0154_regValues, sizeof(S6D0154_regValues));
 
@@ -1061,8 +1061,8 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
             0x0090, 0x0019,          // 80Hz
             0x0010, 0x0530,          // Power Control
             0x0011, 0x0237,
-            0x0012, 0x01BF,
-            0x0013, 0x1300,
+            0x0012, 0x01BF,          //VCMR=1, PSON=1, PON=1, VRH=15
+            0x0013, 0x1300,          //VDV=19
             TFTLCD_DELAY, 100,
 
             0x0001, 0x0100,
@@ -1388,13 +1388,13 @@ case 0x4532:    // thanks Leodino
             0x0012, 0x0000,     // Power Control 3 (R12h)
             0x0013, 0x0000,     // Power Control 4 (R13h)
             TFTLCD_DELAY, 50,
-            0x0010, 0x14B0,     // Power Control 1 (R10h)
+            0x0010, 0x14B0,     // Power Control 1 SAP=1, BT=4, APE=1, AP=3
             TFTLCD_DELAY, 10,
-            0x0011, 0x0007,     // Power Control 2 (R11h)
+            0x0011, 0x0007,     // Power Control 2 VC=7
             TFTLCD_DELAY, 10,
-            0x0012, 0x008E,     // Power Control 3 (R12h)
-            0x0013, 0x0C00,     // Power Control 4 (R13h)
-            0x0029, 0x0015,     // NVM read data 2 (R29h)
+            0x0012, 0x008E,     // Power Control 3 VCIRE=1, VRH=14
+            0x0013, 0x0C00,     // Power Control 4 VDV=12
+            0x0029, 0x0015,     // NVM read data 2 VCM=21
             TFTLCD_DELAY, 10,
             0x0030, 0x0000,     // Gamma Control 1
             0x0031, 0x0107,     // Gamma Control 2
@@ -1766,10 +1766,10 @@ case 0x4532:    // thanks Leodino
             //After pin Reset wait at least 100ms
             TFTLCD_DELAY, 100, //at least 100ms
             0x0046, 0x0002, //MTP Disable
-            0x0010, 0x1590,
-            0x0011, 0x0227,
-            0x0012, 0x80ff,
-            0x0013, 0x9c31,
+            0x0010, 0x1590, //SAP=1, BT=5, APE=1, AP=1
+            0x0011, 0x0227, //DC1=2, DC0=2, VC=7
+            0x0012, 0x80ff, //P5VMD=1, PON=7, VRH=15
+            0x0013, 0x9c31, //VDV=28, VCM=49
             TFTLCD_DELAY, 10, //at least 10ms
             0x0002, 0x0300, //set N-line = 1
             0x0003, 0x1030, //set GRAM writing direction & BGR=1
@@ -1837,13 +1837,13 @@ case 0x4532:    // thanks Leodino
             0x0012, 0x0000,
             0x0013, 0x0000,
             TFTLCD_DELAY, 50,
-            0x0010, 0x17B0,
-            0x0011, 0x0007,
+            0x0010, 0x17B0,  //SAP=1, BT=7, APE=1, AP=3
+            0x0011, 0x0007,  //DC1=0, DC0=0, VC=7
             TFTLCD_DELAY, 10,
-            0x0012, 0x013A,
+            0x0012, 0x013A,  //VCMR=1, PON=3, VRH=10
             TFTLCD_DELAY, 10,
-            0x0013, 0x1A00,
-            0x0029, 0x000c,
+            0x0013, 0x1A00,  //VDV=26
+            0x0029, 0x000c,  //VCM=12
             TFTLCD_DELAY, 10,
             //-----Gamma control-----------------------
             0x0030, 0x0000,
@@ -1913,13 +1913,13 @@ case 0x4532:    // thanks Leodino
             0x0013, 0x0000,     // VDV[4:0] for VCOM amplitude
             0x0007, 0x0001,
             TFTLCD_DELAY, 200,  // Dis-charge capacitor power voltage
-            0x0010, 0x1690,     // SAP, BT[3:0], AP, DSTB, SLP, STB
-            0x0011, 0x0227,     // Set DC1[2:0], DC0[2:0], VC[2:0]
+            0x0010, 0x1690,     // SAP=1, BT=6, APE=1, AP=1, DSTB=0, SLP=0, STB=0
+            0x0011, 0x0227,     // DC1=2, DC0=2, VC=7
             TFTLCD_DELAY, 50,   // wait_ms 50ms
-            0x0012, 0x000D,     // 0012
+            0x0012, 0x000D,     // VCIRE=1, PON=0, VRH=5
             TFTLCD_DELAY, 50,   // wait_ms 50ms
-            0x0013, 0x1200,     // VDV[4:0] for VCOM amplitude
-            0x0029, 0x000A,     // 04  VCM[5:0] for VCOMH
+            0x0013, 0x1200,     // VDV=28 for VCOM amplitude
+            0x0029, 0x000A,     // VCM=10 for VCOMH
             0x002B, 0x000D,     // Set Frame Rate
             TFTLCD_DELAY, 50,   // wait_ms 50ms
             0x0020, 0x0000,     // GRAM horizontal Address
@@ -2311,18 +2311,18 @@ case 0x4532:    // thanks Leodino
             0x0038, 0x1403,
             0x0039, 0x0020,
             0x0090, 0x0015,     //DIVI & RTNI
-            0x0010, 0x0410,     //BT,AP
-            0x0011, 0x0237,     //VC,DC0,DC1
-            0x0029, 0x0046,     //VCM1
-            0x002A, 0x0046,     //VCMSEL,VCM2
+            0x0010, 0x0410,     //BT=4,AP=1
+            0x0011, 0x0237,     //DC1=2,DC0=3, VC=7
+            0x0029, 0x0046,     //VCM1=70
+            0x002A, 0x0046,     //VCMSEL=0,VCM2=70
             // Sleep mode IN sequence
             0x0007, 0x0000,
             //0x0012, 0x0000,   //PSON=0,PON=0
             // Sleep mode EXIT sequence 
-            0x0012, 0x0189,     //VRH=9,VCMR=1,PSON=0,PON=0
-            0x0013, 0x1100,     //VDV
+            0x0012, 0x0189,     //VCMR=1,PSON=0,PON=0,VRH=9
+            0x0013, 0x1100,     //VDV=17
             TFTLCD_DELAY, 150,
-            0x0012, 0x01B9,     //VRH=9,VCMR=1,PSON=1,PON=1 [018F]
+            0x0012, 0x01B9,     //VCMR=1,PSON=1,PON=1,VRH=9 [018F]
             0x0001, 0x0100,     //SS=1 Other mode settings
             0x0002, 0x0200,     //BC0=1--Line inversion
             0x0003, 0x1030,
