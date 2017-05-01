@@ -254,7 +254,7 @@ int16_t MCUFRIEND_kbv::readGRAM(int16_t x, int16_t y, uint16_t * block, int16_t 
     uint16_t ret, dummy, _MR = _MW;
     int16_t n = w * h, row = 0, col = 0;
     uint8_t r, g, b, tmp;
-    if (_lcd_capable & MIPI_DCS_REV1)
+    if (!is8347 && _lcd_capable & MIPI_DCS_REV1) // HX8347 uses same register
         _MR = 0x2E;
     setAddrWindow(x, y, x + w - 1, y + h - 1);
     while (n > 0) {
