@@ -1453,10 +1453,10 @@ case 0x4532:    // thanks Leodino
         break;
 
 #ifdef SUPPORT_8347D
-    case 0x6767:       //HX8367-A
     case 0x4747:       //HX8347-D
         _lcd_capable = REV_SCREEN | MIPI_DCS_REV1 | MV_AXIS | INVERT_SS;
 		goto common_8347DGI;
+    case 0x6767:       //HX8367-A
 	case 0x7575:       //HX8347-G
 	case 0x9595:       //HX8347-I
         _lcd_capable = REV_SCREEN | MIPI_DCS_REV1 | MV_AXIS;
