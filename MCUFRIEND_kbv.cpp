@@ -927,7 +927,7 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
             0x000C, 0x0000,
             0x000F, 0x1801,
             0x0015, 0x0020,
-            /*
+            
                0x0050,0x0101,
                0x0051,0x0603,
                0x0052,0x0408,
@@ -938,7 +938,7 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
                0x0057,0x0303,
                0x0058,0x0010,
                0x0059,0x1000,
-             */
+            
             0x0007, 0x0012,     //GON=1, REV=0, D=2
             TFTLCD_DELAY, 40,
             0x0007, 0x0013,     //GON=1, REV=0, D=3
