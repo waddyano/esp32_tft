@@ -71,7 +71,7 @@ UNKNOWN  240x320  ID=0x1602
 UNKNOWN  240x320  ID=0xAC11
 
 Most of these controllers are #define SUPPORT_xxxx by default.
-You can save Flash memory on a Uno by commenting out the macro(s).
+You can save Flash memory on a Uno by commenting out the macro(s) in MCUFRIEND_kbv.cpp
 
 11. It should run on a UNO, MEGA2560, LEONARDO, DUE, ZERO, M0-PRO, 
 It also runs on NUCLEO-F103 and TEENSY3.2 with Sparkfun Adapter
@@ -82,8 +82,12 @@ Run the TouchScreen_Calibr_kbv.ino sketch to diagnose your model and then scale 
 The Resistive TouchScreen does not work on the Due.   It seems to be upset by sharing pins.  I have discovered why.   
 (You need a new Touch library.)
 
-13. The aspect_kbv.ino sketch should show the 4 different rotations.   Please report the results for an ILI9335, ILI9327. 
-
+13. The graphictest_kbv.ino sketch runs the standard Adafruit tests and reports the execution time.
+    The Scroll tests show each screen rotation, colours, scroll directions, colour inversion.
+    Vertical scroll is up/down in Portrait modes.  Left/right in Landscape
+    Band Scroll should just move the coloured Band.   ILI9320 style will always move the whole screen.	
+    The text "SOFTWARE SCROLL" should move horizontally across the screen or report a readPixel() ERROR.
+	
 14. The scroll_kbv.ino sketch should scroll a window or subwindow for most chips.   Not all chips can scroll.
 
 15. The readpixel_kbv.ino sketch should display memory in each aspect. 
