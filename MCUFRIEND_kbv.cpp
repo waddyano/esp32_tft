@@ -15,6 +15,7 @@
 //#define SUPPORT_9806
 #define SUPPORT_B509_7793         //R61509, ST7793 +244 bytes
 #define OFFSET_9327 32            //costs about 103 bytes, 0.08s
+#define SUPPORT_9488_555          //costs +230 bytes, 0.03s / 0.19s
 
 #include "MCUFRIEND_kbv.h"
 #if defined(USE_SERIAL)
@@ -63,8 +64,10 @@ MCUFRIEND_kbv::MCUFRIEND_kbv(int CS, int RS, int WR, int RD, int RST):Adafruit_G
 
 static uint8_t done_reset, is8347, is555;
 static uint16_t color565_to_555(uint16_t color) {
+    return (color & 0xFFC0) | ((color & 0x1F) << 1) | ((color & 0x01));  //lose Green LSB, extend Blue LSB
 }
 static uint16_t color555_to_565(uint16_t color) {
+    return (color & 0xFFC0) | ((color & 0x0400) >> 5) | ((color & 0x3F) >> 1); //extend Green LSB
 }
 
 void MCUFRIEND_kbv::reset(void)
