@@ -61,7 +61,11 @@ MCUFRIEND_kbv::MCUFRIEND_kbv(int CS, int RS, int WR, int RD, int RST):Adafruit_G
 }
 #endif
 
-static uint8_t done_reset, is8347;
+static uint8_t done_reset, is8347, is555;
+static uint16_t color565_to_555(uint16_t color) {
+}
+static uint16_t color555_to_565(uint16_t color) {
+}
 
 void MCUFRIEND_kbv::reset(void)
 {
@@ -290,6 +294,9 @@ int16_t MCUFRIEND_kbv::readGRAM(int16_t x, int16_t y, uint16_t * block, int16_t 
                 if (_lcd_capable & READ_BGR)
                     ret = (ret & 0x07E0) | (ret >> 11) | (ret << 11);
             }
+#if defined(SUPPORT_9488_555)
+    if (is555) ret = color555_to_565(ret);
+#endif
             *block++ = ret;
             n--;
             if (!(_lcd_capable & AUTO_READINC))
@@ -476,6 +483,9 @@ void MCUFRIEND_kbv::drawPixel(int16_t x, int16_t y, uint16_t color)
         WriteCmdData(_MC, x);
         WriteCmdData(_MP, y);
     }
+#if defined(SUPPORT_9488_555)
+    if (is555) color = color565_to_555(color);
+#endif
     WriteCmdData(_MW, color);
 }
 
@@ -516,6 +526,9 @@ void MCUFRIEND_kbv::setAddrWindow(int16_t x, int16_t y, int16_t x1, int16_t y1)
 void MCUFRIEND_kbv::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color)
 {
     int16_t end;
+#if defined(SUPPORT_9488_555)
+    if (is555) color = color565_to_555(color);
+#endif
     if (w < 0) {
         w = -w;
         x -= w;
@@ -594,6 +607,9 @@ void MCUFRIEND_kbv::pushColors(uint16_t * block, int16_t n, bool first)
     CD_DATA;
     while (n-- > 0) {
         color = *block++;
+#if defined(SUPPORT_9488_555)
+    if (is555) color = color565_to_555(color);
+#endif
         write16(color);
     }
     CS_IDLE;
@@ -612,6 +628,9 @@ void MCUFRIEND_kbv::pushColors(uint8_t * block, int16_t n, bool first)
         h = (*block++);
         l = (*block++);
         color = h << 8 | l;
+#if defined(SUPPORT_9488_555)
+    if (is555) color = color565_to_555(color);
+#endif
         write16(color);
     }
     CS_IDLE;
@@ -630,6 +649,9 @@ void MCUFRIEND_kbv::pushColors(const uint8_t * block, int16_t n, bool first, boo
         l = pgm_read_byte(block++);
         h = pgm_read_byte(block++);
         color = (bigend) ? (l << 8 ) | h : (h << 8) | l;
+#if defined(SUPPORT_9488_555)
+    if (is555) color = color565_to_555(color);
+#endif
         write16(color);
     }
     CS_IDLE;
@@ -2465,4 +2487,16 @@ case 0x4532:    // thanks Leodino
     }
     setRotation(0);             //PORTRAIT
     invertDisplay(false);
+#if defined(SUPPORT_9488_555)
+    if (_lcd_ID == 0x9488) {
+		is555 = 0;
+		drawPixel(0, 0, 0xFFE0);
+		if (readPixel(0, 0) == 0xFF1F) {
+			uint8_t pixfmt = 0x06;
+			pushCommand(0x3A, &pixfmt, 1);
+			_lcd_capable &= ~READ_24BITS;
+			is555 = 1;
+		}
+	}
+#endif
 }
