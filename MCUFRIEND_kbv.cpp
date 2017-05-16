@@ -1774,8 +1774,11 @@ case 0x4532:    // thanks Leodino
 #endif
 
     case 0x8357:                //BIG CHANGE: HX8357-B is now 0x8357
+        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | REV_SCREEN;
+        goto common_8357;
     case 0x9090:                //BIG CHANGE: HX8357-D was 0x8357
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | REV_SCREEN | READ_24BITS;
+      common_8357:
         static const uint8_t HX8357D_regValues[] PROGMEM = {
             0xB0, 1, 0x00,              // unlocks E0, F0
         };
