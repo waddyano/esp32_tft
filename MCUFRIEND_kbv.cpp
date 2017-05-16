@@ -1059,7 +1059,7 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
 
 #ifdef SUPPORT_1580
     case 0x1580:
-        _lcd_capable = 0 | REV_SCREEN | READ_BGR;
+        _lcd_capable = 0 | REV_SCREEN | READ_BGR | INVERT_GS; //thanks vanhan123
         static const uint16_t R61580_regValues[] PROGMEM = {
             // Synchronization after reset
             TFTLCD_DELAY, 2,
@@ -1085,8 +1085,10 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
             0x0039, 0x1122,          // y control
             0x0090, 0x0019,          // 80Hz
             0x0010, 0x0530,          // Power Control
-            0x0011, 0x0237,
-            0x0012, 0x01BF,          //VCMR=1, PSON=1, PON=1, VRH=15
+            0x0011, 0x0237,          //DC1=2, DC0=3, VC=7
+//            0x0011, 0x17B0,          //DC1=7, DC0=3, VC=0 ?b12 ?b7 vanhan123
+            0x0012, 0x01BF,          //VCMR=1, PSON=1, PON=1, VRH=15 
+//            0x0012, 0x013A,          //VCMR=1, PSON=1, PON=1, VRH=10 vanhan123
             0x0013, 0x1300,          //VDV=19
             TFTLCD_DELAY, 100,
 
