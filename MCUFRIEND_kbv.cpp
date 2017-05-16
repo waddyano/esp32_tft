@@ -15,7 +15,7 @@
 //#define SUPPORT_9806
 #define SUPPORT_B509_7793         //R61509, ST7793 +244 bytes
 #define OFFSET_9327 32            //costs about 103 bytes, 0.08s
-#define SUPPORT_9488_555          //costs +230 bytes, 0.03s / 0.19s
+//#define SUPPORT_9488_555          //costs +230 bytes, 0.03s / 0.19s
 
 #include "MCUFRIEND_kbv.h"
 #if defined(USE_SERIAL)
@@ -356,7 +356,7 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
             d[2] = 0x3B;
             WriteCmdParamN(0xB6, 3, d);
             goto common_MC;
-        } else if (_lcd_ID == 0x1963 || _lcd_ID == 0x9481 || _lcd_ID == 0x1511 || _lcd_ID == 0x1581 || _lcd_ID == 0x8357) {
+        } else if (_lcd_ID == 0x1963 || _lcd_ID == 0x9481 || _lcd_ID == 0x1511 || _lcd_ID == 0x1581) {
             if (val & 0x80)
                 val |= 0x01;    //GS
             if ((val & 0x40))
@@ -366,7 +366,7 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
                 WriteCmdParamN(0xC0, 1, d);
             }
             if (_lcd_ID == 0x1963) val &= ~0xC0;
-            if (_lcd_ID == 0x9481 || _lcd_ID == 0x1581 || _lcd_ID == 0x8357) val &= ~0xD0;
+            if (_lcd_ID == 0x9481 || _lcd_ID == 0x1581) val &= ~0xD0;
             if (_lcd_ID == 0x1511) {
                 val &= ~0x10;   //remove ML
                 val |= 0xC0;    //force penguin 180 rotation
@@ -1773,6 +1773,7 @@ case 0x4532:    // thanks Leodino
         break;
 #endif
 
+    case 0x8357:                //BIG CHANGE: HX8357-B is now 0x8357
     case 0x9090:                //BIG CHANGE: HX8357-D was 0x8357
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | REV_SCREEN | READ_24BITS;
         static const uint8_t HX8357D_regValues[] PROGMEM = {
@@ -2146,9 +2147,6 @@ case 0x4532:    // thanks Leodino
         break;
     case 0x1581:
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_BGR | READ_24BITS; //thanks zdravke
-		goto common_9481;
-    case 0x8357:                //BIG CHANGE: HX8357-B is now 0x8357
-        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | REV_SCREEN;  // thanks pAy79
 		goto common_9481;
     case 0x9481:
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_BGR;
