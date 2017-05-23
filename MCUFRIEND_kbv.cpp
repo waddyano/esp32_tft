@@ -12,10 +12,11 @@
 //#define SUPPORT_8347A             //HX8347-A +500 bytes, 0.27s
 //#define SUPPORT_8352A             //HX8352A +486 bytes, 0.27s
 //#define SUPPORT_9326_5420         //ILI9326, SPFD5420 +246 bytes
+//#define SUPPORT_9342              //costs +114 bytes
 //#define SUPPORT_9806
+#define SUPPORT_9488_555          //costs +230 bytes, 0.03s / 0.19s
 #define SUPPORT_B509_7793         //R61509, ST7793 +244 bytes
 #define OFFSET_9327 32            //costs about 103 bytes, 0.08s
-//#define SUPPORT_9488_555          //costs +230 bytes, 0.03s / 0.19s
 
 #include "MCUFRIEND_kbv.h"
 #if defined(USE_SERIAL)
@@ -356,17 +357,13 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
             d[2] = 0x3B;
             WriteCmdParamN(0xB6, 3, d);
             goto common_MC;
-        } else if (_lcd_ID == 0x1963 || _lcd_ID == 0x9481 || _lcd_ID == 0x1511 || _lcd_ID == 0x1581) {
+        } else if (_lcd_ID == 0x1963 || _lcd_ID == 0x9481 || _lcd_ID == 0x1511) {
             if (val & 0x80)
                 val |= 0x01;    //GS
             if ((val & 0x40))
                 val |= 0x02;    //SS
-            if (_lcd_ID == 0x1581) { // no Horizontal Flip
-                d[0] = (val & 0x40) ? 0x13 : 0x12; //REV | BGR | SS
-                WriteCmdParamN(0xC0, 1, d);
-            }
             if (_lcd_ID == 0x1963) val &= ~0xC0;
-            if (_lcd_ID == 0x9481 || _lcd_ID == 0x1581) val &= ~0xD0;
+            if (_lcd_ID == 0x9481) val &= ~0xD0;
             if (_lcd_ID == 0x1511) {
                 val &= ~0x10;   //remove ML
                 val |= 0xC0;    //force penguin 180 rotation
@@ -2150,7 +2147,49 @@ case 0x4532:    // thanks Leodino
             table8_ads = ILI9341_regValues_2_4, table_size = sizeof(ILI9341_regValues_2_4);   //
         }
         break;
-    case 0x1581:
+#if defined(SUPPORT_9342)
+    case 0x9342:
+        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_24BITS | INVERT_GS | REV_SCREEN;
+        static const uint8_t ILI9342_regValues_CPT24[] PROGMEM = {     //CPT 2.4"
+            (0xB9), 3, 0xFF, 0x93, 0x42, //[00 00 00]
+            (0xC0), 2, 0x1D, 0x0A,    //[26 09]
+            (0xC1), 1, 0x02,          //[10]
+            (0xC5), 2, 0x2F, 0x2F,    //[31 3C]
+            (0xC7), 1, 0xC3,          //[C0]
+            (0xB8), 1, 0x0B,          //[07]
+            (0xE0), 15, 0x0F, 0x33, 0x30, 0x0C, 0x0F, 0x08, 0x5D, 0x66, 0x4A, 0x07, 0x13, 0x05, 0x1B, 0x0E, 0x08,
+            (0xE1), 15, 0x08, 0x0E, 0x11, 0x02, 0x0E, 0x02, 0x24, 0x33, 0x37, 0x03, 0x0A, 0x09, 0x26, 0x33, 0x0F,
+        };
+        static const uint8_t ILI9342_regValues_Tianma23[] PROGMEM = {     //Tianma 2.3"
+            (0xB9), 3, 0xFF, 0x93, 0x42,
+            (0xC0), 2, 0x1D, 0x0A,
+            (0xC1), 1, 0x01,
+            (0xC5), 2, 0x2C, 0x2C,
+            (0xC7), 1, 0xC6,
+            (0xB8), 1, 0x09,
+            (0xE0), 15, 0x0F, 0x26, 0x21, 0x07, 0x0A, 0x03, 0x4E, 0x62, 0x3E, 0x0B, 0x11, 0x00, 0x08, 0x02, 0x00,
+            (0xE1), 15, 0x00, 0x19, 0x1E, 0x03, 0x0E, 0x03, 0x30, 0x23, 0x41, 0x03, 0x0B, 0x07, 0x2F, 0x36, 0x0F,
+        };
+        static const uint8_t ILI9342_regValues_HSD23[] PROGMEM = {     //HSD 2.3"
+            (0xB9), 3, 0xFF, 0x93, 0x42,
+            (0xC0), 2, 0x1D, 0x0A,
+            (0xC1), 1, 0x02,
+            (0xC5), 2, 0x2F, 0x27,
+            (0xC7), 1, 0xA4,
+            (0xB8), 1, 0x0B,
+            (0xE0), 15, 0x0F, 0x24, 0x21, 0x0C, 0x0F, 0x06, 0x50, 0x75, 0x3F, 0x07, 0x12, 0x05, 0x11, 0x0B, 0x08,
+            (0xE1), 15, 0x08, 0x1D, 0x20, 0x02, 0x0E, 0x04, 0x31, 0x24, 0x42, 0x03, 0x0B, 0x09, 0x30, 0x36, 0x0F,
+        };
+        table8_ads = ILI9342_regValues_CPT24, table_size = sizeof(ILI9342_regValues_CPT24);   //
+        //        table8_ads = ILI9342_regValues_Tianma23, table_size = sizeof(ILI9342_regValues_Tianma23);   //
+        //        table8_ads = ILI9342_regValues_HSD23, table_size = sizeof(ILI9342_regValues_HSD23);   //
+        p16 = (int16_t *) & HEIGHT;
+        *p16 = 240;
+        p16 = (int16_t *) & WIDTH;
+        *p16 = 320;
+        break;
+#endif
+    case 0x1581:                        //no BGR in MADCTL.  set BGR in Panel Control
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_24BITS; //thanks zdravke
 		goto common_9481;
     case 0x9481:
@@ -2165,7 +2204,7 @@ case 0x4532:    // thanks Leodino
             0xD2, 2, 0x01, 0x02,        // Set Power for Normal Mode [01 22]
             0xD3, 2, 0x01, 0x02,        // Set Power for Partial Mode [01 22]
             0xD4, 2, 0x01, 0x02,        // Set Power for Idle Mode [01 22]
-            0xC0, 5, 0x10, 0x3B, 0x00, 0x02, 0x11,      //Set Panel Driving [10 3B 00 02 11]
+            0xC0, 5, 0x12, 0x3B, 0x00, 0x02, 0x11, //Panel Driving BGR for 1581 [10 3B 00 02 11]
             0xC1, 3, 0x10, 0x10, 0x88,  // Display Timing Normal [10 10 88]
 			0xC5, 1, 0x03,      //Frame Rate [03]
 			0xC6, 1, 0x02,      //Interface Control [02]
