@@ -1,27 +1,28 @@
-// Simple BMP display on Uno
-// library:      320x240x24 180x180x24 320x240x16             
-// SDfat (SPI)       2146ms      845ms     1735ms
-// SDfat (soft)      4095ms     1730ms     3241ms
-// SD    (SPI)       3046ms     1263ms     2441ms (7)
-// SD    (AS7)      16398ms     7384ms    12491ms (7)
+// MCUFRIEND UNO shields have microSD on pins 10, 11, 12, 13
+// The official <SD.h> library only works on the hardware SPI pins
+// e.g. 11, 12, 13 on a Uno  (or STM32 Nucleo)
 //
-// 
+// copy all your BMP files to the root directory on the microSD with your PC
+// (or another directory)
 
-#include <SPI.h>          // f.k. for Arduino-1.5.2
-#define USE_SDFAT
-//#include <SD.h>
-#include <SdFat.h>           // Use the SdFat library
-SdFat SD;                    // Use hardware SPI (or UNO with SD_SPI_CONFIGURATION==2)
-//SdFatSoftSpi<12, 11, 13> SD; //Bit-Bang SD_SPI_CONFIGURATION==3
+#include <SPI.h>            // f.k. for Arduino-1.5.2
+//#define USE_SDFAT
+#include <SD.h>             // Use the official SD library on hardware pins
 
-#include <Adafruit_GFX.h> // Hardware-specific library
-
+#include <Adafruit_GFX.h>   // Hardware-specific library
 #include <MCUFRIEND_kbv.h>
 MCUFRIEND_kbv tft;
-#define SD_CS 10
+
+#define SD_CS     10
+//#define NAMEMATCH ""        // "" matches any name
+#define NAMEMATCH "tiger"   // *tiger*.bmp
+#define PALETTEDEPTH   0     // do not support Palette modes
+//#define PALETTEDEPTH   8     // support 256-colour Palette
+
+//char namebuf[32] = "/";   //BMP files in root directory
+char namebuf[32] = "/bitmaps/";  //BMP directory e.g. files in /bitmaps/*.bmp
 
 File root;
-char namebuf[32] = "/bitmaps/";
 int pathlen;
 
 void setup()
@@ -34,7 +35,6 @@ void setup()
     if (ID == 0x0D3D3) ID = 0x9481;
     tft.begin(ID);
     tft.fillScreen(0x001F);
-    if (tft.height() > tft.width()) tft.setRotation(1);    //LANDSCAPE
     tft.setTextColor(0xFFFF, 0x0000);
     bool good = SD.begin(SD_CS);
     if (!good) {
@@ -59,7 +59,7 @@ void loop()
 #endif
         f.close();
         strlwr(nm);
-        if (strstr(nm, ".bmp") != NULL && strstr(nm, "tiger") != NULL) {
+        if (strstr(nm, ".bmp") != NULL && strstr(nm, NAMEMATCH) != NULL) {
             Serial.print(namebuf);
             Serial.print(F(" - "));
             tft.fillScreen(0);
@@ -83,6 +83,9 @@ void loop()
                 case 4:
                     Serial.println(F("unsupported BMP format"));
                     break;
+                case 5:
+                    Serial.println(F("unsupported palette"));
+                    break;
                 default:
                     Serial.println(F("unknown"));
                     break;
@@ -94,8 +97,7 @@ void loop()
 
 #define BMPIMAGEOFFSET 54
 
-#define PALETTEDEPTH   8
-#define BUFFPIXEL 20
+#define BUFFPIXEL      20
 
 uint16_t read16(File& f) {
     uint16_t result;         // read little-endian
@@ -149,6 +151,7 @@ uint8_t showBMP(char *nm, int x, int y)
     if (bmpID != 0x4D42) ret = 2; // bad ID
     else if (n != 1) ret = 3;   // too many planes
     else if (pos != 0 && pos != 3) ret = 4; // format: 0 = uncompressed, 3 = 565
+    else if (bmpDepth < 16 && bmpDepth > PALETTEDEPTH) ret = 5; // palette 
     else {
         bool first = true;
         is565 = (pos == 3);               // ?already in 16-bit format

@@ -1,3 +1,7 @@
+//  https://forum.arduino.cc/index.php?topic=473885.msg3245748#msg3245748
+//  file attached 03 May 2017 21:15 BST
+
+
 // TouchScreen_Calibr_kbv for MCUFRIEND UNO Display Shields
 // adapted by David Prentice
 // for Adafruit's <TouchScreen.h> Resistive Touch Screen Library
@@ -15,6 +19,7 @@
 //
 // Instructions will be given on the display.
 
+//#define TOUCH_ORIENTATION  LANDSCAPE
 #define TOUCH_ORIENTATION  PORTRAIT
 #define TITLE "TouchScreen.h Calibration"
 
@@ -25,10 +30,8 @@ UTFTGLUE myGLCD(0x9341, A2, A1, A3, A4, A0);
 #include <TouchScreen.h>         //Adafruit Library
 
 // MCUFRIEND UNO shield shares pins with the TFT.   Due does NOT work
-#define YP A1   //[A1], A3 for ILI9320, A2 for ST7789V 
-#define YM 7    //[ 7], 9             , 7
-#define XM A2   //[A2], A2 for ILI9320, A1 for ST7789V
-#define XP 6    //[ 6], 8             , 6
+
+int YP = A1, YM = 7, XM = A2, XP = 7;  //most comon configuration
 
 TouchScreen myTouch(XP, YP, XM, YM, 300);
 TSPoint tp;                      //Touchscreen_due branch uses Point
@@ -86,10 +89,63 @@ int dispx, dispy, text_y_center, swapxy;
 uint32_t calx, caly, cals;
 char buf[13];
 
+void showpins(int A, int D, int value, const char *msg)
+{
+    char buf[40];
+    sprintf(buf, "%s (A%d, D%d) = %d", msg, A - A0, D, value);
+    Serial.println(buf);
+}
+
+boolean diagnose_pins()
+{
+    int i, j, value, Apins[2], Dpins[2], Values[2], found = 0;
+    //    Serial.begin(9600);
+    Serial.println("Making all control and bus pins INPUT_PULLUP");
+    Serial.println("Typical 30k Analog pullup with corresponding pin");
+    Serial.println("would read low when digital is written LOW");
+    Serial.println("e.g. reads ~25 for 300R X direction");
+    Serial.println("e.g. reads ~30 for 500R Y direction");
+    Serial.println("");
+    for (i = A0; i < A5; i++) pinMode(i, INPUT_PULLUP);
+    for (i = 2; i < 10; i++) pinMode(i, INPUT_PULLUP);
+    for (i = A0; i < A4; i++) {
+        for (j = 5; j < 10; j++) {
+            pinMode(j, OUTPUT);
+            digitalWrite(j, LOW);
+            value = analogRead(i);   // ignore first reading
+            value = analogRead(i);
+            if (value < 100) {
+                showpins(i, j, value, "Testing :");
+                if (found < 2) {
+                    Apins[found] = i;
+                    Dpins[found] = j;
+                    Values[found] = value;
+                    found++;
+                }
+            }
+            pinMode(j, INPUT_PULLUP);
+        }
+    }
+    if (found == 2) {
+        Serial.println("Diagnosing as:-");
+        int idx = Values[0] < Values[1];
+        for (i = 0; i < 2; i++) {
+            showpins(Apins[i], Dpins[i], Values[i],
+                     (Values[i] < Values[!i]) ? "XM,XP: " : "YP,YM: ");
+        }
+        XM = Apins[!idx]; XP = Dpins[!idx]; YP = Apins[idx]; YM = Dpins[idx];
+        myTouch = TouchScreen(XP, YP, XM, YM, 300);
+        return true;
+    }
+    Serial.println("BROKEN TOUCHSCREEN");
+    return false;
+}
+
 void setup()
 {
     Serial.begin(9600);
     Serial.println(TITLE);
+    bool ret = diagnose_pins();
     digitalWrite(A0, HIGH);
     pinMode(A0, OUTPUT);
     myGLCD.InitLCD(TOUCH_ORIENTATION);
@@ -98,6 +154,10 @@ void setup()
     dispx = myGLCD.getDisplayXSize();
     dispy = myGLCD.getDisplayYSize();
     text_y_center = (dispy / 2) - 6;
+    if (ret == false) {
+        myGLCD.print("BROKEN TOUCHSCREEN", CENTER, dispy / 2);
+        while (1);
+    }
 }
 
 void drawCrossHair(int x, int y)
@@ -232,6 +292,7 @@ void done()
 {
     uint16_t TS_LEFT, TS_RT, TS_TOP, TS_BOT, TS_WID, TS_HT, TS_SWAP;
     int16_t tmp;
+    char buf[60];
     myGLCD.clrScr();
     myGLCD.setColor(255, 0, 0);
     myGLCD.fillRect(0, 0, dispx - 1, 13);
@@ -255,35 +316,42 @@ void done()
     TS_WID  = ((cals >> 12) & 0x0FFF) + 1;
     TS_HT   = ((cals >>  0) & 0x0FFF) + 1;
     TS_SWAP = (cals >> 31);
-    if (TOUCH_ORIENTATION != 0) {
-        myGLCD.print("Sketch is LANDSCAPE", 0, 126);
-        myGLCD.printNumI(TS_WID, 150, 126);
-        myGLCD.print("x", 174, 126);
-        myGLCD.printNumI(TS_HT, 186, 126);
-        showNumI("LEFT ", TS_LEFT, 0, 138);
-        showNumI("RT   ", TS_RT, 100, 138);
-        showNumI("TOP  ", TS_TOP, 0, 150);
-        showNumI("BOT  ", TS_BOT, 100, 150);
-        switch (TOUCH_ORIENTATION) {
-            case 1:
-                tmp = TS_LEFT, TS_LEFT = TS_TOP, TS_TOP = TS_RT, TS_RT = TS_BOT, TS_BOT = tmp;
-                tmp = TS_WID, TS_WID = TS_HT, TS_HT = tmp;
-                break;
-        }
+    int y = 120;
+    Serial.println("");
+    sprintf(buf, "Sketch is %s      %d x %d",
+            TOUCH_ORIENTATION ? "LANDSCAPE" : "PORTRAIT", TS_WID, TS_HT);
+    myGLCD.print(buf, 0, y);
+    Serial.println(buf);
+    if (TOUCH_ORIENTATION == LANDSCAPE) { //always show PORTRAIT first
+        tmp = TS_LEFT, TS_LEFT = TS_BOT, TS_BOT = TS_RT, TS_RT = TS_TOP, TS_TOP = tmp;
+        tmp = TS_WID, TS_WID = TS_HT, TS_HT = tmp;
     }
-    myGLCD.print("PORTRAIT CALIBRATION", 0, 174);
-    myGLCD.printNumI(TS_WID, 150, 174);
-    myGLCD.print("x", 174, 174);
-    myGLCD.printNumI(TS_HT, 186, 174);
-    showNumI("LEFT ", TS_LEFT, 0, 186);
-    showNumI("RT   ", TS_RT, 100, 186);
-    myGLCD.printNumF(((float)TS_RT - TS_LEFT) / TS_WID, 2, 200, 186);
-    showNumI("TOP  ", TS_TOP, 0, 198);
-    showNumI("BOT  ", TS_BOT, 100, 198);
-    myGLCD.printNumF(((float)TS_BOT - TS_TOP) / TS_HT, 2, 200, 198);
-    myGLCD.print("Touch Pin Wiring is ", 0, 222);
-    myGLCD.print((cals >> 31) ? "SWAPXY" : "PORTRAIT", 170, 222);
+    sprintf(buf, "PORTRAIT CALIBRATION     %d x %d", TS_WID, TS_HT);
+    myGLCD.print(buf, 0, y += 24);
+    Serial.println(buf);
+    sprintf(buf, "x = map(p.x, LEFT=%d, RT=%d, 0, %d)", TS_LEFT, TS_RT, TS_WID);
+    myGLCD.print(buf, 0, y += 12);
+    Serial.println(buf);
+    sprintf(buf, "y = map(p.y, TOP=%d, BOT=%d, 0, %d)", TS_TOP, TS_BOT, TS_HT);
+    myGLCD.print(buf, 0, y += 12);
+    Serial.println(buf);
+    sprintf(buf, "Touch Pin Wiring XP=%d XM=A%d YP=A%d YM=%d",
+            XP, XM - A0, YP - A0, YM);
+    myGLCD.print(buf, 0, y += 24);
+    Serial.println(buf);
 
+    tmp = TS_LEFT, TS_LEFT = TS_TOP, TS_TOP = TS_RT, TS_RT = TS_BOT, TS_BOT = tmp;
+    tmp = TS_WID, TS_WID = TS_HT, TS_HT = tmp;
+
+    sprintf(buf, "LANDSCAPE CALIBRATION     %d x %d", TS_WID, TS_HT);
+    myGLCD.print(buf, 0, y += 24);
+    Serial.println(buf);
+    sprintf(buf, "x = map(p.y, LEFT=%d, RT=%d, 0, %d)", TS_LEFT, TS_RT, TS_WID);
+    myGLCD.print(buf, 0, y += 12);
+    Serial.println(buf);
+    sprintf(buf, "y = map(p.x, TOP=%d, BOT=%d, 0, %d)", TS_TOP, TS_BOT, TS_HT);
+    myGLCD.print(buf, 0, y += 12);
+    Serial.println(buf);
 }
 
 void fail()
