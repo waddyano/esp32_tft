@@ -14,13 +14,13 @@
 MCUFRIEND_kbv tft;
 
 #define SD_CS     10
-//#define NAMEMATCH ""        // "" matches any name
-#define NAMEMATCH "tiger"   // *tiger*.bmp
+#define NAMEMATCH ""        // "" matches any name
+//#define NAMEMATCH "tiger"   // *tiger*.bmp
 #define PALETTEDEPTH   0     // do not support Palette modes
 //#define PALETTEDEPTH   8     // support 256-colour Palette
 
-//char namebuf[32] = "/";   //BMP files in root directory
-char namebuf[32] = "/bitmaps/";  //BMP directory e.g. files in /bitmaps/*.bmp
+char namebuf[32] = "/";   //BMP files in root directory
+//char namebuf[32] = "/bitmaps/";  //BMP directory e.g. files in /bitmaps/*.bmp
 
 File root;
 int pathlen;
