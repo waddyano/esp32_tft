@@ -101,17 +101,13 @@ void loop()
 
 uint16_t read16(File& f) {
     uint16_t result;         // read little-endian
-    result = f.read();       // LSB
-    result |= f.read() << 8; // MSB
+    f.read(&result, sizeof(result));
     return result;
 }
 
 uint32_t read32(File& f) {
     uint32_t result;
-    result = f.read(); // LSB
-    result |= f.read() << 8;
-    result |= f.read() << 16;
-    result |= f.read() << 24; // MSB
+    f.read(&result, sizeof(result));
     return result;
 }
 
