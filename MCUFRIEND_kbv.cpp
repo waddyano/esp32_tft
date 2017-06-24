@@ -11,6 +11,7 @@
 //#define SUPPORT_8347D             //HX8347-D, HX8347-G, HX8347-I +520 bytes, 0.27s
 //#define SUPPORT_8347A             //HX8347-A +500 bytes, 0.27s
 //#define SUPPORT_8352A             //HX8352A +486 bytes, 0.27s
+#define SUPPORT_9225
 //#define SUPPORT_9326_5420         //ILI9326, SPFD5420 +246 bytes
 //#define SUPPORT_9342              //costs +114 bytes
 //#define SUPPORT_9806
@@ -388,6 +389,15 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
     // cope with 9320 variants
     else {
         switch (_lcd_ID) {
+#if defined(SUPPORT_9225)
+        case 0x9225:
+            _SC = 0x37, _EC = 0x36, _SP = 0x39, _EP = 0x38;
+            _MC = 0x20, _MP = 0x21, _MW = 0x22;
+            GS = (val & 0x80) ? (1 << 9) : 0;
+            SS = (val & 0x40) ? (1 << 8) : 0;
+            WriteCmdData(0x01, GS | SS | 0x001C);       // set Driver Output Control
+            goto common_ORG;
+#endif
 #if defined(SUPPORT_0139) || defined(SUPPORT_0154)
 #ifdef SUPPORT_0139
         case 0x0139:
@@ -1840,6 +1850,119 @@ case 0x4532:    // thanks Leodino
         init_table16(UC8230_regValues, sizeof(UC8230_regValues));
         break;
 #endif
+
+#ifdef SUPPORT_9225
+#define ILI9225_DRIVER_OUTPUT_CTRL      (0x01u)  // Driver Output Control
+#define ILI9225_LCD_AC_DRIVING_CTRL     (0x02u)  // LCD AC Driving Control
+#define ILI9225_ENTRY_MODE                (0x03u)  // Entry Mode
+#define ILI9225_DISP_CTRL1              (0x07u)  // Display Control 1
+#define ILI9225_BLANK_PERIOD_CTRL1      (0x08u)  // Blank Period Control
+#define ILI9225_FRAME_CYCLE_CTRL        (0x0Bu)  // Frame Cycle Control
+#define ILI9225_INTERFACE_CTRL          (0x0Cu)  // Interface Control
+#define ILI9225_OSC_CTRL                (0x0Fu)  // Osc Control
+#define ILI9225_POWER_CTRL1             (0x10u)  // Power Control 1
+#define ILI9225_POWER_CTRL2             (0x11u)  // Power Control 2
+#define ILI9225_POWER_CTRL3             (0x12u)  // Power Control 3
+#define ILI9225_POWER_CTRL4             (0x13u)  // Power Control 4
+#define ILI9225_POWER_CTRL5             (0x14u)  // Power Control 5
+#define ILI9225_VCI_RECYCLING           (0x15u)  // VCI Recycling
+#define ILI9225_RAM_ADDR_SET1           (0x20u)  // Horizontal GRAM Address Set
+#define ILI9225_RAM_ADDR_SET2           (0x21u)  // Vertical GRAM Address Set
+#define ILI9225_GRAM_DATA_REG           (0x22u)  // GRAM Data Register
+#define ILI9225_GATE_SCAN_CTRL          (0x30u)  // Gate Scan Control Register
+#define ILI9225_VERTICAL_SCROLL_CTRL1   (0x31u)  // Vertical Scroll Control 1 Register
+#define ILI9225_VERTICAL_SCROLL_CTRL2   (0x32u)  // Vertical Scroll Control 2 Register
+#define ILI9225_VERTICAL_SCROLL_CTRL3   (0x33u)  // Vertical Scroll Control 3 Register
+#define ILI9225_PARTIAL_DRIVING_POS1    (0x34u)  // Partial Driving Position 1 Register
+#define ILI9225_PARTIAL_DRIVING_POS2    (0x35u)  // Partial Driving Position 2 Register
+#define ILI9225_HORIZONTAL_WINDOW_ADDR1 (0x36u)  // Horizontal Address END Position   HEA
+#define ILI9225_HORIZONTAL_WINDOW_ADDR2 (0x37u)  // Horizontal Address START Position HSA
+#define ILI9225_VERTICAL_WINDOW_ADDR1   (0x38u)  // Vertical Address END Position     VEA
+#define ILI9225_VERTICAL_WINDOW_ADDR2   (0x39u)  // Vertical Address START Position   VSA
+#define ILI9225_GAMMA_CTRL1             (0x50u)  // Gamma Control 1
+#define ILI9225_GAMMA_CTRL2             (0x51u)  // Gamma Control 2
+#define ILI9225_GAMMA_CTRL3             (0x52u)  // Gamma Control 3
+#define ILI9225_GAMMA_CTRL4             (0x53u)  // Gamma Control 4
+#define ILI9225_GAMMA_CTRL5             (0x54u)  // Gamma Control 5
+#define ILI9225_GAMMA_CTRL6             (0x55u)  // Gamma Control 6
+#define ILI9225_GAMMA_CTRL7             (0x56u)  // Gamma Control 7
+#define ILI9225_GAMMA_CTRL8             (0x57u)  // Gamma Control 8
+#define ILI9225_GAMMA_CTRL9             (0x58u)  // Gamma Control 9
+#define ILI9225_GAMMA_CTRL10            (0x59u)  // Gamma Control 10
+
+#define ILI9225C_INVOFF  0x20
+#define ILI9225C_INVON   0x21
+
+    case 0x9225:
+        _lcd_capable = REV_SCREEN | INVERT_GS;
+        static const uint16_t ILI9225_regValues[] PROGMEM = {
+            /* Start Initial Sequence */
+            /* Set SS bit and direction output from S528 to S1 */
+            ILI9225_POWER_CTRL1, 0x0000, // Set SAP,DSTB,STB
+            ILI9225_POWER_CTRL2, 0x0000, // Set APON,PON,AON,VCI1EN,VC
+            ILI9225_POWER_CTRL3, 0x0000, // Set BT,DC1,DC2,DC3
+            ILI9225_POWER_CTRL4, 0x0000, // Set GVDD
+            ILI9225_POWER_CTRL5, 0x0000, // Set VCOMH/VCOML voltage
+            TFTLCD_DELAY, 40,
+
+            // Power-on sequence
+            ILI9225_POWER_CTRL2, 0x0018, // Set APON,PON,AON,VCI1EN,VC
+            ILI9225_POWER_CTRL3, 0x6121, // Set BT,DC1,DC2,DC3
+            ILI9225_POWER_CTRL4, 0x006F, // Set GVDD   /*007F 0088 */
+            ILI9225_POWER_CTRL5, 0x495F, // Set VCOMH/VCOML voltage
+            ILI9225_POWER_CTRL1, 0x0800, // Set SAP,DSTB,STB
+            TFTLCD_DELAY, 10,
+            ILI9225_POWER_CTRL2, 0x103B, // Set APON,PON,AON,VCI1EN,VC
+            TFTLCD_DELAY, 50,
+
+            ILI9225_DRIVER_OUTPUT_CTRL, 0x011C, // set the display line number and display direction
+            ILI9225_LCD_AC_DRIVING_CTRL, 0x0100, // set 1 line inversion
+            ILI9225_ENTRY_MODE, 0x1030, // set GRAM write direction and BGR=1.
+            ILI9225_DISP_CTRL1, 0x0000, // Display off
+            ILI9225_BLANK_PERIOD_CTRL1, 0x0808, // set the back porch and front porch
+            ILI9225_FRAME_CYCLE_CTRL, 0x1100, // set the clocks number per line
+            ILI9225_INTERFACE_CTRL, 0x0000, // CPU interface
+            ILI9225_OSC_CTRL, 0x0D01, // Set Osc  /*0e01*/
+            ILI9225_VCI_RECYCLING, 0x0020, // Set VCI recycling
+            ILI9225_RAM_ADDR_SET1, 0x0000, // RAM Address
+            ILI9225_RAM_ADDR_SET2, 0x0000, // RAM Address
+
+            /* Set GRAM area */
+            ILI9225_GATE_SCAN_CTRL, 0x0000,
+            ILI9225_VERTICAL_SCROLL_CTRL1, 0x00DB,
+            ILI9225_VERTICAL_SCROLL_CTRL2, 0x0000,
+            ILI9225_VERTICAL_SCROLL_CTRL3, 0x0000,
+            ILI9225_PARTIAL_DRIVING_POS1, 0x00DB,
+            ILI9225_PARTIAL_DRIVING_POS2, 0x0000,
+            ILI9225_HORIZONTAL_WINDOW_ADDR1, 0x00AF,
+            ILI9225_HORIZONTAL_WINDOW_ADDR2, 0x0000,
+            ILI9225_VERTICAL_WINDOW_ADDR1, 0x00DB,
+            ILI9225_VERTICAL_WINDOW_ADDR2, 0x0000,
+
+            /* Set GAMMA curve */
+            ILI9225_GAMMA_CTRL1, 0x0000,
+            ILI9225_GAMMA_CTRL2, 0x0808,
+            ILI9225_GAMMA_CTRL3, 0x080A,
+            ILI9225_GAMMA_CTRL4, 0x000A,
+            ILI9225_GAMMA_CTRL5, 0x0A08,
+            ILI9225_GAMMA_CTRL6, 0x0808,
+            ILI9225_GAMMA_CTRL7, 0x0000,
+            ILI9225_GAMMA_CTRL8, 0x0A00,
+            ILI9225_GAMMA_CTRL9, 0x0710,
+            ILI9225_GAMMA_CTRL10, 0x0710,
+
+            ILI9225_DISP_CTRL1, 0x0012,
+            TFTLCD_DELAY, 50,
+            ILI9225_DISP_CTRL1, 0x1017,
+        };
+        init_table16(ILI9225_regValues, sizeof(ILI9225_regValues));
+        p16 = (int16_t *) & HEIGHT;
+        *p16 = 220;
+        p16 = (int16_t *) & WIDTH;
+        *p16 = 176;
+        break;
+#endif
+
 //        goto common_9320;
     case 0x5408:
         _lcd_capable = 0 | REV_SCREEN | READ_BGR | INVERT_GS;
