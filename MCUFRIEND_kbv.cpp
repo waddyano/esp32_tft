@@ -730,8 +730,9 @@ void MCUFRIEND_kbv::vertScroll(int16_t top, int16_t scrollines, int16_t offset)
         WriteCmdData(0x43, vsp - top);  //SST
         break;
 #endif
-#ifdef SUPPORT_0154
-    case 0x0154:
+#if defined(SUPPORT_0154) || defined(SUPPORT_9225)  //thanks tongbajiel
+    case 0x9225:
+	case 0x0154:
         WriteCmdData(0x31, sea);        //SEA
         WriteCmdData(0x32, top);        //SSA
         WriteCmdData(0x33, vsp - top);  //SST
@@ -1894,7 +1895,7 @@ case 0x4532:    // thanks Leodino
 #define ILI9225C_INVON   0x21
 
     case 0x9225:
-        _lcd_capable = REV_SCREEN | INVERT_GS;
+        _lcd_capable = REV_SCREEN;     //thanks tongbajiel
         static const uint16_t ILI9225_regValues[] PROGMEM = {
             /* Start Initial Sequence */
             /* Set SS bit and direction output from S528 to S1 */
