@@ -780,6 +780,7 @@ void MCUFRIEND_kbv::invertDisplay(boolean i)
 #ifdef SUPPORT_0139
     case 0x0139:
 #endif
+    case 0x9225:                                        //REV is in reg(0x07) like Samsung
     case 0x0154:
         WriteCmdData(0x07, 0x13 | (_lcd_rev << 2));     //.kbv kludge
         break;
