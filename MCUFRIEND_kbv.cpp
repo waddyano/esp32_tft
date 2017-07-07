@@ -322,6 +322,9 @@ int16_t MCUFRIEND_kbv::readGRAM(int16_t x, int16_t y, uint16_t * block, int16_t 
 
 void MCUFRIEND_kbv::setRotation(uint8_t r)
 {
+#if defined(STM32L476xx)
+#undef SS
+#endif
     uint16_t GS, SS, ORG, REV = _lcd_rev;
     uint8_t val, d[3];
     rotation = r & 3;           // just perform the operation ourselves on the protected variables
