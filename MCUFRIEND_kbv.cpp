@@ -11,7 +11,7 @@
 //#define SUPPORT_8347D             //HX8347-D, HX8347-G, HX8347-I +520 bytes, 0.27s
 //#define SUPPORT_8347A             //HX8347-A +500 bytes, 0.27s
 //#define SUPPORT_8352A             //HX8352A +486 bytes, 0.27s
-#define SUPPORT_9225
+#define SUPPORT_9225              //ILI9225-B, ILI9225-G ID=0x9225, ID=0x9226
 //#define SUPPORT_9326_5420         //ILI9326, SPFD5420 +246 bytes
 //#define SUPPORT_9342              //costs +114 bytes
 //#define SUPPORT_9806
@@ -391,6 +391,7 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
         switch (_lcd_ID) {
 #if defined(SUPPORT_9225)
         case 0x9225:
+        case 0x9226:
             _SC = 0x37, _EC = 0x36, _SP = 0x39, _EP = 0x38;
             _MC = 0x20, _MP = 0x21, _MW = 0x22;
             GS = (val & 0x80) ? (1 << 9) : 0;
@@ -732,6 +733,7 @@ void MCUFRIEND_kbv::vertScroll(int16_t top, int16_t scrollines, int16_t offset)
 #endif
 #if defined(SUPPORT_0154) || defined(SUPPORT_9225)  //thanks tongbajiel
     case 0x9225:
+    case 0x9226:
 	case 0x0154:
         WriteCmdData(0x31, sea);        //SEA
         WriteCmdData(0x32, top);        //SSA
@@ -781,6 +783,7 @@ void MCUFRIEND_kbv::invertDisplay(boolean i)
     case 0x0139:
 #endif
     case 0x9225:                                        //REV is in reg(0x07) like Samsung
+    case 0x9226:
     case 0x0154:
         WriteCmdData(0x07, 0x13 | (_lcd_rev << 2));     //.kbv kludge
         break;
@@ -1896,6 +1899,7 @@ case 0x4532:    // thanks Leodino
 #define ILI9225C_INVON   0x21
 
     case 0x9225:
+    case 0x9226:
         _lcd_capable = REV_SCREEN | READ_BGR;     //thanks tongbajiel
         static const uint16_t ILI9225_regValues[] PROGMEM = {
             /* Start Initial Sequence */
