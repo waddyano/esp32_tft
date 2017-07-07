@@ -1895,7 +1895,7 @@ case 0x4532:    // thanks Leodino
 #define ILI9225C_INVON   0x21
 
     case 0x9225:
-        _lcd_capable = REV_SCREEN;     //thanks tongbajiel
+        _lcd_capable = REV_SCREEN | READ_BGR;     //thanks tongbajiel
         static const uint16_t ILI9225_regValues[] PROGMEM = {
             /* Start Initial Sequence */
             /* Set SS bit and direction output from S528 to S1 */
