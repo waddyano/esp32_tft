@@ -726,7 +726,9 @@
   #define D4_PIN  4
   #define D5_PORT PORTC //PC4
   #define D5_PIN  4
+  #define D6_PORT PORTA //PA1
   #define D6_PIN  1
+  #define D7_PORT PORTA //PA0
   #define D7_PIN  0
   #define D8_PORT PORTA //PA2
   #define D8_PIN  2
