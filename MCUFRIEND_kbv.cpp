@@ -1976,6 +1976,7 @@ case 0x4532:    // thanks Leodino
     case 0x5408:
         _lcd_capable = 0 | REV_SCREEN | READ_BGR | INVERT_GS;
         goto common_9320;
+    case 0x1505:                //R61505 thanks Ravi_kanchan2004. R61505V, R61505W different
     case 0x9320:
         _lcd_capable = 0 | REV_SCREEN | READ_BGR;
       common_9320:
@@ -2230,7 +2231,7 @@ case 0x4532:    // thanks Leodino
         };
         table8_ads = ILI9329_regValues, table_size = sizeof(ILI9329_regValues);
         break;
-    case 0x9340:
+    case 0x9340:                //ILI9340 thanks Ravi_kanchan2004.
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_24BITS | REV_SCREEN;
         goto common_9341;
     case 0x9341:
@@ -2490,7 +2491,6 @@ case 0x4532:    // thanks Leodino
         p16 = (int16_t *) & WIDTH;
         *p16 = 320;
         break;
-    case 0x1505:                //R61505
     case 0xB505:                //R61505V
     case 0xC505:                //R61505W
         _lcd_capable = 0 | REV_SCREEN | READ_LOWHIGH;
