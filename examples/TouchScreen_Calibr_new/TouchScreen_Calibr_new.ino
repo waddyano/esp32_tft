@@ -1,3 +1,7 @@
+// .kbv:  previous sketch wasted too much SRAM with const strings
+// .kbv:  replace all UTFT print const strings with F(string)
+// .kbv:  correct UTFTGLUE settextcursor() for String print
+
 //  https://forum.arduino.cc/index.php?topic=473885.msg3245748#msg3245748
 //  file attached 03 May 2017 21:15 BST
 
@@ -27,12 +31,14 @@
 #include <UTFTGLUE.h>            //we are using UTFT display methods
 UTFTGLUE myGLCD(0x9341, A2, A1, A3, A4, A0);
 
-#include <TouchScreen.h>         //Adafruit Library
-
 // MCUFRIEND UNO shield shares pins with the TFT.   Due does NOT work
 
-int YP = A1, YM = 7, XM = A2, XP = 7;  //most comon configuration
+//int XP = 6, XM = A2, YP = A1, YM = 7;  //most common configuration (dead Due)
+int XP = 7, XM = A1, YP = A2, YM = 6;  //most common configuration (WHITE Due)
 
+//#include "TouchScreen_kbv.h"         //Local Library
+//TouchScreen_kbv myTouch(XP, YP, XM, YM, 300);
+#include <TouchScreen.h>         //Global Library
 TouchScreen myTouch(XP, YP, XM, YM, 300);
 TSPoint tp;                      //Touchscreen_due branch uses Point
 
@@ -41,8 +47,6 @@ void readResistiveTouch(void)
     tp = myTouch.getPoint();
     pinMode(YP, OUTPUT);      //restore shared pins
     pinMode(XM, OUTPUT);
-    digitalWrite(YP, HIGH);   //because TFT control pins
-    digitalWrite(XM, HIGH);
 }
 
 bool ISPRESSED(void)
@@ -53,7 +57,7 @@ bool ISPRESSED(void)
     bool state, oldstate;
     while (count < 10) {
         readResistiveTouch();
-        state = tp.z > 20 && tp.z < 1000;
+        state = tp.z > 180;  // .kbv was >20 && < 1000
         if (state == oldstate) count++;
         else count = 0;
         oldstate = state;
@@ -134,7 +138,8 @@ boolean diagnose_pins()
                      (Values[i] < Values[!i]) ? "XM,XP: " : "YP,YM: ");
         }
         XM = Apins[!idx]; XP = Dpins[!idx]; YP = Apins[idx]; YM = Dpins[idx];
-        myTouch = TouchScreen(XP, YP, XM, YM, 300);
+//        myTouch = TouchScreen_kbv(XP, YP, XM, YM, 300); //Local library
+        myTouch = TouchScreen(XP, YP, XM, YM, 300);     //Global library
         return true;
     }
     Serial.println("BROKEN TOUCHSCREEN");
@@ -145,7 +150,17 @@ void setup()
 {
     Serial.begin(9600);
     Serial.println(TITLE);
-    bool ret = diagnose_pins();
+    bool ret = true;
+#if defined(__AVR_ATmega328P__) || defined(__AVR_ATmega2560__) 
+    ret = diagnose_pins();
+#else
+    Serial.println("Only AVR can diagnose Touch Pins");
+    Serial.println("Other targets use default Pins");
+    char buf[40];
+    sprintf(buf, "Touch Pin Wiring XP=%d XM=A%d YP=A%d YM=%d",
+            XP, XM - A0, YP - A0, YM);
+    Serial.println(buf);
+#endif
     digitalWrite(A0, HIGH);
     pinMode(A0, OUTPUT);
     myGLCD.InitLCD(TOUCH_ORIENTATION);
@@ -155,7 +170,7 @@ void setup()
     dispy = myGLCD.getDisplayYSize();
     text_y_center = (dispy / 2) - 6;
     if (ret == false) {
-        myGLCD.print("BROKEN TOUCHSCREEN", CENTER, dispy / 2);
+        myGLCD.print(F("BROKEN TOUCHSCREEN"), CENTER, dispy / 2);
         while (1);
     }
 }
@@ -179,9 +194,9 @@ void readCoordinates()
     while (OK == false)
     {
         myGLCD.setColor(255, 255, 255);
-        myGLCD.print("*  PRESS  *", CENTER, text_y_center);
+        myGLCD.print(F("*  PRESS  *"), CENTER, text_y_center);
         while (ISPRESSED() == false) {}
-        myGLCD.print("*  HOLD!  *", CENTER, text_y_center);
+        myGLCD.print(F("*  HOLD!  *"), CENTER, text_y_center);
         cnt = 0;
         iter = 400;
         do
@@ -222,7 +237,7 @@ void calibrate(int x, int y, int i)
     myGLCD.setBackColor(255, 0, 0);
     readCoordinates();
     myGLCD.setColor(255, 255, 255);
-    myGLCD.print("* RELEASE *", CENTER, text_y_center);
+    myGLCD.print(F("* RELEASE *"), CENTER, text_y_center);
     myGLCD.setColor(80, 80, 80);
     drawCrossHair(x, y);
     rx[i] = cx;
@@ -266,20 +281,19 @@ void startup()
     myGLCD.print(TITLE, CENTER, 1);
     myGLCD.setBackColor(0, 0, 0);
 
-    myGLCD.print("#define NUMSAMPLES 3 in Library", LEFT, 18);
-    myGLCD.print("Use a stylus or something", LEFT, 30);
-    myGLCD.print("similar to touch as close", LEFT, 42);
-    myGLCD.print("to the center of the", LEFT, 54);
-    myGLCD.print("highlighted crosshair as", LEFT, 66);
-    myGLCD.print("possible. Keep as still as", LEFT, 78);
-    myGLCD.print("possible and keep holding", LEFT, 90);
-    myGLCD.print("until the highlight is", LEFT, 102);
-    myGLCD.print("removed. Repeat for all", LEFT, 114);
-    myGLCD.print("crosshairs in sequence.", LEFT, 126);
-    myGLCD.print("Touch screen to continue", CENTER, 162);
+    myGLCD.print(F("#define NUMSAMPLES 3 in Library"), LEFT, 18);
+    myGLCD.print(F("Use a stylus or something"), LEFT, 30);
+    myGLCD.print(F("similar to touch as close"), LEFT, 42);
+    myGLCD.print(F("to the center of the"), LEFT, 54);
+    myGLCD.print(F("highlighted crosshair as"), LEFT, 66);
+    myGLCD.print(F("possible. Keep as still as"), LEFT, 78);
+    myGLCD.print(F("possible and keep holding"), LEFT, 90);
+    myGLCD.print(F("until the highlight is"), LEFT, 102);
+    myGLCD.print(F("removed. Repeat for all"), LEFT, 114);
+    myGLCD.print(F("crosshairs in sequence."), LEFT, 126);
+    myGLCD.print(F("Touch screen to continue"), CENTER, 162);
 
     waitForTouch();
-    myGLCD.clrScr();
 }
 
 void showNumI(char *msg, uint32_t val, int x, int y)
@@ -301,12 +315,12 @@ void done()
     myGLCD.drawLine(0, 14, dispx - 1, 14);
     myGLCD.print(TITLE, CENTER, 1);
     myGLCD.setBackColor(0, 0, 0);
-    myGLCD.print("To use the new calibration", LEFT, 30);
-    myGLCD.print("settings you must map the values", LEFT, 42);
-    myGLCD.print("from Point p = ts.getPoint() e.g. ", LEFT, 54);
-    myGLCD.print("x = map(p.x, LEFT, RT, 0, tft.width());", LEFT, 66);
-    myGLCD.print("y = map(p.y, TOP, BOT, 0, tft.height());", LEFT, 78);
-    myGLCD.print("swap p.x and p.y if diff ORIENTATION", LEFT, 90);
+    myGLCD.print(F("To use the new calibration"), LEFT, 30);
+    myGLCD.print(F("settings you must map the values"), LEFT, 42);
+    myGLCD.print(F("from Point p = ts.getPoint() e.g. "), LEFT, 54);
+    myGLCD.print(F("x = map(p.x, LEFT, RT, 0, tft.width());"), LEFT, 66);
+    myGLCD.print(F("y = map(p.y, TOP, BOT, 0, tft.height());"), LEFT, 78);
+    myGLCD.print(F("swap p.x and p.y if diff ORIENTATION"), LEFT, 90);
 
     //.kbv show human values
     TS_LEFT = (calx >> 14) & 0x3FFF;
@@ -362,17 +376,17 @@ void fail()
     myGLCD.setColor(255, 255, 255);
     myGLCD.setBackColor(255, 0, 0);
     myGLCD.drawLine(0, 14, dispx - 1, 14);
-    myGLCD.print("Touch Calibration FAILED", CENTER, 1);
+    myGLCD.print(F("Touch Calibration FAILED"), CENTER, 1);
     myGLCD.setBackColor(0, 0, 0);
 
-    myGLCD.print("Unable to read the position", LEFT, 30);
-    myGLCD.print("of the press. This is a", LEFT, 42);
-    myGLCD.print("hardware issue and can", LEFT, 54);
-    myGLCD.print("not be corrected in", LEFT, 66);
-    myGLCD.print("software.", LEFT, 78);
-    myGLCD.print("check XP, XM pins with a multimeter", LEFT, 102);
-    myGLCD.print("check YP, YM pins with a multimeter", LEFT, 114);
-    myGLCD.print("should be about 300 ohms", LEFT, 126);
+    myGLCD.print(F("Unable to read the position"), LEFT, 30);
+    myGLCD.print(F("of the press. This is a"), LEFT, 42);
+    myGLCD.print(F("hardware issue and can"), LEFT, 54);
+    myGLCD.print(F("not be corrected in"), LEFT, 66);
+    myGLCD.print(F("software."), LEFT, 78);
+    myGLCD.print(F("check XP, XM pins with a multimeter"), LEFT, 102);
+    myGLCD.print(F("check YP, YM pins with a multimeter"), LEFT, 114);
+    myGLCD.print(F("should be about 300 ohms"), LEFT, 126);
 
     while (true) {};
 }
@@ -381,6 +395,8 @@ void loop()
 {
     startup();
 
+    delay(100);
+    myGLCD.clrScr();
     myGLCD.setColor(80, 80, 80);
     drawCrossHair(dispx - 11, 10);
     drawCrossHair(dispx / 2, 10);
@@ -392,8 +408,8 @@ void loop()
     drawCrossHair(10, dispy - 11);
     myGLCD.setColor(255, 255, 255);
     myGLCD.setBackColor(255, 0, 0);
-    myGLCD.print("***********", CENTER, text_y_center - 12);
-    myGLCD.print("***********", CENTER, text_y_center + 12);
+    myGLCD.print(F("***********"), CENTER, text_y_center - 12);
+    myGLCD.print(F("***********"), CENTER, text_y_center + 12);
 
     calibrate(10, 10, 0);
     calibrate(10, dispy / 2, 1);
@@ -435,4 +451,5 @@ void loop()
     done();
     while (true) {}
 }
+
 
