@@ -15,13 +15,18 @@
 MCUFRIEND_kbv tft;
 
 // MCUFRIEND UNO shield shares pins with the TFT.
+#if defined(ESP32)
+int XP = 27, YP = 4, XM = 15, YM = 14;  //most common configuration
+#else
 int XP = 6, YP = A1, XM = A2, YM = 7;  //most common configuration
 //int XP = 7, YP = A2, XM = A1, YM = 6;  //most common configuration
-#include <TouchScreen.h>         //Adafruit Library
-TouchScreen ts(XP, YP, XM, YM, 300);   //re-initialised after diagnose
-//#include "TouchScreen_kbv.h"         //my hacked version
-//TouchScreen_kbv ts(XP, YP, XM, YM, 300);   //re-initialised after diagnose
-TSPoint tp;                            //global point
+#endif
+//#include <TouchScreen.h>         //Adafruit Library
+//TouchScreen ts(XP, YP, XM, YM, 300);   //re-initialised after diagnose
+//TSPoint tp;                            //global point
+#include "TouchScreen_kbv.h"         //my hacked version
+TouchScreen_kbv ts(XP, YP, XM, YM, 300);   //re-initialised after diagnose
+TSPoint_kbv tp;                            //global point
 
 #define WHITE 0xFFFF
 #define RED   0xF800
@@ -33,8 +38,9 @@ void readResistiveTouch(void)
     tp = ts.getPoint();
     pinMode(YP, OUTPUT);      //restore shared pins
     pinMode(XM, OUTPUT);
-    digitalWrite(YP, HIGH);   //because TFT control pins
+    digitalWrite(YP, HIGH);  //because TFT control pins
     digitalWrite(XM, HIGH);
+    //    Serial.println("tp.x=" + String(tp.x) + ", tp.y=" + String(tp.y) + ", tp.z =" + String(tp.z));
 }
 
 bool ISPRESSED(void)
@@ -45,7 +51,7 @@ bool ISPRESSED(void)
     bool state, oldstate;
     while (count < 10) {
         readResistiveTouch();
-        state = tp.z > 180 && tp.z < 1000;
+        state = tp.z > 20;
         if (state == oldstate) count++;
         else count = 0;
         oldstate = state;
@@ -61,10 +67,22 @@ float px, py;
 int dispx, dispy, text_y_center, swapxy;
 uint32_t calx, caly, cals;
 
+char *Aval(int pin)
+{
+    static char buf[2][10], cnt;
+    cnt = !cnt;
+#if defined(ESP32)
+    sprintf(buf[cnt], "%d", pin);
+#else
+    sprintf(buf[cnt], "A%d", pin - A0);
+#endif
+    return buf[cnt];
+}
+
 void showpins(int A, int D, int value, const char *msg)
 {
     char buf[40];
-    sprintf(buf, "%s (A%d, D%d) = %d", msg, A - A0, D, value);
+    sprintf(buf, "%s (%s, D%d) = %d", msg, Aval(A), D, value);
     Serial.println(buf);
 }
 
@@ -107,8 +125,8 @@ boolean diagnose_pins()
                      (Values[i] < Values[!i]) ? "XM,XP: " : "YP,YM: ");
         }
         XM = Apins[!idx]; XP = Dpins[!idx]; YP = Apins[idx]; YM = Dpins[idx];
-        ts = TouchScreen(XP, YP, XM, YM, 300);    //re-initialise with pins
-//        ts = TouchScreen_kbv(XP, YP, XM, YM, 300);    //re-initialise with pins
+//        ts = TouchScreen(XP, YP, XM, YM, 300);    //re-initialise with pins
+        ts = TouchScreen_kbv(XP, YP, XM, YM, 300);    //re-initialise with pins
         return true;                              //success
     }
     Serial.println(F("BROKEN TOUCHSCREEN"));
@@ -120,8 +138,8 @@ void setup()
     Serial.begin(9600);
     Serial.println(TITLE);
     bool ret = true;
-#if defined(__arm__)
-    Serial.println(F("Not possible to diagnose Touch pins on ARM"));
+#if defined(__arm__) || defined(ESP32)
+    Serial.println(F("Not possible to diagnose Touch pins on ARM or ESP32"));
 #else
     ret = diagnose_pins();
 #endif
@@ -215,7 +233,7 @@ void readCoordinates()
         do
         {
             readResistiveTouch();
-            if (tp.z > 20 && tp.z < 1000)
+            if (tp.z > 20)
             {
                 tx += tp.x;
                 ty += tp.y;
@@ -299,8 +317,8 @@ void report()
     sprintf(buf, "y = map(p.y, TOP=%d, BOT=%d, 0, %d)", TS_TOP, TS_BOT, TS_HT);
     tft.println(buf);
     Serial.println(buf);
-    sprintf(buf, "Touch Pin Wiring XP=%d XM=A%d YP=A%d YM=%d",
-            XP, XM - A0, YP - A0, YM);
+    sprintf(buf, "Touch Pin Wiring XP=%d XM=%s YP=%s YM=%d",
+            XP, Aval(XM), Aval(YP), YM);
     tft.println("");
     tft.println(buf);
     Serial.println(buf);
@@ -364,7 +382,7 @@ void startup()
 
     while (ISPRESSED() == false) {}
     while (ISPRESSED() == true) {}
-//    waitForTouch();
+    //    waitForTouch();
 }
 
 void fail()

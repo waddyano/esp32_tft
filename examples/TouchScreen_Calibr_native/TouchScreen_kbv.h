@@ -7,13 +7,13 @@
 #define _TOUCHSCREEN_KBV_H_
 #include <stdint.h>
 
-class TSPoint {
+class TSPoint_kbv {
     public:
-        TSPoint(void);
-        TSPoint(int16_t x, int16_t y, int16_t z);
+        TSPoint_kbv(void);
+        TSPoint_kbv(int16_t x, int16_t y, int16_t z);
 
-        bool operator==(TSPoint);
-        bool operator!=(TSPoint);
+        bool operator==(TSPoint_kbv);
+        bool operator!=(TSPoint_kbv);
 
         int16_t x, y, z;
 };
@@ -27,7 +27,7 @@ class TouchScreen_kbv {
         uint16_t pressure(void);
         int readTouchY();
         int readTouchX();
-        TSPoint getPoint();
+        TSPoint_kbv getPoint();
         int16_t pressureThreshhold;
 
     private:
