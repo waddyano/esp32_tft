@@ -472,15 +472,15 @@ void write_8(uint8_t x)
 #define LCD_D6 27
 #define LCD_D7 14
 
-#define RD_PORT PORTC
+#define RD_PORT GPIO.out
 #define RD_PIN  LCD_RD
-#define WR_PORT PORTC
+#define WR_PORT GPIO.out
 #define WR_PIN  LCD_WR
-#define CD_PORT PORTC
+#define CD_PORT GPIO.out
 #define CD_PIN  LCD_RS
-#define CS_PORT PORTC
+#define CS_PORT GPIO.out1.val
 #define CS_PIN  LCD_CS
-#define RESET_PORT PORTC
+#define RESET_PORT GPIO.out1.val
 #define RESET_PIN  LCD_RST
 
 static inline uint32_t map_8(uint32_t d)
