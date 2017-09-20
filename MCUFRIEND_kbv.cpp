@@ -2643,6 +2643,10 @@ case 0x4532:    // thanks Leodino
         *p16 = 854;
         break;
 #endif
+    default:
+        p16 = (int16_t *) & WIDTH;
+        *p16 = 0;       //error value for WIDTH
+        break;
     }
     _lcd_rev = ((_lcd_capable & REV_SCREEN) != 0);
     if (table8_ads != NULL) {
