@@ -1075,7 +1075,7 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
 
 #ifdef SUPPORT_1580
     case 0x1580:
-        _lcd_capable = 0 | REV_SCREEN | READ_BGR | INVERT_GS; //thanks vanhan123
+        _lcd_capable = 0 | REV_SCREEN | READ_BGR | INVERT_GS | READ_NODUMMY; //thanks vanhan123
         static const uint16_t R61580_regValues[] PROGMEM = {  //from MCHIP Graphics Lib drvTFT001.c
             // Synchronization after reset
             TFTLCD_DELAY, 2,
