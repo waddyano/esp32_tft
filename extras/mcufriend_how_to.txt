@@ -72,6 +72,7 @@ UC8230   240x320  ID=0x8230 #define SUPPORT_8230
 UNKNOWN  320x480  ID=0x1511 (scroll directions not correct)
 UNKNOWN  240x320  ID=0x1602
 UNKNOWN  240x320  ID=0xAC11
+UNKNOWN  240x320  ID=0x2053 weird controller from BangGood (was ID=0x0000)
 
 Most of these controllers are #define SUPPORT_xxxx by default.
 You can save Flash memory on a Uno by commenting out the macro(s) in MCUFRIEND_kbv.cpp

@@ -217,6 +217,9 @@ uint16_t MCUFRIEND_kbv::readID(void)
     ret = readReg40(0xEF);      //ILI9327: [xx 02 04 93 27 FF] 
     if (ret == 0x9327)
         return 0x9327;
+    ret = readReg32(0xFE) >> 8; //weird unknown from BangGood [04 20 53] 
+    if (ret == 0x2053)
+        return 0x2053;
     uint32_t ret32 = readReg32(0x04);
     msb = ret32 >> 16;
     ret = ret32;	
@@ -855,8 +858,6 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
     int16_t table_size;
     reset();
     _lcd_xor = 0;
-    if (ID == 0)
-        ID = 0x9341;
     switch (_lcd_ID = ID) {
 /*
 	static const uint16_t _regValues[] PROGMEM = {
@@ -2211,6 +2212,9 @@ case 0x4532:    // thanks Leodino
     case 0x1602:
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | INVERT_GS | READ_24BITS; //thanks Dumper
 		goto common_9329;
+    case 0x2053:    //weird from BangGood
+        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_24BITS | REV_SCREEN | READ_BGR;
+		goto common_9329;
     case 0xAC11:
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_24BITS | REV_SCREEN; //thanks viliam
 		goto common_9329;
@@ -2273,15 +2277,7 @@ case 0x4532:    // thanks Leodino
             0xB1, 2, 0x00, 0x1B,        //Frame Control [00 1B]
             0xB7, 1, 0x07,      //Entry Mode [00]
         };
-#if !defined(USE_SERIAL)
-        if (readReg32(0xD3) == 0x0000) {        //weird DealExtreme EXTC=0 shield
-            table8_ads = ILI9341_regValues_ada, table_size = sizeof(ILI9341_regValues_ada);
-            _lcd_capable |= REV_SCREEN | READ_BGR;
-        } else
-#endif
-        {
-            table8_ads = ILI9341_regValues_2_4, table_size = sizeof(ILI9341_regValues_2_4);   //
-        }
+        table8_ads = ILI9341_regValues_2_4, table_size = sizeof(ILI9341_regValues_2_4);   //
         break;
 #if defined(SUPPORT_9342)
     case 0x9342:
