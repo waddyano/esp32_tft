@@ -1,5 +1,5 @@
 #ifndef MCUFRIEND_KBV_H_
-#define MCUFRIEND_KBV_H_   297
+#define MCUFRIEND_KBV_H_   298
 
 //#define USE_SERIAL
 
