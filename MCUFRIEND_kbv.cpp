@@ -1076,7 +1076,7 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
 #ifdef SUPPORT_1580
     case 0x1580:
         _lcd_capable = 0 | REV_SCREEN | READ_BGR | INVERT_GS; //thanks vanhan123
-        static const uint16_t R61580_regValues[] PROGMEM = {
+        static const uint16_t R61580_regValues[] PROGMEM = {  //from MCHIP Graphics Lib drvTFT001.c
             // Synchronization after reset
             TFTLCD_DELAY, 2,
             0x0000, 0x0000,
@@ -1132,7 +1132,68 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
             0x0093, 0x0701,
             0x0007, 0x0100,
         };
-        init_table16(R61580_regValues, sizeof(R61580_regValues));
+        static const uint16_t R61580_DEM240320C[] PROGMEM = { //from DEM 240320C TMH-PW-N
+            0x00, 0x0000,
+            0x00, 0x0000,
+            TFTLCD_DELAY, 100,
+            0x00, 0x0000,
+            0x00, 0x0000,
+            0x00, 0x0000,
+            0x00, 0x0000,
+            0xA4, 0x0001,
+            TFTLCD_DELAY, 100,
+            0x60, 0xA700,
+            0x08, 0x0808,
+            /******************************************/
+            //Gamma Setting:
+            0x30, 0x0203,
+            0x31, 0x080F,
+            0x32, 0x0401,
+            0x33, 0x050B,
+            0x34, 0x3330,
+            0x35, 0x0B05,
+            0x36, 0x0005,
+            0x37, 0x0F08,
+            0x38, 0x0302,
+            0x39, 0x3033,
+            /******************************************/
+            //Power Setting:
+            0x90, 0x0018, //80Hz
+            0x10, 0x0530, //BT,AP
+            0x11, 0x0237, //DC1,DC0,VC
+            0x12, 0x01BF,
+            0x13, 0x1000, //VCOM
+            TFTLCD_DELAY, 200,
+            /******************************************/
+            0x01, 0x0100,
+            0x02, 0x0200,
+            0x03, 0x1030,
+            0x09, 0x0001,
+            0x0A, 0x0008,
+            0x0C, 0x0000,
+            0x0D, 0xD000,
+
+            0x0E, 0x0030,
+            0x0F, 0x0000,
+            0x20, 0x0000, //H Start
+            0x21, 0x0000, //V Start
+            0x29, 0x002E,
+            0x50, 0x0000,
+            0x51, 0x00EF,
+            0x52, 0x0000,
+            0x53, 0x013F,
+            0x61, 0x0001,
+            0x6A, 0x0000,
+            0x80, 0x0000,
+            0x81, 0x0000,
+            0x82, 0x005F,
+            0x93, 0x0701,
+            /******************************************/
+            0x07, 0x0100,
+            TFTLCD_DELAY, 100,
+        };
+        init_table16(R61580_DEM240320C, sizeof(R61580_DEM240320C));
+//        init_table16(R61580_regValues, sizeof(R61580_regValues));
         break;
 #endif
 
