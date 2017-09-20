@@ -81,10 +81,9 @@ You can save Flash memory on a Uno by commenting out the macro(s) in MCUFRIEND_k
 It also runs on NUCLEO-F103 and TEENSY3.2 with Sparkfun Adapter
 
 12. These Mcufriend-style shields tend to have a resistive TouchScreen on A1, 7, A2, 6 but are not always the same rotation of direction.
-Run the diagnose_Touchpins.ino sketch to detect which pins are used
-Run the TouchScreen_Calibr_kbv.ino sketch to diagnose your model and then scale the result from TouchScreen.h methods()
-The Resistive TouchScreen does not work on the Due.   It seems to be upset by sharing pins.  I have discovered why.   
-(You need a new Touch library.)
+    The TouchScreen_Calibr_native.ino sketch wiil diagnose Touch Pins, do Calibration, report to Serial Terminal.
+	The Calibration should work with the TouchScreen.h library from Adafruit.
+	You can always copy the local TouchScreen_kbv.h library from sketch to the global user libraries folder.
 
 13. The graphictest_kbv.ino sketch runs the standard Adafruit tests and reports the execution time.
     The Scroll tests show each screen rotation, colours, scroll directions, colour inversion.
