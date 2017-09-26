@@ -2036,7 +2036,8 @@ case 0x4532:    // thanks Leodino
 
 //        goto common_9320;
     case 0x5408:
-        _lcd_capable = 0 | REV_SCREEN | READ_BGR | INVERT_GS;
+        _lcd_capable = 0 | REV_SCREEN | READ_BGR; //Red 2.4" thanks jorgenv, Ardlab_Gent
+//        _lcd_capable = 0 | REV_SCREEN | READ_BGR | INVERT_GS; //Blue 2.8" might be different
         goto common_9320;
     case 0x1505:                //R61505 thanks Ravi_kanchan2004. R61505V, R61505W different
     case 0x9320:
