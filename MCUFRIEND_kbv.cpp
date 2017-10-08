@@ -326,10 +326,7 @@ int16_t MCUFRIEND_kbv::readGRAM(int16_t x, int16_t y, uint16_t * block, int16_t 
 
 void MCUFRIEND_kbv::setRotation(uint8_t r)
 {
-#if defined(STM32L476xx)
-#undef SS
-#endif
-    uint16_t GS, SS, ORG, REV = _lcd_rev;
+    uint16_t GS, SS_v, ORG, REV = _lcd_rev;
     uint8_t val, d[3];
     rotation = r & 3;           // just perform the operation ourselves on the protected variables
     _width = (rotation & 1) ? HEIGHT : WIDTH;
@@ -357,10 +354,10 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
     if (_lcd_capable & MIPI_DCS_REV1) {
         if (_lcd_ID == 0x6814) {  //.kbv my weird 0x9486 might be 68140
             GS = (val & 0x80) ? (1 << 6) : 0;   //MY
-            SS = (val & 0x40) ? (1 << 5) : 0;   //MX
+            SS_v = (val & 0x40) ? (1 << 5) : 0;   //MX
             val &= 0x28;        //keep MV, BGR, MY=0, MX=0, ML=0
             d[0] = 0;
-            d[1] = GS | SS | 0x02;      //MY, MX
+            d[1] = GS | SS_v | 0x02;      //MY, MX
             d[2] = 0x3B;
             WriteCmdParamN(0xB6, 3, d);
             goto common_MC;
@@ -401,8 +398,8 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
             _SC = 0x37, _EC = 0x36, _SP = 0x39, _EP = 0x38;
             _MC = 0x20, _MP = 0x21, _MW = 0x22;
             GS = (val & 0x80) ? (1 << 9) : 0;
-            SS = (val & 0x40) ? (1 << 8) : 0;
-            WriteCmdData(0x01, GS | SS | 0x001C);       // set Driver Output Control
+            SS_v = (val & 0x40) ? (1 << 8) : 0;
+            WriteCmdData(0x01, GS | SS_v | 0x001C);       // set Driver Output Control
             goto common_ORG;
 #endif
 #if defined(SUPPORT_0139) || defined(SUPPORT_0154)
@@ -419,8 +416,8 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
           common_S6D:
             _MC = 0x20, _MP = 0x21, _MW = 0x22;
             GS = (val & 0x80) ? (1 << 9) : 0;
-            SS = (val & 0x40) ? (1 << 8) : 0;
-            WriteCmdData(0x01, GS | SS | 0x0028);       // set Driver Output Control
+            SS_v = (val & 0x40) ? (1 << 8) : 0;
+            WriteCmdData(0x01, GS | SS_v | 0x0028);       // set Driver Output Control
             goto common_ORG;
 #endif
         case 0x5420:
@@ -439,8 +436,8 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
             GS = (val & 0x80) ? (1 << 15) : 0;
             WriteCmdData(0x60, GS | 0x2700);    // Gate Scan Line (0xA700)
           common_SS:
-            SS = (val & 0x40) ? (1 << 8) : 0;
-            WriteCmdData(0x01, SS);     // set Driver Output Control
+            SS_v = (val & 0x40) ? (1 << 8) : 0;
+            WriteCmdData(0x01, SS_v);     // set Driver Output Control
           common_ORG:
             ORG = (val & 0x20) ? (1 << 3) : 0;
 #ifdef SUPPORT_8230
@@ -461,9 +458,9 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
             if (rotation & 1)
                 val ^= 0xD0;    // exchange Landscape modes
             GS = (val & 0x80) ? (1 << 14) | (1 << 12) : 0;      //called TB (top-bottom)
-            SS = (val & 0x40) ? (1 << 9) : 0;   //called RL (right-left)
+            SS_v = (val & 0x40) ? (1 << 9) : 0;   //called RL (right-left)
             ORG = (val & 0x20) ? (1 << 3) : 0;  //called AM
-            _lcd_drivOut = GS | SS | (REV << 13) | 0x013F;      //REV=0, BGR=0, MUX=319
+            _lcd_drivOut = GS | SS_v | (REV << 13) | 0x013F;      //REV=0, BGR=0, MUX=319
             if (val & 0x08)
                 _lcd_drivOut |= 0x0800; //BGR
             WriteCmdData(0x01, _lcd_drivOut);   // set Driver Output Control
