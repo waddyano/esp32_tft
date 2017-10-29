@@ -110,13 +110,18 @@
 // VPORTs are very fast.   CBI, SBI are only one cycle.    Hence all those RD_ACTIVEs
 // ILI9320 data sheet says tDDR=100ns.    We need 218ns to read REGs correctly.
 // S6D0154 data sheet says tDDR=250ns.    We need ~500ns to read REGs correctly.
+// ST7789 data sheet says tRC=450ns.    We need ~167ns to read REGs correctly. (10 cycles @ 60MHz )
+// ST7789 says tRC=160ns for ID and tRC=450ns for Frame Memory
+// ILI9341 says tRC=160ns for ID and tRC=450ns for Frame Memory.  They are FASTER
+#define WRITE_DELAY   { }
+#define READ_DELAY    { RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; }
 #define write_8(x)    { VPORT2.OUT = x; }
 #define read_8()      ( VPORT2.IN )
 #define setWriteDir() { PORTCFG.VPCTRLA=0x10; PORTCFG.VPCTRLB=0x32; VPORT2.DIR = 0xFF; }
 #define setReadDir()  { VPORT2.DIR = 0x00; }
-#define write8(x)     { write_8(x); WR_STROBE; }
+#define write8(x)     { write_8(x); WRITE_DELAY; WR_STROBE; }
 #define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
-#define READ_8(dst)   { RD_STROBE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; dst = read_8(); RD_IDLE; }
+#define READ_8(dst)   { RD_STROBE; READ_DELAY; dst = read_8(); RD_IDLE; }
 #define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
 
 #define PIN_LOW(p, b)        (p).OUT &= ~(1<<(b))
