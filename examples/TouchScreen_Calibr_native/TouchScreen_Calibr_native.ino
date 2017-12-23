@@ -307,6 +307,12 @@ void report()
             tft.readID(), TS_WID, TS_HT);
     tft.println(buf);
     Serial.println(buf);
+    sprintf(buf, "const int XP=%d,XM=A%d,YP=A%d,YM=%d; //ID=0x%04X", 
+            XP, XM - A0, YP - A0, YM, tft.readID());
+    Serial.println(buf);
+    sprintf(buf, "const int TS_LEFT=%d,TS_RT=%d,TS_TOP=%d,TS_BOT=%d;", 
+            TS_LEFT, TS_RT, TS_TOP, TS_BOT);
+    Serial.println(buf);
     sprintf(buf, "PORTRAIT CALIBRATION     %d x %d", TS_WID, TS_HT);
     tft.println("");
     tft.println(buf);
