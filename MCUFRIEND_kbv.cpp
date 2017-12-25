@@ -614,64 +614,44 @@ void MCUFRIEND_kbv::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_
         setAddrWindow(0, 0, width() - 1, height() - 1);
 }
 
+static void pushColors_any(uint16_t cmd, uint8_t * block, int16_t n, bool first, uint8_t flags)
+{
+    uint16_t color;
+    uint8_t h, l;
+	bool isconst = flags & 1;
+	bool isbigend = (flags & 2) != 0;
+    CS_ACTIVE;
+    if (first) {
+        WriteCmd(cmd);
+    }
+    while (n-- > 0) {
+        if (isconst) {
+            h = pgm_read_byte(block++);
+            l = pgm_read_byte(block++);
+        } else {
+		    h = (*block++);
+            l = (*block++);
+		}
+        color = (isbigend) ? (h << 8 | l) :  (l << 8 | h);
+#if defined(SUPPORT_9488_555)
+    if (is555) color = color565_to_555(color);
+#endif
+        write16(color);
+    }
+    CS_IDLE;
+}
+
 void MCUFRIEND_kbv::pushColors(uint16_t * block, int16_t n, bool first)
 {
-    uint16_t color;
-    CS_ACTIVE;
-    if (first) {
-        WriteCmd(_MW);
-    }
-//    CD_DATA;
-    while (n-- > 0) {
-        color = *block++;
-#if defined(SUPPORT_9488_555)
-    if (is555) color = color565_to_555(color);
-#endif
-        write16(color);
-    }
-    CS_IDLE;
+    pushColors_any(_MW, (uint8_t *)block, n, first, 0);
 }
-
 void MCUFRIEND_kbv::pushColors(uint8_t * block, int16_t n, bool first)
 {
-    uint16_t color;
-    uint8_t h, l;
-    CS_ACTIVE;
-    if (first) {
-        WriteCmd(_MW);
-    }
-//    CD_DATA;
-    while (n-- > 0) {
-        h = (*block++);
-        l = (*block++);
-        color = h << 8 | l;
-#if defined(SUPPORT_9488_555)
-    if (is555) color = color565_to_555(color);
-#endif
-        write16(color);
-    }
-    CS_IDLE;
+    pushColors_any(_MW, (uint8_t *)block, n, first, 0);
 }
-
-void MCUFRIEND_kbv::pushColors(const uint8_t * block, int16_t n, bool first, bool bigend) //costs 28 bytes
+void MCUFRIEND_kbv::pushColors(const uint8_t * block, int16_t n, bool first, bool bigend)
 {
-    uint16_t color;
-    uint8_t h, l;
-    CS_ACTIVE;
-    if (first) {
-        WriteCmd(_MW);
-    }
-//    CD_DATA;
-    while (n-- > 0) {
-        l = pgm_read_byte(block++);
-        h = pgm_read_byte(block++);
-        color = (bigend) ? (l << 8 ) | h : (h << 8) | l;
-#if defined(SUPPORT_9488_555)
-    if (is555) color = color565_to_555(color);
-#endif
-        write16(color);
-    }
-    CS_IDLE;
+    pushColors_any(_MW, (uint8_t *)block, n, first, bigend ? 3 : 1);
 }
 
 void MCUFRIEND_kbv::vertScroll(int16_t top, int16_t scrollines, int16_t offset)
