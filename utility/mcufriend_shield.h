@@ -1,4 +1,4 @@
-//#define USE_SPECIAL             //check for custom drivers
+#define USE_SPECIAL             //check for custom drivers
 #if defined(USE_SPECIAL)
 #include "mcufriend_special.h"
 #if !defined(USE_SPECIAL_FAIL)
@@ -589,5 +589,5 @@ static void setReadDir()
 #define GPIO_INIT()
 #endif
 #define CTL_INIT()   { GPIO_INIT(); RD_OUTPUT; WR_OUTPUT; CD_OUTPUT; CS_OUTPUT; RESET_OUTPUT; }
-#define WriteCmd(x)  { CD_COMMAND; write16(x); }
-#define WriteData(x) { CD_DATA; write16(x); }
+#define WriteCmd(x)  { CD_COMMAND; write16(x); CD_DATA; }
+#define WriteData(x) { write16(x); }
