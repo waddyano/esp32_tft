@@ -103,7 +103,7 @@ static void WriteCmdParamN(uint16_t cmd, int8_t N, uint8_t * block)
     WriteCmd(cmd);
     while (N-- > 0) {
         uint8_t u8 = *block++;
-        CD_DATA;
+//        CD_DATA;
         write8(u8);
         if (N && is8347) {
             cmd++;
@@ -148,7 +148,7 @@ uint16_t MCUFRIEND_kbv::readReg(uint16_t reg, int8_t index)
     CS_ACTIVE;
     WriteCmd(reg);
     setReadDir();
-    CD_DATA;
+//    CD_DATA;
     delay(1);    //1us should be adequate
     //    READ_16(ret);
     do { ret = read16bits(); }while (--index >= 0);  //need to test with SSD1963
@@ -277,7 +277,7 @@ int16_t MCUFRIEND_kbv::readGRAM(int16_t x, int16_t y, uint16_t * block, int16_t 
         CS_ACTIVE;
         WriteCmd(_MR);
         setReadDir();
-        CD_DATA;
+//        CD_DATA;
         if (_lcd_capable & READ_NODUMMY) {
             ;
         } else if ((_lcd_capable & MIPI_DCS_REV1) || _lcd_ID == 0x1289) {
@@ -481,6 +481,9 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
 
 void MCUFRIEND_kbv::drawPixel(int16_t x, int16_t y, uint16_t color)
 {
+#if 1
+    fillRect(x, y, 1, 1, color);
+#else
     // MCUFRIEND just plots at edge if you try to write outside of the box:
     if (x < 0 || y < 0 || x >= width() || y >= height())
         return;
@@ -501,6 +504,7 @@ void MCUFRIEND_kbv::drawPixel(int16_t x, int16_t y, uint16_t color)
     if (is555) color = color565_to_555(color);
 #endif
     WriteCmdData(_MW, color);
+#endif
 }
 
 void MCUFRIEND_kbv::setAddrWindow(int16_t x, int16_t y, int16_t x1, int16_t y1)
@@ -563,7 +567,6 @@ void MCUFRIEND_kbv::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_
     if (end > height())
         end = height();
     h = end - y;
-
     setAddrWindow(x, y, x + w - 1, y + h - 1);
     CS_ACTIVE;
     WriteCmd(_MW);
@@ -573,7 +576,7 @@ void MCUFRIEND_kbv::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_
         w = end;
     }
     uint8_t hi = color >> 8, lo = color & 0xFF;
-    CD_DATA;
+//    CD_DATA;
     while (h-- > 0) {
         end = w;
 #if USING_16BIT_BUS
@@ -618,7 +621,7 @@ void MCUFRIEND_kbv::pushColors(uint16_t * block, int16_t n, bool first)
     if (first) {
         WriteCmd(_MW);
     }
-    CD_DATA;
+//    CD_DATA;
     while (n-- > 0) {
         color = *block++;
 #if defined(SUPPORT_9488_555)
@@ -637,7 +640,7 @@ void MCUFRIEND_kbv::pushColors(uint8_t * block, int16_t n, bool first)
     if (first) {
         WriteCmd(_MW);
     }
-    CD_DATA;
+//    CD_DATA;
     while (n-- > 0) {
         h = (*block++);
         l = (*block++);
@@ -658,7 +661,7 @@ void MCUFRIEND_kbv::pushColors(const uint8_t * block, int16_t n, bool first, boo
     if (first) {
         WriteCmd(_MW);
     }
-    CD_DATA;
+//    CD_DATA;
     while (n-- > 0) {
         l = pgm_read_byte(block++);
         h = pgm_read_byte(block++);
