@@ -4,10 +4,10 @@
 //#define USE_SSD1289_SHIELD_MEGA 
 //#define USE_SSD1289_SHIELD_DUE 
 //#define USE_MEGA_8BIT_PROTOSHIELD
-//#define USE_MEGA_8BIT_SHIELD
-//#define USE_MEGA_16BIT_SHIELD     //RD on PL6 (D43)
-#define USE_BLD_BST_MEGA32U4
-#define USE_BLD_BST_MEGA2560
+//#define USE_MEGA_8BIT_SHIELD      // 4.7sec Mega2560 Shield
+//#define USE_MEGA_16BIT_SHIELD     // 2.14sec Mega2560 Shield 
+//#define USE_BLD_BST_MEGA32U4
+#define USE_BLD_BST_MEGA2560      // 12.23sec Uno Shield (17.38s C)
 //#define USE_DUE_8BIT_PROTOSHIELD
 //#define USE_DUE_16BIT_SHIELD        //RD on PA15 (D24) 
 //#define USE_BOBCACHELOT_TEENSY
