@@ -809,6 +809,58 @@ static __attribute((always_inline)) void write_8(uint8_t val)
 #define PIN_HIGH(port, pin)   (port)->PIO_SODR = (1<<(pin))
 #define PIN_OUTPUT(port, pin) (port)->PIO_OER = (1<<(pin))
 
+#elif defined(__SAM3X8E__) && defined(USE_OPENSMART_SHIELD_PINOUT)  //OPENSMART shield on DUE
+#warning USE_OPENSMART_SHIELD_PINOUT on DUE
+ // configure macros for the control pins
+#define RD_PORT PIOA
+#define RD_PIN  16
+#define WR_PORT PIOA
+#define WR_PIN  24
+#define CD_PORT PIOA
+#define CD_PIN  23
+#define CS_PORT PIOA
+#define CS_PIN  22
+#define RESET_PORT PIOA
+#define RESET_PIN  6
+ // configure macros for data bus
+#define BMASK         (1<<27)
+#define CMASK         (0x12F << 21)
+#define DMASK         (1<<7)
+#define write_8(x)   {  PIOB->PIO_CODR = BMASK; PIOC->PIO_CODR = CMASK; PIOD->PIO_CODR = DMASK; \
+                        PIOC->PIO_SODR = (((x) & (1<<0)) << 22); \
+                        PIOC->PIO_SODR = (((x) & (1<<1)) << 20); \
+                        PIOC->PIO_SODR = (((x) & (1<<2)) << 27); \
+                        PIOD->PIO_SODR = (((x) & (1<<3)) << 4); \
+                        PIOC->PIO_SODR = (((x) & (1<<4)) << 22); \
+                        PIOB->PIO_SODR = (((x) & (1<<5)) << 22); \
+                        PIOC->PIO_SODR = (((x) & (1<<6)) << 18); \
+                        PIOC->PIO_SODR = (((x) & (1<<7)) << 16); \
+					 }
+
+#define read_8()      ( ((PIOC->PIO_PDSR & (1<<22)) >> 22)\
+                      | ((PIOC->PIO_PDSR & (1<<21)) >> 20)\
+                      | ((PIOC->PIO_PDSR & (1<<29)) >> 27)\
+                      | ((PIOD->PIO_PDSR & (1<<7))  >> 4)\
+                      | ((PIOC->PIO_PDSR & (1<<26)) >> 22)\
+                      | ((PIOB->PIO_PDSR & (1<<27)) >> 22)\
+                      | ((PIOC->PIO_PDSR & (1<<24)) >> 18)\
+                      | ((PIOC->PIO_PDSR & (1<<23)) >> 16)\
+                      )
+#define setWriteDir() { PIOB->PIO_OER = BMASK; PIOC->PIO_OER = CMASK; PIOD->PIO_OER = DMASK; }
+#define setReadDir()  { \
+                          PMC->PMC_PCER0 = (1 << ID_PIOB)|(1 << ID_PIOC)|(1 << ID_PIOD);\
+						  PIOB->PIO_ODR = BMASK; PIOC->PIO_ODR = CMASK; PIOD->PIO_ODR = DMASK;\
+						}
+#define write8(x)     { write_8(x); WR_ACTIVE; WR_STROBE; }
+//#define write8(x)     { write_8(x); WR_ACTIVE; WR_STROBE; WR_IDLE; }
+#define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
+#define READ_8(dst)   { RD_STROBE; RD_ACTIVE; dst = read_8(); RD_IDLE; RD_IDLE; }
+#define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
+ // Shield Control macros.
+#define PIN_LOW(port, pin)    (port)->PIO_CODR = (1<<(pin))
+#define PIN_HIGH(port, pin)   (port)->PIO_SODR = (1<<(pin))
+#define PIN_OUTPUT(port, pin) (port)->PIO_OER = (1<<(pin))
+
 #elif defined(__MK20DX256__) && defined(USE_BOBCACHELOT_TEENSY) // special for BOBCACHEALOT_TEENSY
 #warning  special for BOBCACHEALOT_TEENSY
 #define RD_PORT GPIOD
