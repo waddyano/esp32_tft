@@ -89,7 +89,7 @@ void MCUFRIEND_kbv::reset(void)
 	WriteCmdData(0xB0, 0x0000);   //R61520 needs this to read ID
 }
 
-void MCUFRIEND_kbv::WriteCmdData(uint16_t cmd, uint16_t dat)
+static void writecmddata(uint16_t cmd, uint16_t dat)
 {
     CS_ACTIVE;
     WriteCmd(cmd);
@@ -97,13 +97,14 @@ void MCUFRIEND_kbv::WriteCmdData(uint16_t cmd, uint16_t dat)
     CS_IDLE;
 }
 
+void MCUFRIEND_kbv::WriteCmdData(uint16_t cmd, uint16_t dat) { writecmddata(cmd, dat); }
+
 static void WriteCmdParamN(uint16_t cmd, int8_t N, uint8_t * block)
 {
     CS_ACTIVE;
     WriteCmd(cmd);
     while (N-- > 0) {
         uint8_t u8 = *block++;
-        CD_DATA;
         write8(u8);
         if (N && is8347) {
             cmd++;
@@ -148,7 +149,6 @@ uint16_t MCUFRIEND_kbv::readReg(uint16_t reg, int8_t index)
     CS_ACTIVE;
     WriteCmd(reg);
     setReadDir();
-    CD_DATA;
     delay(1);    //1us should be adequate
     //    READ_16(ret);
     do { ret = read16bits(); }while (--index >= 0);  //need to test with SSD1963
@@ -277,7 +277,6 @@ int16_t MCUFRIEND_kbv::readGRAM(int16_t x, int16_t y, uint16_t * block, int16_t 
         CS_ACTIVE;
         WriteCmd(_MR);
         setReadDir();
-        CD_DATA;
         if (_lcd_capable & READ_NODUMMY) {
             ;
         } else if ((_lcd_capable & MIPI_DCS_REV1) || _lcd_ID == 0x1289) {
@@ -484,22 +483,11 @@ void MCUFRIEND_kbv::drawPixel(int16_t x, int16_t y, uint16_t color)
     // MCUFRIEND just plots at edge if you try to write outside of the box:
     if (x < 0 || y < 0 || x >= width() || y >= height())
         return;
-#if defined(OFFSET_9327)
-	if (_lcd_ID == 0x9327) {
-	    if (rotation == 2) y += OFFSET_9327;
-	    if (rotation == 3) x += OFFSET_9327;
-    }
-#endif
-    if (_lcd_capable & MIPI_DCS_REV1) {
-        WriteCmdParam4(_MC, x >> 8, x, x >> 8, x);
-        WriteCmdParam4(_MP, y >> 8, y, y >> 8, y);
-    } else {
-        WriteCmdData(_MC, x);
-        WriteCmdData(_MP, y);
-    }
 #if defined(SUPPORT_9488_555)
     if (is555) color = color565_to_555(color);
 #endif
+    setAddrWindow(x, y, x, y);
+//    CS_ACTIVE; WriteCmd(_MW); write16(color); CS_IDLE; //-0.01s +98B
     WriteCmdData(_MW, color);
 }
 
@@ -519,21 +507,30 @@ void MCUFRIEND_kbv::setAddrWindow(int16_t x, int16_t y, int16_t x1, int16_t y1)
     }
 #endif
     if (_lcd_capable & MIPI_DCS_REV1) {
+#if 1
+        CS_ACTIVE;    //-0.26s, +272B
+        WriteCmd(_MC); write8(x>>8); write8(x); write8(x1>>8); write8(x1); 
+        WriteCmd(_MP); write8(y>>8); write8(y); write8(y1>>8); write8(y1);
+        CS_IDLE;		
+#else
         WriteCmdParam4(_MC, x >> 8, x, x1 >> 8, x1);
         WriteCmdParam4(_MP, y >> 8, y, y1 >> 8, y1);
+#endif
     } else {
         WriteCmdData(_MC, x);
         WriteCmdData(_MP, y);
-        if (_lcd_capable & XSA_XEA_16BIT) {
-            if (rotation & 1)
-                y1 = y = (y1 << 8) | y;
-            else
-                x1 = x = (x1 << 8) | x;
+        if (!(x == x1 && y == y1)) {  //only need MC,MP for drawPixel
+            if (_lcd_capable & XSA_XEA_16BIT) {
+                if (rotation & 1)
+                    y1 = y = (y1 << 8) | y;
+                else
+                    x1 = x = (x1 << 8) | x;
+            }
+            WriteCmdData(_SC, x);
+            WriteCmdData(_SP, y);
+            WriteCmdData(_EC, x1);
+            WriteCmdData(_EP, y1);
         }
-        WriteCmdData(_SC, x);
-        WriteCmdData(_SP, y);
-        WriteCmdData(_EC, x1);
-        WriteCmdData(_EP, y1);
     }
 }
 
@@ -563,7 +560,6 @@ void MCUFRIEND_kbv::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_
     if (end > height())
         end = height();
     h = end - y;
-
     setAddrWindow(x, y, x + w - 1, y + h - 1);
     CS_ACTIVE;
     WriteCmd(_MW);
@@ -573,7 +569,6 @@ void MCUFRIEND_kbv::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_
         w = end;
     }
     uint8_t hi = color >> 8, lo = color & 0xFF;
-    CD_DATA;
     while (h-- > 0) {
         end = w;
 #if USING_16BIT_BUS
@@ -611,64 +606,44 @@ void MCUFRIEND_kbv::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_
         setAddrWindow(0, 0, width() - 1, height() - 1);
 }
 
+static void pushColors_any(uint16_t cmd, uint8_t * block, int16_t n, bool first, uint8_t flags)
+{
+    uint16_t color;
+    uint8_t h, l;
+	bool isconst = flags & 1;
+	bool isbigend = (flags & 2) != 0;
+    CS_ACTIVE;
+    if (first) {
+        WriteCmd(cmd);
+    }
+    while (n-- > 0) {
+        if (isconst) {
+            h = pgm_read_byte(block++);
+            l = pgm_read_byte(block++);
+        } else {
+		    h = (*block++);
+            l = (*block++);
+		}
+        color = (isbigend) ? (h << 8 | l) :  (l << 8 | h);
+#if defined(SUPPORT_9488_555)
+    if (is555) color = color565_to_555(color);
+#endif
+        write16(color);
+    }
+    CS_IDLE;
+}
+
 void MCUFRIEND_kbv::pushColors(uint16_t * block, int16_t n, bool first)
 {
-    uint16_t color;
-    CS_ACTIVE;
-    if (first) {
-        WriteCmd(_MW);
-    }
-    CD_DATA;
-    while (n-- > 0) {
-        color = *block++;
-#if defined(SUPPORT_9488_555)
-    if (is555) color = color565_to_555(color);
-#endif
-        write16(color);
-    }
-    CS_IDLE;
+    pushColors_any(_MW, (uint8_t *)block, n, first, 0);
 }
-
 void MCUFRIEND_kbv::pushColors(uint8_t * block, int16_t n, bool first)
 {
-    uint16_t color;
-    uint8_t h, l;
-    CS_ACTIVE;
-    if (first) {
-        WriteCmd(_MW);
-    }
-    CD_DATA;
-    while (n-- > 0) {
-        h = (*block++);
-        l = (*block++);
-        color = h << 8 | l;
-#if defined(SUPPORT_9488_555)
-    if (is555) color = color565_to_555(color);
-#endif
-        write16(color);
-    }
-    CS_IDLE;
+    pushColors_any(_MW, (uint8_t *)block, n, first, 0);
 }
-
-void MCUFRIEND_kbv::pushColors(const uint8_t * block, int16_t n, bool first, bool bigend) //costs 28 bytes
+void MCUFRIEND_kbv::pushColors(const uint8_t * block, int16_t n, bool first, bool bigend)
 {
-    uint16_t color;
-    uint8_t h, l;
-    CS_ACTIVE;
-    if (first) {
-        WriteCmd(_MW);
-    }
-    CD_DATA;
-    while (n-- > 0) {
-        l = pgm_read_byte(block++);
-        h = pgm_read_byte(block++);
-        color = (bigend) ? (l << 8 ) | h : (h << 8) | l;
-#if defined(SUPPORT_9488_555)
-    if (is555) color = color565_to_555(color);
-#endif
-        write16(color);
-    }
-    CS_IDLE;
+    pushColors_any(_MW, (uint8_t *)block, n, first, bigend ? 3 : 1);
 }
 
 void MCUFRIEND_kbv::vertScroll(int16_t top, int16_t scrollines, int16_t offset)
@@ -839,10 +814,7 @@ static void init_table16(const void *table, int16_t size)
         if (cmd == TFTLCD_DELAY)
             delay(d);
         else {
-            CS_ACTIVE;
-            WriteCmd(cmd);
-            WriteData(d);
-            CS_IDLE;
+			writecmddata(cmd, d);                      //static function
         }
         size -= 2 * sizeof(int16_t);
     }

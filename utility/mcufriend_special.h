@@ -4,10 +4,10 @@
 //#define USE_SSD1289_SHIELD_MEGA 
 //#define USE_SSD1289_SHIELD_DUE 
 //#define USE_MEGA_8BIT_PROTOSHIELD
-//#define USE_MEGA_8BIT_SHIELD
-//#define USE_MEGA_16BIT_SHIELD     //RD on PL6 (D43)
+//#define USE_MEGA_8BIT_SHIELD      // 4.7sec Mega2560 Shield
+//#define USE_MEGA_16BIT_SHIELD     // 2.14sec Mega2560 Shield 
 //#define USE_BLD_BST_MEGA32U4
-//#define USE_BLD_BST_MEGA2560
+#define USE_BLD_BST_MEGA2560      // 12.23sec Uno Shield (17.38s C)
 //#define USE_DUE_8BIT_PROTOSHIELD
 //#define USE_DUE_16BIT_SHIELD        //RD on PA15 (D24) 
 //#define USE_BOBCACHELOT_TEENSY
@@ -144,7 +144,7 @@
 #define EMASK         0x38
 #define GMASK         0x20
 #define HMASK         0x78
-static inline void write_8(uint8_t val)
+static __attribute((always_inline)) void write_8(uint8_t val)
 {
 	asm volatile("lds __tmp_reg__,0x0102" "\n\t"
 	"BST %0,0" "\n\t" "BLD __tmp_reg__,5" "\n\t"
@@ -371,7 +371,7 @@ static inline void write_8(uint8_t val)
 #define CMASK         (1<<6)
 #define DMASK         ((1<<7)|(1<<4)|(3<<0))
 #define EMASK         (1<<6)
-static inline void write_8(uint8_t val)
+static __attribute((always_inline)) void write_8(uint8_t val)
 {
 	asm volatile("in __tmp_reg__,0x05" "\n\t"
 	"BST %0,0" "\n\t" "BLD __tmp_reg__,4" "\n\t"
