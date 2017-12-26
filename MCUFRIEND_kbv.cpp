@@ -11,6 +11,7 @@
 //#define SUPPORT_8347D             //HX8347-D, HX8347-G, HX8347-I +520 bytes, 0.27s
 //#define SUPPORT_8347A             //HX8347-A +500 bytes, 0.27s
 //#define SUPPORT_8352A             //HX8352A +486 bytes, 0.27s
+#define SUPPORT_8352B             //HX8352B UNTESTED
 #define SUPPORT_9225              //ILI9225-B, ILI9225-G ID=0x9225, ID=0x9226
 //#define SUPPORT_9326_5420         //ILI9326, SPFD5420 +246 bytes
 //#define SUPPORT_9342              //costs +114 bytes
@@ -1625,6 +1626,64 @@ case 0x4532:    // thanks Leodino
         *p16 = 400;
         break;
 #endif
+
+#ifdef SUPPORT_8352B
+    case 0x0065:       //HX8352-B
+        _lcd_capable = MIPI_DCS_REV1 | MV_AXIS;
+        is8347 = 1;
+        static const uint8_t HX8352B_regValues[] PROGMEM = {
+            // Register setting for EQ setting
+            0xe5, 1, 0x10,      //
+            0xe7, 1, 0x10,      //
+            0xe8, 1, 0x48,      //
+            0xec, 1, 0x09,      //
+            0xed, 1, 0x6c,      //
+            // Power on Setting
+            0x23, 1, 0x6F,      //VMF
+            0x24, 1, 0x57,      //VMH
+            0x25, 1, 0x71,      //VML
+            0xE2, 1, 0x18,      //
+            0x1B, 1, 0x15,      //VRH
+            0x01, 1, 0x00,      //
+            0x1C, 1, 0x03,      //AP=3
+            // Power on sequence
+            0x19, 1, 0x01,      //OSCEN=1
+            TFTLCD_DELAY8, 5,
+            0x1F, 1, 0x8C,      //GASEN=1, DK=1, XDK=1
+            0x1F, 1, 0x84,      //GASEN=1, XDK=1
+            TFTLCD_DELAY8, 10,
+            0x1F, 1, 0x94,      //GASEN=1, PON=1, XDK=1
+            TFTLCD_DELAY8, 10,
+            0x1F, 1, 0xD4,      //GASEN=1, VCOMG=1, PON=1, XDK=1
+            TFTLCD_DELAY8, 5,
+            // Gamma Setting
+            0x40, 13, 0x00, 0x2B, 0x29, 0x3E, 0x3D, 0x3F, 0x24, 0x74, 0x08, 0x06, 0x07, 0x0D, 0x17,
+            0x50, 13, 0x00, 0x02, 0x01, 0x16, 0x14, 0x3F, 0x0B, 0x5B, 0x08, 0x12, 0x18, 0x19, 0x17,
+            0x5D, 1, 0xFF,      //
+
+            0x16, 1, 0x08,      //MemoryAccess BGR=1
+            0x28, 1, 0x20,      //GON=1
+            TFTLCD_DELAY8, 40,
+            0x28, 1, 0x38,      //GON=1, DTE=1, D=2
+            TFTLCD_DELAY8, 40,
+            0x28, 1, 0x3C,      //GON=1, DTE=1, D=3
+
+            0x02, 2, 0x00, 0x00,     //SC
+            0x04, 2, 0x00, 0xEF,     //EC
+            0x06, 2, 0x00, 0x00,     //SP
+            0x08, 2, 0x01, 0x8F,     //EP
+
+            0x80, 2, 0x00, 0x00,     //CAC
+            0x82, 2, 0x00, 0x00,     //RAC
+            0x17, 1, 0x05,      //COLMOD = 565
+
+        };
+        init_table(HX8352B_regValues, sizeof(HX8352B_regValues));
+        p16 = (int16_t *) & HEIGHT;
+        *p16 = 400;
+        break;
+#endif
+
 #ifdef SUPPORT_8347A
     case 0x8347:
         _lcd_capable = REV_SCREEN | MIPI_DCS_REV1 | MV_AXIS;
