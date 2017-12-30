@@ -215,6 +215,9 @@ uint16_t MCUFRIEND_kbv::readID(void)
     ret = readReg32(0xD4);
     if (ret == 0x5310)          //NT35310: [xx 01 53 10]
         return 0x5310;
+    ret = readReg32(0xD7);
+    if (ret == 0x8031)          //weird unknown from BangGood [xx 20 80 31] PrinceCharles
+        return 0x8031;
     ret = readReg40(0xEF);      //ILI9327: [xx 02 04 93 27 FF] 
     if (ret == 0x9327)
         return 0x9327;
@@ -1526,6 +1529,16 @@ case 0x4532:    // thanks Leodino
         table8_ads = ST7789_regValues, table_size = sizeof(ST7789_regValues); //
         break;
 
+    case 0x8031:      //Unknown BangGood thanks PrinceCharles
+        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_24BITS | REV_SCREEN;
+        static const uint8_t FK8031_regValues[] PROGMEM = {
+            // 0xF2:8.2 = SM, 0xF2:8.0 = REV. invertDisplay(), vertScroll() do not work
+            0xF2,11, 0x16, 0x16, 0x03, 0x08, 0x08, 0x08, 0x08, 0x10, 0x04, 0x16, 0x16, // f.k. 0xF2:8.2 SM=1
+            0xFD, 3, 0x11, 0x02, 0x35,     //f.k 0xFD:1.1 creates contiguous scan lins
+        };
+        table8_ads = FK8031_regValues, table_size = sizeof(FK8031_regValues);
+        break;
+
 #ifdef SUPPORT_8347D
     case 0x4747:       //HX8347-D
         _lcd_capable = REV_SCREEN | MIPI_DCS_REV1 | MV_AXIS | INVERT_SS;
@@ -2325,6 +2338,7 @@ case 0x4532:    // thanks Leodino
         };
         table8_ads = ILI9329_regValues, table_size = sizeof(ILI9329_regValues);
         break;
+
     case 0x9340:                //ILI9340 thanks Ravi_kanchan2004.
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_24BITS | REV_SCREEN;
         goto common_9341;
