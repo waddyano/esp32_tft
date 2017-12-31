@@ -8,6 +8,7 @@
 #if !defined(USE_SPECIAL) || defined (USE_SPECIAL_FAIL)
 
 #if 0
+//################################### UNO ##############################
 #elif defined(__AVR_ATmega328P__)       //regular UNO shield on UNO
 #define RD_PORT PORTC
 #define RD_PIN  0
@@ -35,6 +36,7 @@
 #define PIN_HIGH(p, b)       (p) |= (1<<(b))
 #define PIN_OUTPUT(p, b)     *(&p-1) |= (1<<(b))
 
+//################################### MEGA2560 ##############################
 #elif defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)       //regular UNO shield on MEGA2560
 #define RD_PORT PORTF
 #define RD_PIN  0
@@ -183,6 +185,7 @@
 #define PIN_HIGH(port, pin)   (port)->PIO_SODR = (1<<(pin))
 #define PIN_OUTPUT(port, pin) (port)->PIO_OER = (1<<(pin))
 
+//################################### LEONARDO ##############################
 #elif defined(__AVR_ATmega32U4__)       //regular UNO shield on Leonardo
 #define RD_PORT PORTF
 #define RD_PIN  7
@@ -225,6 +228,36 @@ void write_8(uint8_t x)
 )
 #define setWriteDir() { DDRB |=  BMASK; DDRC |=  CMASK; DDRD |=  DMASK; DDRE |=  EMASK;  }
 #define setReadDir()  { DDRB &= ~BMASK; DDRC &= ~CMASK; DDRD &= ~DMASK; DDRE &= ~EMASK;  }
+#define write8(x)     { write_8(x); WR_STROBE; }
+#define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
+#define READ_8(dst)   { RD_STROBE; dst = read_8(); RD_IDLE; }
+#define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
+
+#define PIN_LOW(p, b)        (p) &= ~(1<<(b))
+#define PIN_HIGH(p, b)       (p) |= (1<<(b))
+#define PIN_OUTPUT(p, b)     *(&p-1) |= (1<<(b))
+
+//################################### UNO SHIELD on BOBUINO ##############################
+#elif defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega644P__) //UNO shield on BOBUINO
+#warning regular UNO shield on BOBUINO
+#define RD_PORT PORTA
+#define RD_PIN  7
+#define WR_PORT PORTA
+#define WR_PIN  6
+#define CD_PORT PORTA
+#define CD_PIN  5
+#define CS_PORT PORTA
+#define CS_PIN  4
+#define RESET_PORT PORTA
+#define RESET_PIN  3
+
+#define BMASK         0x0F              //
+#define DMASK         0x6C              //
+#define write_8(x)    { PORTB = (PORTB & ~BMASK) | ((x) >> 4); \
+        PORTD = (PORTD & ~DMASK) | ((x) & 0x0C) | (((x) & 0x03) << 5); }
+#define read_8()      ( (PINB << 4) | (PIND & 0x0C) | ((PIND & 0x60) >> 5) )
+#define setWriteDir() { DDRB |=  BMASK; DDRD |=  DMASK; }
+#define setReadDir()  { DDRB &= ~BMASK; DDRD &= ~DMASK; }
 #define write8(x)     { write_8(x); WR_STROBE; }
 #define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
 #define READ_8(dst)   { RD_STROBE; dst = read_8(); RD_IDLE; }
@@ -456,6 +489,7 @@ void write_8(uint8_t x)
 #define READ_8(dst)   { RD_STROBE; READ_DELAY; dst = read_8(); RD_IDLE; }
 #define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
 
+//################################### ESP32 ##############################
 #elif defined(ESP32)       //regular UNO shield on TTGO D1 R32 (ESP32)
 #define LCD_RD  2  //LED
 #define LCD_WR  4
