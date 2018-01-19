@@ -19,6 +19,9 @@
 #include <MCUFRIEND_kbv.h>
 
 #include <Adafruit_GFX.h>
+#if !defined(AVR)
+#include <avr/dtostrf.h>
+#endif
 
 #undef _GFXFONT_H_     //comment this line to enable FreeFonts
 #if defined(_GFXFONT_H_)
