@@ -375,6 +375,7 @@ void write_8(uint8_t x)
 #warning Uno Shield on BLUEPILL
 #define RD_PORT GPIOB
 #define RD_PIN  5
+//#define RD_PIN  0  //hardware mod to Adapter.  Allows use of PB5 for SD Card
 #define WR_PORT GPIOB
 #define WR_PIN  6
 #define CD_PORT GPIOB
