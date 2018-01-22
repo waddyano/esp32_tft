@@ -643,7 +643,7 @@ void MCUFRIEND_kbv::pushColors(uint16_t * block, int16_t n, bool first)
 }
 void MCUFRIEND_kbv::pushColors(uint8_t * block, int16_t n, bool first)
 {
-    pushColors_any(_MW, (uint8_t *)block, n, first, 0);
+    pushColors_any(_MW, (uint8_t *)block, n, first, 2);   //regular bigend
 }
 void MCUFRIEND_kbv::pushColors(const uint8_t * block, int16_t n, bool first, bool bigend)
 {
