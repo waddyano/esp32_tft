@@ -335,15 +335,24 @@ void write_8(uint8_t x)
 #define PIN_OUTPUT(port, pin) PASTE(port, _PDDR) |= (1<<(pin))
 
 //####################################### STM32 ############################
-#elif defined(__STM32F1__) || defined(STM32F103xB) || defined(STM32L476xx) // MAPLECORE or STM32CORE 
+// NUCLEO:   ARDUINO_NUCLEO_xxxx from ST Core or ARDUINO_STM_NUCLEO_F103RB from MapleCore
+// BLUEPILL: ARDUINO_NUCLEO_F103C8 from ST Core or ARDUINO_GENERIC_STM32F103C from MapleCore
+// MAPLE_REV3: n/a from ST Core or ARDUINO_MAPLE_REV3 from MapleCore
+// ST Core:   ARDUINO_ARCH_STM32
+// MapleCore: __STM32F1__
+#elif defined(__STM32F1__) || defined(STM32F103xB) || defined(STM32L476xx) || defined(STM32F401xE) || defined(STM32F411xE) // MAPLECORE or STM32CORE 
 
 #if 0
-#elif defined(STM32L476xx)
+#elif defined(STM32L476xx) || defined(STM32F401xE) || defined(STM32F411xE)
 #define WRITE_DELAY { WR_ACTIVE; WR_ACTIVE; }
 #define READ_DELAY  { RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; }
 #define REGS(x) x
 #define PIN_MODE2(reg, pin, mode) reg=(reg&~(0x3<<((pin)<<1)))|(mode<<((pin)<<1))
+#if defined(STM32L476xx)
 #define GPIO_INIT()   { RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN | RCC_AHB2ENR_GPIOBEN | RCC_AHB2ENR_GPIOCEN; }
+#elif defined(STM32F401xE) || defined(STM32F411xE)
+#define GPIO_INIT()   { RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN | RCC_AHB1ENR_GPIOBEN | RCC_AHB1ENR_GPIOCEN; }
+#endif
 #define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
 #elif defined(ARDUINO_NUCLEO_F103C8) || defined(ARDUINO_NUCLEO_F103RB)   //regular CMSIS libraries
 #define REGS(x) x
@@ -392,7 +401,7 @@ void write_8(uint8_t x)
 #define setWriteDir() {GP_OUT(GPIOA, CRL, 0xFFFFFFFF); }
 #define setReadDir()  {GP_INP(GPIOA, CRL, 0xFFFFFFFF); }
 
-#elif defined(ARDUINO_STM_NUCLEO_F103RB) || defined(ARDUINO_NUCLEO_F103RB) || defined(ARDUINO_NUCLEO_L476RG) // Uno Shield on NUCLEO
+#elif defined(ARDUINO_STM_NUCLEO_F103RB) || defined(ARDUINO_NUCLEO_F103RB) || defined(ARDUINO_NUCLEO_L476RG) || defined(ARDUINO_NUCLEO_F401RE) || defined(ARDUINO_NUCLEO_F411RE)// Uno Shield on NUCLEO
 #warning Uno Shield on NUCLEO
 #define RD_PORT GPIOA
 #define RD_PIN  0
@@ -430,7 +439,7 @@ void write_8(uint8_t x)
                             | ((GPIOA->REGS(IDR) & (1<<8))  >> 1)))
 
 
-#if defined(ARDUINO_NUCLEO_L476RG)
+#if defined(ARDUINO_NUCLEO_L476RG) || defined(ARDUINO_NUCLEO_F401RE) || defined(ARDUINO_NUCLEO_F411RE)
 //                                   PA10,PA9,PA8           PB10,PB5,PB4,PB3                      PC7
 #define setWriteDir() { setReadDir(); \
                         GPIOA->MODER |=  0x150000; GPIOB->MODER |=  0x100540; GPIOC->MODER |=  0x4000; }
