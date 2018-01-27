@@ -340,31 +340,33 @@ void write_8(uint8_t x)
 // MAPLE_REV3: n/a from ST Core or ARDUINO_MAPLE_REV3 from MapleCore
 // ST Core:   ARDUINO_ARCH_STM32
 // MapleCore: __STM32F1__
-#elif defined(__STM32F1__) || defined(STM32F103xB) || defined(STM32L476xx) || defined(STM32F401xE) || defined(STM32F411xE) // MAPLECORE or STM32CORE 
-
-#if 0
-#elif defined(STM32L476xx) || defined(STM32F401xE) || defined(STM32F411xE)
-#define WRITE_DELAY { WR_ACTIVE; WR_ACTIVE; }
-#define READ_DELAY  { RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; }
-#define REGS(x) x
-#define PIN_MODE2(reg, pin, mode) reg=(reg&~(0x3<<((pin)<<1)))|(mode<<((pin)<<1))
-#if defined(STM32L476xx)
-#define GPIO_INIT()   { RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN | RCC_AHB2ENR_GPIOBEN | RCC_AHB2ENR_GPIOCEN; }
-#elif defined(STM32F401xE) || defined(STM32F411xE)
-#define GPIO_INIT()   { RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN | RCC_AHB1ENR_GPIOBEN | RCC_AHB1ENR_GPIOCEN; }
-#endif
-#define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
-#elif defined(ARDUINO_NUCLEO_F103C8) || defined(ARDUINO_NUCLEO_F103RB)   //regular CMSIS libraries
-#define REGS(x) x
-#define GPIO_INIT()   { RCC->APB2ENR |= RCC_APB2ENR_IOPAEN | RCC_APB2ENR_IOPBEN | RCC_APB2ENR_IOPCEN | RCC_APB2ENR_IOPDEN | RCC_APB2ENR_AFIOEN; \
-        AFIO->MAPR |= AFIO_MAPR_SWJ_CFG_1;}
-#else                                                                  //weird Maple libraries
+#elif defined(__STM32F1__) || defined(ARDUINO_ARCH_STM32)   //MapleCore or ST Core
+#define IS_NUCLEO ( defined(ARDUINO_STM_NUCLEO_F103RB) || defined(ARDUINO_NUCLEO_F103RB) \
+                   || defined(ARDUINO_NUCLEO_L476RG) \
+                   || defined(ARDUINO_NUCLEO_F401RE) || defined(ARDUINO_NUCLEO_F411RE) \
+				  )
+// F1xx, F4xx, L4xx have different registers and styles.  General Macros
+#if defined(__STM32F1__)   //weird Maple Core
 #define REGS(x) regs->x
+#else                      //regular ST Core
+#define REGS(x) x
 #endif
-#if defined(__STM32F1__) || defined(STM32F103xB)
+#define PIN_HIGH(port, pin)   (port)-> REGS(BSRR) = (1<<(pin))
+#define PIN_LOW(port, pin)    (port)-> REGS(BSRR) = (1<<((pin)+16))
+#define PIN_MODE2(reg, pin, mode) reg=(reg&~(0x3<<((pin)<<1)))|(mode<<((pin)<<1))
+#define GROUP_MODE(port, reg, mask, val)  {port->REGS(reg) = (port->REGS(reg) & ~(mask)) | ((mask)&(val)); }
+
+// Family specific Macros.  F103 needs ST and Maple compatibility
+#if 0
+#elif defined(__STM32F1__) || defined(ARDUINO_NUCLEO_F103C8) || defined(ARDUINO_NUCLEO_F103RB)
 #define WRITE_DELAY { }
 #define READ_DELAY  { RD_ACTIVE; }
-#define GROUP_MODE(port, reg, mask, val)  {port->REGS(reg) = (port->REGS(reg) & ~(mask)) | ((mask)&(val)); }
+#if defined(__STM32F1__)  //MapleCore crts.o does RCC.  not understand regular syntax anyway
+#define GPIO_INIT()      
+#else
+#define GPIO_INIT()   { RCC->APB2ENR |= RCC_APB2ENR_IOPAEN | RCC_APB2ENR_IOPBEN | RCC_APB2ENR_IOPCEN | RCC_APB2ENR_IOPDEN | RCC_APB2ENR_AFIOEN; \
+        AFIO->MAPR |= AFIO_MAPR_SWJ_CFG_1;}
+#endif
 #define GP_OUT(port, reg, mask)           GROUP_MODE(port, reg, mask, 0x33333333)
 #define GP_INP(port, reg, mask)           GROUP_MODE(port, reg, mask, 0x44444444)
 #define PIN_OUTPUT(port, pin) {\
@@ -375,9 +377,23 @@ void write_8(uint8_t x)
         if (pin < 8) { GP_INP(port, CRL, 0xF<<((pin)<<2)); } \
         else { GP_INP(port, CRH, 0xF<<((pin&7)<<2)); } \
     }
+
+// should be easy to add F030, F091, F303, L053, ...
+#elif defined(STM32L476xx)
+#define WRITE_DELAY { WR_ACTIVE; WR_ACTIVE; }
+#define READ_DELAY  { RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; }
+#define GPIO_INIT()   { RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN | RCC_AHB2ENR_GPIOBEN | RCC_AHB2ENR_GPIOCEN; }
+#define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
+
+#elif defined(STM32F401xE) || defined(STM32F411xE)
+#define WRITE_DELAY { WR_ACTIVE; WR_ACTIVE; }
+#define READ_DELAY  { RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; }
+#define GPIO_INIT()   { RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN | RCC_AHB1ENR_GPIOBEN | RCC_AHB1ENR_GPIOCEN; }
+#define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
+
+#else
+#error unsupported STM32
 #endif
-#define PIN_HIGH(port, pin)   (port)-> REGS(BSRR) = (1<<(pin))
-#define PIN_LOW(port, pin)    (port)-> REGS(BSRR) = (1<<((pin)+16))
 
 #if 0
 #elif defined(ARDUINO_GENERIC_STM32F103C) || defined(ARDUINO_NUCLEO_F103C8)
@@ -401,7 +417,7 @@ void write_8(uint8_t x)
 #define setWriteDir() {GP_OUT(GPIOA, CRL, 0xFFFFFFFF); }
 #define setReadDir()  {GP_INP(GPIOA, CRL, 0xFFFFFFFF); }
 
-#elif defined(ARDUINO_STM_NUCLEO_F103RB) || defined(ARDUINO_NUCLEO_F103RB) || defined(ARDUINO_NUCLEO_L476RG) || defined(ARDUINO_NUCLEO_F401RE) || defined(ARDUINO_NUCLEO_F411RE)// Uno Shield on NUCLEO
+#elif IS_NUCLEO // Uno Shield on NUCLEO
 #warning Uno Shield on NUCLEO
 #define RD_PORT GPIOA
 #define RD_PIN  0
@@ -439,15 +455,15 @@ void write_8(uint8_t x)
                             | ((GPIOA->REGS(IDR) & (1<<8))  >> 1)))
 
 
-#if defined(ARDUINO_NUCLEO_L476RG) || defined(ARDUINO_NUCLEO_F401RE) || defined(ARDUINO_NUCLEO_F411RE)
+#if defined(ARDUINO_NUCLEO_F103RB) || defined(ARDUINO_STM_NUCLEO_F103RB) //F103 has unusual GPIO modes
+//                                 PA10,PA9,PA8                       PB10                   PB5,PB4,PB3                             PC7
+#define setWriteDir() {GP_OUT(GPIOA, CRH, 0xFFF); GP_OUT(GPIOB, CRH, 0xF00); GP_OUT(GPIOB, CRL, 0xFFF000); GP_OUT(GPIOC, CRL, 0xF0000000); }
+#define setReadDir()  {GP_INP(GPIOA, CRH, 0xFFF); GP_INP(GPIOB, CRH, 0xF00); GP_INP(GPIOB, CRL, 0xFFF000); GP_INP(GPIOC, CRL, 0xF0000000); }
+#else      //F0xx, F3xx, F4xx, L0xx, L1xx, L4xx use MODER
 //                                   PA10,PA9,PA8           PB10,PB5,PB4,PB3                      PC7
 #define setWriteDir() { setReadDir(); \
                         GPIOA->MODER |=  0x150000; GPIOB->MODER |=  0x100540; GPIOC->MODER |=  0x4000; }
 #define setReadDir()  { GPIOA->MODER &= ~0x3F0000; GPIOB->MODER &= ~0x300FC0; GPIOC->MODER &= ~0xC000; }
-#else
-//                                 PA10,PA9,PA8                       PB10                   PB5,PB4,PB3                             PC7
-#define setWriteDir() {GP_OUT(GPIOA, CRH, 0xFFF); GP_OUT(GPIOB, CRH, 0xF00); GP_OUT(GPIOB, CRL, 0xFFF000); GP_OUT(GPIOC, CRL, 0xF0000000); }
-#define setReadDir()  {GP_INP(GPIOA, CRH, 0xFFF); GP_INP(GPIOB, CRH, 0xF00); GP_INP(GPIOB, CRL, 0xFFF000); GP_INP(GPIOC, CRL, 0xF0000000); }
 #endif
 
 #elif defined(ARDUINO_MAPLE_REV3) // Uno Shield on MAPLE_REV3 board
