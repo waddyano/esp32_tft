@@ -2526,7 +2526,8 @@ case 0x4532:    // thanks Leodino
         *p16 = 320;
         break;
     case 0x9486:
-        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | REV_SCREEN;
+        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS; //Red 3.5", Blue 3.5"
+//        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | REV_SCREEN; //old Red 3.5"
         static const uint8_t ILI9486_regValues[] PROGMEM = {
             0xC0, 2, 0x0d, 0x0d,        //Power Control 1 [0E 0E]
             0xC1, 2, 0x43, 0x00,        //Power Control 2 [43 00]
