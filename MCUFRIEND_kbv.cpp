@@ -379,6 +379,11 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
             goto common_MC;
         } else if (is8347) {
             _MC = 0x02, _MP = 0x06, _MW = 0x22, _SC = 0x02, _EC = 0x04, _SP = 0x06, _EP = 0x08;
+            if (_lcd_ID == 0x0065) {             //HX8352-B
+                if (!(val & 0x10)) val ^= 0x81;  //(!ML) flip MY, GS
+                if (r & 1) _MC = 0x82, _MP = 0x80;
+                else _MC = 0x80, _MP = 0x82;
+            }
 			if (_lcd_ID == 0x5252) {
 			    val |= 0x02;   //VERT_SCROLLON
 				if (val & 0x10) val |= 0x04;   //if (ML) SS=1 kludge mirror in XXX_REV modes
@@ -511,15 +516,15 @@ void MCUFRIEND_kbv::setAddrWindow(int16_t x, int16_t y, int16_t x1, int16_t y1)
     }
 #endif
     if (_lcd_capable & MIPI_DCS_REV1) {
-#if 1
-        CS_ACTIVE;    //-0.26s, +272B
-        WriteCmd(_MC); write8(x>>8); write8(x); write8(x1>>8); write8(x1); 
-        WriteCmd(_MP); write8(y>>8); write8(y); write8(y1>>8); write8(y1);
-        CS_IDLE;		
-#else
-        WriteCmdParam4(_MC, x >> 8, x, x1 >> 8, x1);
-        WriteCmdParam4(_MP, y >> 8, y, y1 >> 8, y1);
-#endif
+        WriteCmdParam4(_SC, x >> 8, x, x1 >> 8, x1);   //Start column instead of _MC
+        WriteCmdParam4(_SP, y >> 8, y, y1 >> 8, y1);   //
+        if (is8347 && _lcd_ID == 0x0065) {             //HX8352-B has separate _MC, _SC
+            uint8_t d[2];
+            d[0] = x >> 8; d[1] = x;
+            WriteCmdParamN(_MC, 2, d);                 //allows !MV_AXIS to work
+            d[0] = y >> 8; d[1] = y;
+            WriteCmdParamN(_MP, 2, d);
+        }
     } else {
         WriteCmdData(_MC, x);
         WriteCmdData(_MP, y);
@@ -1642,7 +1647,7 @@ case 0x4532:    // thanks Leodino
 
 #ifdef SUPPORT_8352B
     case 0x0065:       //HX8352-B
-        _lcd_capable = MIPI_DCS_REV1 | MV_AXIS;
+        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | INVERT_GS | READ_24BITS | REV_SCREEN;
         is8347 = 1;
         static const uint8_t HX8352B_regValues[] PROGMEM = {
             // Register setting for EQ setting
