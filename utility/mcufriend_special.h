@@ -821,7 +821,7 @@ static __attribute((always_inline)) void write_8(uint8_t val)
 #define CS_PORT PIOA
 #define CS_PIN  22
 #define RESET_PORT PIOA
-#define RESET_PIN  6
+#define RESET_PIN  24  // n/a. so mimic WR_PIN
  // configure macros for data bus
 #define BMASK         (1<<27)
 #define CMASK         (0x12F << 21)
@@ -956,7 +956,7 @@ static __attribute((always_inline)) void write_8(uint8_t val)
 #define CS_PORT PORTC
 #define CS_PIN  3
 #define RESET_PORT PORTC
-#define RESET_PIN  4
+#define RESET_PIN  1  // n/a. so mimic WR_PIN
 
 #define BMASK         B00101111
 #define DMASK         B11010000
@@ -990,7 +990,7 @@ static __attribute((always_inline)) void write_8(uint8_t val)
 #define CS_PORT PORTF
 #define CS_PIN  3
 #define RESET_PORT PORTF
-#define RESET_PIN  4
+#define RESET_PIN  1  // n/a. so mimic WR_PIN
 
 #define BMASK         B10110000 //D13, D11, D10
 #define GMASK         0x20      //D4
