@@ -23,8 +23,10 @@ HX8347-D 240x320  ID=0x4747 #define SUPPORT_8347D
 HX8347-G 240x320  ID=0x7575 #define SUPPORT_8347D
 HX8347-I 240x320  ID=0x9595 #define SUPPORT_8347D
 HX8352-A 240x400  ID=0x5252 #define SUPPORT_8352A
+HX8352-B 240x400  ID=0x0065 #define SUPPORT_8352B
 HX8357-B 320x480  ID=0x8357 (shares init with 8357-D)
-HX8357-D 320x480  ID=0x9090 (ID has changed from 0x8357)
+HX8357-C 320x480  ID=0x9090 (ID has changed from 0x8357)
+HX8357-D 320x480  ID=0x0099 #define SUPPORT_8357D_GAMMA
 HX8367-A 240x320  ID=0x6767 #define SUPPORT_8347D
 ILI9225  176x220  ID=0x9225 #define SUPPORT_9225 
 ILI9226  176x220  ID=0x9226 #define SUPPORT_9225 
@@ -73,6 +75,7 @@ UNKNOWN  320x480  ID=0x1511 (scroll directions not correct)
 UNKNOWN  240x320  ID=0x1602
 UNKNOWN  240x320  ID=0xAC11
 UNKNOWN  240x320  ID=0x2053 weird controller from BangGood (was ID=0x0000)
+UNKNOWN  240x320  ID=0x8031 (no Vertical Scroll)
 
 Most of these controllers are #define SUPPORT_xxxx by default.
 You can save Flash memory on a Uno by commenting out the macro(s) in MCUFRIEND_kbv.cpp
