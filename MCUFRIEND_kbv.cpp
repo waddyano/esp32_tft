@@ -1,4 +1,4 @@
-//#define SUPPORT_0139              //not working +238 bytes
+#define SUPPORT_0139              //not working +238 bytes
 #define SUPPORT_0154              //S6D0154 +320 bytes
 //#define SUPPORT_1289              //costs about 408 bytes
 //#define SUPPORT_1580              //R61580 Untested
@@ -427,7 +427,7 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
             _MC = 0x20, _MP = 0x21, _MW = 0x22;
             GS = (val & 0x80) ? (1 << 9) : 0;
             SS_v = (val & 0x40) ? (1 << 8) : 0;
-            WriteCmdData(0x01, GS | SS_v | 0x0028);       // set Driver Output Control
+            WriteCmdData(0x01, GS | SS_v | (_lcd_ID == 0x0139 ? 0x27 : 0x28));       // set Driver Output Control
             goto common_ORG;
 #endif
         case 0x5420:
@@ -713,11 +713,13 @@ void MCUFRIEND_kbv::vertScroll(int16_t top, int16_t scrollines, int16_t offset)
         WriteCmdData(0x61, _lcd_rev);   //!NDL, !VLE, REV
         WriteCmdData(0x6A, vsp);        //VL#
         break;
-#ifdef SUPPORT_0139
+#ifdef SUPPORT_0139 
     case 0x0139:
-        WriteCmdData(0x41, sea);        //SEA
-        WriteCmdData(0x42, top);        //SSA
-        WriteCmdData(0x43, vsp - top);  //SST
+#if 0                                   //disable scroll
+        WriteCmdData(0x42, sea);        //SEA
+        WriteCmdData(0x43, top);        //SSA
+        WriteCmdData(0x41, vsp - top);  //VL# check vsp
+#endif
         break;
 #endif
 #if defined(SUPPORT_0154) || defined(SUPPORT_9225)  //thanks tongbajiel
@@ -913,9 +915,10 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
             0x000c, 0x0000,     //Interface Control: system i/f
             0x0040, 0x0000,     //Scan Line
             0x0041, 0x0000,     //Vertical Scroll Control
-            0x0007, 0x0014,     //Display Control: SPT=1, REV=1
-            0x0007, 0x0016,     //Display Control: SPT=1, REV=1, display on
-            0x0007, 0x0017,     //Display Control: SPT=1, REV=1, display on, GON
+            0x0007, 0x0014,     //Display Control: VLE1=0, SPT=0, GON=1, REV=1, D=0 (halt)
+            0x0007, 0x0016,     //Display Control: VLE1=0, SPT=0, GON=1, REV=1, D=2 (blank)
+            0x0007, 0x0017,     //Display Control: VLE1=0, SPT=0, GON=1, REV=1, D=3 (normal)
+//            0x0007, 0x0217,     //Display Control: VLE1=1, SPT=0, GON=1, REV=1, D=3
         };
         init_table16(S6D0139_regValues, sizeof(S6D0139_regValues));
         break;
