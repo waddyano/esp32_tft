@@ -427,7 +427,7 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
             _MC = 0x20, _MP = 0x21, _MW = 0x22;
             GS = (val & 0x80) ? (1 << 9) : 0;
             SS_v = (val & 0x40) ? (1 << 8) : 0;
-            WriteCmdData(0x01, GS | SS_v | (_lcd_ID == 0x0139 ? 0x27 : 0x28));       // set Driver Output Control
+            WriteCmdData(0x01, GS | SS_v | 0x0028);       // set Driver Output Control
             goto common_ORG;
 #endif
         case 0x5420:
@@ -715,11 +715,7 @@ void MCUFRIEND_kbv::vertScroll(int16_t top, int16_t scrollines, int16_t offset)
         break;
 #ifdef SUPPORT_0139 
     case 0x0139:
-#if 0                                   //disable scroll
-        WriteCmdData(0x42, sea);        //SEA
-        WriteCmdData(0x43, top);        //SSA
-        WriteCmdData(0x41, vsp - top);  //VL# check vsp
-#endif
+        WriteCmdData(0x41, vsp);  //VL# check vsp
         break;
 #endif
 #if defined(SUPPORT_0154) || defined(SUPPORT_9225)  //thanks tongbajiel
@@ -894,7 +890,7 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
 */
 #ifdef SUPPORT_0139
     case 0x0139:
-        _lcd_capable = AUTO_READINC | REV_SCREEN | XSA_XEA_16BIT;
+        _lcd_capable = REV_SCREEN | XSA_XEA_16BIT;    //remove AUTO_READINC
         static const uint16_t S6D0139_regValues[] PROGMEM = {
             0x0000, 0x0001,     //Start oscillator
             0x0011, 0x1a00,     //Power Control 2
@@ -909,7 +905,7 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
             0x0002, 0x0100,     //LCD Control:  (.kbv was 0700) FLD=0, BC= 0, EOR=1
             0x0003, 0x1030,     //Entry Mode:    TR1=0, DFM=0, BGR=1, I_D=3   
             0x0007, 0x0000,     //Display Control: everything off
-            0x0008, 0x0808,     //Blank Period:  FP=98, BP=8
+            0x0008, 0x0303,     //Blank Period:  FP=3, BP=3
             0x0009, 0x0000,     //f.k.
             0x000b, 0x0000,     //Frame Control:
             0x000c, 0x0000,     //Interface Control: system i/f
