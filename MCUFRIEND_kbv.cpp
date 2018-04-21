@@ -715,6 +715,7 @@ void MCUFRIEND_kbv::vertScroll(int16_t top, int16_t scrollines, int16_t offset)
         break;
 #ifdef SUPPORT_0139 
     case 0x0139:
+        WriteCmdData(0x07, 0x0213 | (_lcd_rev << 2));  //VLE1=1, GON=1, REV=x, D=3
         WriteCmdData(0x41, vsp);  //VL# check vsp
         break;
 #endif
