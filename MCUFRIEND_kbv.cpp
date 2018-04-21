@@ -1,4 +1,4 @@
-//#define SUPPORT_0139              //not working +238 bytes
+#define SUPPORT_0139              //not working +238 bytes
 #define SUPPORT_0154              //S6D0154 +320 bytes
 //#define SUPPORT_1289              //costs about 408 bytes
 //#define SUPPORT_1580              //R61580 Untested
@@ -427,7 +427,8 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
             _MC = 0x20, _MP = 0x21, _MW = 0x22;
             GS = (val & 0x80) ? (1 << 9) : 0;
             SS_v = (val & 0x40) ? (1 << 8) : 0;
-            WriteCmdData(0x01, GS | SS_v | 0x0028);       // set Driver Output Control
+            // S6D0139 requires NL = 0x27,  S6D0154 NL = 0x28
+            WriteCmdData(0x01, GS | SS_v | ((_lcd_ID == 0x0139) ? 0x27 : 0x28));
             goto common_ORG;
 #endif
         case 0x5420:
@@ -713,11 +714,10 @@ void MCUFRIEND_kbv::vertScroll(int16_t top, int16_t scrollines, int16_t offset)
         WriteCmdData(0x61, _lcd_rev);   //!NDL, !VLE, REV
         WriteCmdData(0x6A, vsp);        //VL#
         break;
-#ifdef SUPPORT_0139
+#ifdef SUPPORT_0139 
     case 0x0139:
-        WriteCmdData(0x41, sea);        //SEA
-        WriteCmdData(0x42, top);        //SSA
-        WriteCmdData(0x43, vsp - top);  //SST
+        WriteCmdData(0x07, 0x0213 | (_lcd_rev << 2));  //VLE1=1, GON=1, REV=x, D=3
+        WriteCmdData(0x41, vsp);  //VL# check vsp
         break;
 #endif
 #if defined(SUPPORT_0154) || defined(SUPPORT_9225)  //thanks tongbajiel
@@ -892,7 +892,7 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
 */
 #ifdef SUPPORT_0139
     case 0x0139:
-        _lcd_capable = AUTO_READINC | REV_SCREEN | XSA_XEA_16BIT;
+        _lcd_capable = REV_SCREEN | XSA_XEA_16BIT;    //remove AUTO_READINC
         static const uint16_t S6D0139_regValues[] PROGMEM = {
             0x0000, 0x0001,     //Start oscillator
             0x0011, 0x1a00,     //Power Control 2
@@ -907,15 +907,16 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
             0x0002, 0x0100,     //LCD Control:  (.kbv was 0700) FLD=0, BC= 0, EOR=1
             0x0003, 0x1030,     //Entry Mode:    TR1=0, DFM=0, BGR=1, I_D=3   
             0x0007, 0x0000,     //Display Control: everything off
-            0x0008, 0x0808,     //Blank Period:  FP=98, BP=8
+            0x0008, 0x0303,     //Blank Period:  FP=3, BP=3
             0x0009, 0x0000,     //f.k.
             0x000b, 0x0000,     //Frame Control:
             0x000c, 0x0000,     //Interface Control: system i/f
             0x0040, 0x0000,     //Scan Line
             0x0041, 0x0000,     //Vertical Scroll Control
-            0x0007, 0x0014,     //Display Control: SPT=1, REV=1
-            0x0007, 0x0016,     //Display Control: SPT=1, REV=1, display on
-            0x0007, 0x0017,     //Display Control: SPT=1, REV=1, display on, GON
+            0x0007, 0x0014,     //Display Control: VLE1=0, SPT=0, GON=1, REV=1, D=0 (halt)
+            0x0007, 0x0016,     //Display Control: VLE1=0, SPT=0, GON=1, REV=1, D=2 (blank)
+            0x0007, 0x0017,     //Display Control: VLE1=0, SPT=0, GON=1, REV=1, D=3 (normal)
+//            0x0007, 0x0217,     //Display Control: VLE1=1, SPT=0, GON=1, REV=1, D=3
         };
         init_table16(S6D0139_regValues, sizeof(S6D0139_regValues));
         break;
