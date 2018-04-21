@@ -427,7 +427,8 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
             _MC = 0x20, _MP = 0x21, _MW = 0x22;
             GS = (val & 0x80) ? (1 << 9) : 0;
             SS_v = (val & 0x40) ? (1 << 8) : 0;
-            WriteCmdData(0x01, GS | SS_v | 0x0028);       // set Driver Output Control
+            // S6D0139 requires NL = 0x27,  S6D0154 NL = 0x28
+            WriteCmdData(0x01, GS | SS_v | ((_lcd_ID == 0x0139) ? 0x27 : 0x28));
             goto common_ORG;
 #endif
         case 0x5420:
