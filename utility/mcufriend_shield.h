@@ -336,7 +336,7 @@ void write_8(uint8_t x)
 
 //####################################### STM32 ############################
 // NUCLEO:   ARDUINO_NUCLEO_xxxx from ST Core or ARDUINO_STM_NUCLEO_F103RB from MapleCore
-// BLUEPILL: ARDUINO_NUCLEO_F103C8 from ST Core or ARDUINO_GENERIC_STM32F103C from MapleCore
+// BLUEPILL: ARDUINO_NUCLEO_F103C8 / ARDUINO_BLUEPILL_F103C8 from ST Core or ARDUINO_GENERIC_STM32F103C from MapleCore
 // MAPLE_REV3: n/a from ST Core or ARDUINO_MAPLE_REV3 from MapleCore
 // ST Core:   ARDUINO_ARCH_STM32
 // MapleCore: __STM32F1__
@@ -360,7 +360,7 @@ void write_8(uint8_t x)
 
 // Family specific Macros.  F103 needs ST and Maple compatibility
 #if 0
-#elif defined(__STM32F1__) || defined(ARDUINO_NUCLEO_F103C8) || defined(ARDUINO_NUCLEO_F103RB)
+#elif defined(__STM32F1__) || defined(ARDUINO_NUCLEO_F103C8) || defined(ARDUINO_BLUEPILL_F103C8) || defined(ARDUINO_NUCLEO_F103RB)
 #define WRITE_DELAY { }
 #define READ_DELAY  { RD_ACTIVE; }
 #if defined(__STM32F1__)  //MapleCore crts.o does RCC.  not understand regular syntax anyway
@@ -401,7 +401,7 @@ void write_8(uint8_t x)
 
 #elif defined(STM32F401xE) || defined(STM32F411xE)
 #define WRITE_DELAY { WR_ACTIVE; WR_ACTIVE; }
-#define READ_DELAY  { RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; }
+#define READ_DELAY  { RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; }
 #define GPIO_INIT()   { RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN | RCC_AHB1ENR_GPIOBEN | RCC_AHB1ENR_GPIOCEN; }
 #define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
 
@@ -422,11 +422,11 @@ void write_8(uint8_t x)
 #endif
 
 #if 0
-#elif defined(ARDUINO_GENERIC_STM32F103C) || defined(ARDUINO_NUCLEO_F103C8)
+#elif defined(ARDUINO_GENERIC_STM32F103C) || defined(ARDUINO_NUCLEO_F103C8) || defined(ARDUINO_BLUEPILL_F103C8)
 #warning Uno Shield on BLUEPILL
 #define RD_PORT GPIOB
-#define RD_PIN  5
-//#define RD_PIN  0  //hardware mod to Adapter.  Allows use of PB5 for SD Card
+//#define RD_PIN  5
+#define RD_PIN  0  //hardware mod to Adapter.  Allows use of PB5 for SD Card
 #define WR_PORT GPIOB
 #define WR_PIN  6
 #define CD_PORT GPIOB
