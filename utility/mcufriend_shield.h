@@ -359,6 +359,7 @@ void write_8(uint8_t x)
 #define GROUP_MODE(port, reg, mask, val)  {port->REGS(reg) = (port->REGS(reg) & ~(mask)) | ((mask)&(val)); }
 
 // Family specific Macros.  F103 needs ST and Maple compatibility
+// note that ILI9320 class of controller has much slower Read cycles
 #if 0
 #elif defined(__STM32F1__) || defined(ARDUINO_NUCLEO_F103C8) || defined(ARDUINO_BLUEPILL_F103C8) || defined(ARDUINO_NUCLEO_F103RB)
 #define WRITE_DELAY { }
@@ -399,8 +400,14 @@ void write_8(uint8_t x)
 #define GPIO_INIT()   { RCC->AHBENR |= RCC_AHBENR_GPIOAEN | RCC_AHBENR_GPIOBEN | RCC_AHBENR_GPIOCEN; \
                       /* AFIO->MAPR |= AFIO_MAPR_SWJ_CFG_1; */ }
 
-#elif defined(STM32F401xE) || defined(STM32F411xE)
+#elif defined(STM32F401xE)
 #define WRITE_DELAY { WR_ACTIVE; WR_ACTIVE; }
+#define READ_DELAY  { RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; }
+#define GPIO_INIT()   { RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN | RCC_AHB1ENR_GPIOBEN | RCC_AHB1ENR_GPIOCEN; }
+#define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
+
+#elif defined(STM32F411xE)
+#define WRITE_DELAY { WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; }
 #define READ_DELAY  { RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; }
 #define GPIO_INIT()   { RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN | RCC_AHB1ENR_GPIOBEN | RCC_AHB1ENR_GPIOCEN; }
 #define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
