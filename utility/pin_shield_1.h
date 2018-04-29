@@ -105,7 +105,8 @@
   #define D13_PORT GPIOB
   #define D13_PIN  13    //3
   #define A0_PORT GPIOB
-  #define A0_PIN  5
+  #define A0_PIN  5      //original pcb uses SPI pin 
+//  #define A0_PIN  0      //hardware mod to Adapter to PB0.  Allows use of PB5 for SD Card
   #define A1_PORT GPIOB
   #define A1_PIN  6
   #define A2_PORT GPIOB

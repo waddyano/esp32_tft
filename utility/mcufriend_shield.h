@@ -336,15 +336,17 @@ void write_8(uint8_t x)
 
 //####################################### STM32 ############################
 // NUCLEO:   ARDUINO_NUCLEO_xxxx from ST Core or ARDUINO_STM_NUCLEO_F103RB from MapleCore
-// BLUEPILL: ARDUINO_NUCLEO_F103C8 from ST Core or ARDUINO_GENERIC_STM32F103C from MapleCore
+// BLUEPILL: ARDUINO_NUCLEO_F103C8 / ARDUINO_BLUEPILL_F103C8 from ST Core or ARDUINO_GENERIC_STM32F103C from MapleCore
 // MAPLE_REV3: n/a from ST Core or ARDUINO_MAPLE_REV3 from MapleCore
 // ST Core:   ARDUINO_ARCH_STM32
 // MapleCore: __STM32F1__
 #elif defined(__STM32F1__) || defined(ARDUINO_ARCH_STM32)   //MapleCore or ST Core
-#define IS_NUCLEO ( defined(ARDUINO_STM_NUCLEO_F103RB) || defined(ARDUINO_NUCLEO_F103RB) \
-                   || defined(ARDUINO_NUCLEO_L476RG) \
+#define IS_NUCLEO64 ( defined(ARDUINO_STM_NUCLEO_F103RB) \
+                   || defined(ARDUINO_NUCLEO_F030R8) || defined(ARDUINO_NUCLEO_F091RC) \
+                   || defined(ARDUINO_NUCLEO_F103RB) || defined(ARDUINO_NUCLEO_F303RE) \
                    || defined(ARDUINO_NUCLEO_F401RE) || defined(ARDUINO_NUCLEO_F411RE) \
-				  )
+                   || defined(ARDUINO_NUCLEO_L053R8) || defined(ARDUINO_NUCLEO_L476RG) \
+                    )
 // F1xx, F4xx, L4xx have different registers and styles.  General Macros
 #if defined(__STM32F1__)   //weird Maple Core
 #define REGS(x) regs->x
@@ -357,8 +359,9 @@ void write_8(uint8_t x)
 #define GROUP_MODE(port, reg, mask, val)  {port->REGS(reg) = (port->REGS(reg) & ~(mask)) | ((mask)&(val)); }
 
 // Family specific Macros.  F103 needs ST and Maple compatibility
+// note that ILI9320 class of controller has much slower Read cycles
 #if 0
-#elif defined(__STM32F1__) || defined(ARDUINO_NUCLEO_F103C8) || defined(ARDUINO_NUCLEO_F103RB)
+#elif defined(__STM32F1__) || defined(ARDUINO_NUCLEO_F103C8) || defined(ARDUINO_BLUEPILL_F103C8) || defined(ARDUINO_NUCLEO_F103RB)
 #define WRITE_DELAY { }
 #define READ_DELAY  { RD_ACTIVE; }
 #if defined(__STM32F1__)  //MapleCore crts.o does RCC.  not understand regular syntax anyway
@@ -379,16 +382,46 @@ void write_8(uint8_t x)
     }
 
 // should be easy to add F030, F091, F303, L053, ...
+#elif defined(STM32F030x8)
+#define WRITE_DELAY { }
+#define READ_DELAY  { RD_ACTIVE; }
+#define GPIO_INIT()   { RCC->AHBENR |= RCC_AHBENR_GPIOAEN | RCC_AHBENR_GPIOBEN | RCC_AHBENR_GPIOCEN; }
+#define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
+
+#elif defined(STM32F091xC)
+#define WRITE_DELAY { }
+#define READ_DELAY  { RD_ACTIVE; }
+#define GPIO_INIT()   { RCC->AHBENR |= RCC_AHBENR_GPIOAEN | RCC_AHBENR_GPIOBEN | RCC_AHBENR_GPIOCEN; }
+#define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
+
+#elif defined(STM32F303xE)
+#define WRITE_DELAY { }
+#define READ_DELAY  { RD_ACTIVE; }
+#define GPIO_INIT()   { RCC->AHBENR |= RCC_AHBENR_GPIOAEN | RCC_AHBENR_GPIOBEN | RCC_AHBENR_GPIOCEN; \
+                      /* AFIO->MAPR |= AFIO_MAPR_SWJ_CFG_1; */ }
+
+#elif defined(STM32F401xE)
+#define WRITE_DELAY { WR_ACTIVE; WR_ACTIVE; }
+#define READ_DELAY  { RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; }
+#define GPIO_INIT()   { RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN | RCC_AHB1ENR_GPIOBEN | RCC_AHB1ENR_GPIOCEN; }
+#define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
+
+#elif defined(STM32F411xE)
+#define WRITE_DELAY { WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; }
+#define READ_DELAY  { RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; }
+#define GPIO_INIT()   { RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN | RCC_AHB1ENR_GPIOBEN | RCC_AHB1ENR_GPIOCEN; }
+#define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
+
+#elif defined(STM32L053xx)
+#define WRITE_DELAY { }
+#define READ_DELAY  { RD_ACTIVE; }
+#define GPIO_INIT()   { RCC->IOPENR |= RCC_IOPENR_GPIOAEN | RCC_IOPENR_GPIOBEN | RCC_IOPENR_GPIOCEN; }
+#define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
+
 #elif defined(STM32L476xx)
 #define WRITE_DELAY { WR_ACTIVE; WR_ACTIVE; }
 #define READ_DELAY  { RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; }
 #define GPIO_INIT()   { RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN | RCC_AHB2ENR_GPIOBEN | RCC_AHB2ENR_GPIOCEN; }
-#define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
-
-#elif defined(STM32F401xE) || defined(STM32F411xE)
-#define WRITE_DELAY { WR_ACTIVE; WR_ACTIVE; }
-#define READ_DELAY  { RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; }
-#define GPIO_INIT()   { RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN | RCC_AHB1ENR_GPIOBEN | RCC_AHB1ENR_GPIOCEN; }
 #define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
 
 #else
@@ -396,11 +429,11 @@ void write_8(uint8_t x)
 #endif
 
 #if 0
-#elif defined(ARDUINO_GENERIC_STM32F103C) || defined(ARDUINO_NUCLEO_F103C8)
+#elif defined(ARDUINO_GENERIC_STM32F103C) || defined(ARDUINO_NUCLEO_F103C8) || defined(ARDUINO_BLUEPILL_F103C8)
 #warning Uno Shield on BLUEPILL
 #define RD_PORT GPIOB
-#define RD_PIN  5
-//#define RD_PIN  0  //hardware mod to Adapter.  Allows use of PB5 for SD Card
+//#define RD_PIN  5
+#define RD_PIN  0  //hardware mod to Adapter.  Allows use of PB5 for SD Card
 #define WR_PORT GPIOB
 #define WR_PIN  6
 #define CD_PORT GPIOB
@@ -417,7 +450,7 @@ void write_8(uint8_t x)
 #define setWriteDir() {GP_OUT(GPIOA, CRL, 0xFFFFFFFF); }
 #define setReadDir()  {GP_INP(GPIOA, CRL, 0xFFFFFFFF); }
 
-#elif IS_NUCLEO // Uno Shield on NUCLEO
+#elif IS_NUCLEO64 // Uno Shield on NUCLEO
 #warning Uno Shield on NUCLEO
 #define RD_PORT GPIOA
 #define RD_PIN  0
