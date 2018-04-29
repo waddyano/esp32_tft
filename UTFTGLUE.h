@@ -19,7 +19,8 @@
 #include <MCUFRIEND_kbv.h>
 
 #include <Adafruit_GFX.h>
-#if !defined(AVR)
+//#if !defined(AVR) && !defined(ESP32)
+#if defined(__arm)
 #include <avr/dtostrf.h>
 #endif
 
