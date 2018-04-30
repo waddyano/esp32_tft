@@ -13,13 +13,8 @@
 class MCUFRIEND_kbv : public Adafruit_GFX {
 
 	public:
-#if defined USE_GFX_KBV
-	MCUFRIEND_kbv();
-#elif defined(ARDUINO_GENERIC_STM32F103C) || defined(ARDUINO_GENERIC_STM32F103V) || defined(ARDUINO_MAPLE_REV3) || defined(ARDUINO_MAPLE_MINI) || defined(ESP32)
+//	MCUFRIEND_kbv(int CS=A3, int RS=A2, int WR=A1, int RD=A0, int RST=A4); //shield wiring
 	MCUFRIEND_kbv(int CS=0, int RS=0, int WR=0, int RD=0, int RST=0);  //dummy arguments 
-#else
-	MCUFRIEND_kbv(int CS=A3, int RS=A2, int WR=A1, int RD=A0, int RST=A4);
-#endif
 	void     reset(void);                                       // you only need the constructor
 	void     begin(uint16_t ID = 0x9341);                       // you only need the constructor
 	virtual void     drawPixel(int16_t x, int16_t y, uint16_t color);  // and these three

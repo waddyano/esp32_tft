@@ -1,4 +1,4 @@
-#define SUPPORT_0139              //not working +238 bytes
+//#define SUPPORT_0139              //S6D0139 +280 bytes
 #define SUPPORT_0154              //S6D0154 +320 bytes
 //#define SUPPORT_1289              //costs about 408 bytes
 //#define SUPPORT_1580              //R61580 Untested
@@ -13,10 +13,10 @@
 //#define SUPPORT_8352A             //HX8352A +486 bytes, 0.27s
 //#define SUPPORT_8352B             //HX8352B
 //#define SUPPORT_8357D_GAMMA       //monster 34 byte 
-#define SUPPORT_9225              //ILI9225-B, ILI9225-G ID=0x9225, ID=0x9226
+//#define SUPPORT_9225              //ILI9225-B, ILI9225-G ID=0x9225, ID=0x9226 +380 bytes
 //#define SUPPORT_9326_5420         //ILI9326, SPFD5420 +246 bytes
 //#define SUPPORT_9342              //costs +114 bytes
-//#define SUPPORT_9806
+//#define SUPPORT_9806              //UNTESTED
 #define SUPPORT_9488_555          //costs +230 bytes, 0.03s / 0.19s
 #define SUPPORT_B509_7793         //R61509, ST7793 +244 bytes
 #define OFFSET_9327 32            //costs about 103 bytes, 0.08s
@@ -54,17 +54,10 @@
 #define USING_16BIT_BUS 0
 #endif
 
-#if defined USE_GFX_KBV
-MCUFRIEND_kbv::MCUFRIEND_kbv():Adafruit_GFX(240, 320)
-{
-    // we can not access GPIO pins until AHB has been enabled.
-}
-#else
 MCUFRIEND_kbv::MCUFRIEND_kbv(int CS, int RS, int WR, int RD, int RST):Adafruit_GFX(240, 320)
 {
     // we can not access GPIO pins until AHB has been enabled.
 }
-#endif
 
 static uint8_t done_reset, is8347, is555;
 static uint16_t color565_to_555(uint16_t color) {
