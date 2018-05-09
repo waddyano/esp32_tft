@@ -109,4 +109,9 @@ It also runs on NUCLEO-F103 and TEENSY3.2 with Sparkfun Adapter
 	
 18. Please run LCD_ID_readreg.ino to verify your non-standard wiring.  Paste the defines to a Forum message.
 
+19. OPEN-SMART Shields have different wiring to regular Uno Shields:
+    Edit mcufriend_shield.h:  #define USE_SPECIAL
+    Edit mcufriend_special.h: #define USE_OPENSMART_SHIELD_PINOUT
+    Edit MCUFRIEND_kbv.cpp:   #define SUPPORT_8352B
+
 CHANGE HISTORY: is now in "mcufriend_history.txt"
