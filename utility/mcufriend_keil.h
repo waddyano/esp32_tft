@@ -41,7 +41,7 @@
 #define RD_STROBE RD_IDLE, RD_ACTIVE, RD_ACTIVE, RD_ACTIVE   //PWLR=TRDL=150ns
 
 #if defined(TEENSY) || defined(__ARM_ARCH_7EM__) // -O2: F411@100MHz = 1.44s 
-#define WRITE_DELAY { WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; }
+#define WRITE_DELAY { WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; }
 #define READ_DELAY  { RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; }
 #elif defined(__ARM_ARCH_7M__) // -O2: F103@72MHz = 2.68s
 #define WRITE_DELAY { }
@@ -51,9 +51,9 @@
 #define READ_DELAY  { }
 #endif
 
-#define write8(x)     { write_8(x); WRITE_DELAY; WR_STROBE; }
+#define write8(x)     { write_8(x); WRITE_DELAY; WR_STROBE; WR_IDLE; }
 #define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
-#define READ_8(dst)   { RD_STROBE; READ_DELAY; dst = read_8(); RD_IDLE; } // read 250ns after RD_ACTIVE goes low
+#define READ_8(dst)   { RD_STROBE; READ_DELAY; dst = read_8(); RD_IDLE; RD_IDLE; } // read 250ns after RD_ACTIVE goes low
 #define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
 
 #define CTL_INIT()   { RD_OUTPUT; WR_OUTPUT; CD_OUTPUT; CS_OUTPUT; RESET_OUTPUT; }
