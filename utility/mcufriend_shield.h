@@ -345,7 +345,8 @@ void write_8(uint8_t x)
                    || defined(ARDUINO_NUCLEO_F030R8) || defined(ARDUINO_NUCLEO_F091RC) \
                    || defined(ARDUINO_NUCLEO_F103RB) || defined(ARDUINO_NUCLEO_F303RE) \
                    || defined(ARDUINO_NUCLEO_F401RE) || defined(ARDUINO_NUCLEO_F411RE) \
-                   || defined(ARDUINO_NUCLEO_L053R8) || defined(ARDUINO_NUCLEO_L476RG) \
+                   || defined(ARDUINO_NUCLEO_F446RE) || defined(ARDUINO_NUCLEO_L053R8) \
+                   || defined(ARDUINO_NUCLEO_L152RE) || defined(ARDUINO_NUCLEO_L476RG) \
                     )
 // F1xx, F4xx, L4xx have different registers and styles.  General Macros
 #if defined(__STM32F1__)   //weird Maple Core
@@ -412,10 +413,22 @@ void write_8(uint8_t x)
 #define GPIO_INIT()   { RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN | RCC_AHB1ENR_GPIOBEN | RCC_AHB1ENR_GPIOCEN; }
 #define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
 
+#elif defined(STM32F446xx)
+#define WRITE_DELAY { WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; }
+#define READ_DELAY  { RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; }
+#define GPIO_INIT()   { RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN | RCC_AHB1ENR_GPIOBEN | RCC_AHB1ENR_GPIOCEN; }
+#define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
+
 #elif defined(STM32L053xx)
 #define WRITE_DELAY { }
 #define READ_DELAY  { RD_ACTIVE; }
 #define GPIO_INIT()   { RCC->IOPENR |= RCC_IOPENR_GPIOAEN | RCC_IOPENR_GPIOBEN | RCC_IOPENR_GPIOCEN; }
+#define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
+
+#elif defined(STM32L152xE)
+#define WRITE_DELAY { }
+#define READ_DELAY  { RD_ACTIVE; }
+#define GPIO_INIT()   { RCC->AHBENR |= RCC_AHBENR_GPIOAEN | RCC_AHBENR_GPIOBEN | RCC_AHBENR_GPIOCEN; }
 #define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
 
 #elif defined(STM32L476xx)
@@ -543,9 +556,9 @@ void write_8(uint8_t x)
 #error REGS group
 #endif
 
-#define write8(x)     { write_8(x); WRITE_DELAY; WR_STROBE; }
+#define write8(x)     { write_8(x); WRITE_DELAY; WR_STROBE; WR_IDLE; }
 #define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
-#define READ_8(dst)   { RD_STROBE; READ_DELAY; dst = read_8(); RD_IDLE; }
+#define READ_8(dst)   { RD_STROBE; READ_DELAY; dst = read_8(); RD_IDLE; RD_IDLE; }
 #define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
 
 //################################### ESP32 ##############################
