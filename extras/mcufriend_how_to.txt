@@ -17,6 +17,14 @@
 9. Any Adafruit sketch should work with the MCUFRIEND_kbv constructor() but should allow extra ID values
 An Adafruit constructor(cs, rs, wr, rd, rst) IGNORES any arguments.   i.e. it only uses the shield control pins
 
+MCUFRIEND_kbv inherits all the methods from 
+the Adafruit_GFX class: https://learn.adafruit.com/adafruit-gfx-graphics-library/overview 
+and Print class: https://www.arduino.cc/en/Serial/Print
+
+The only "new" methods are hardware related: 
+vertScroll(), readGRAM(), readPixel(), setAddrWindow(), pushColors(), readID(), begin()
+readReg(), pushCommand(), WriteCmdData() access the controller registers
+
 10. It currently supports UNO shields with "mcufriend.com" pcbs with controllers:
 HX8347-A 240x320  ID=0x8347 #define SUPPORT_8347A *** Untested ***
 HX8347-D 240x320  ID=0x4747 #define SUPPORT_8347D
