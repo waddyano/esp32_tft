@@ -1,4 +1,7 @@
-#if 1
+/* an alternative approach.   swap the #if 1 / 0 values to try it
+ * 
+ */
+#if 0
 
 #include <Adafruit_GFX.h>
 #include <MCUFRIEND_kbv.h>
@@ -59,26 +62,55 @@ void setup(void)
     tft.fillRect(40, 80, 160, 80, RED);
 }
 
-/* two buttons are quite simple
+/*  
+ * updating multiple buttons from a list
+ * 
+ * anything more than two buttons gets repetitive
+ * 
+ * you can place button addresses in separate lists
+ * e.g. for separate menu screens
+ */
+
+// Array of button addresses to behave like a list
+Adafruit_GFX_Button *buttons[] = {&on_btn, &off_btn, NULL};
+
+/* update the state of a button and redraw as reqd
+ *
+ * main program can use isPressed(), justPressed() etc
+ */
+bool update_button(Adafruit_GFX_Button *b, bool down)
+{
+    b->press(down && b->contains(pixel_x, pixel_y));
+    if (b->justReleased())
+        b->drawButton(false);
+    if (b->justPressed())
+        b->drawButton(true);
+    return down;
+}
+
+/* most screens have different sets of buttons
+ * life is easier if you process whole list in one go
+ */
+bool update_button_list(Adafruit_GFX_Button **pb)
+{
+    bool down = Touch_getXY();
+    for (int i = 0 ; pb[i] != NULL; i++) {
+        update_button(pb[i], down);
+    }
+    return down;
+}
+
+/* compare the simplicity of update_button_list()
  */
 void loop(void)
 {
-    bool down = Touch_getXY();
-    on_btn.press(down && on_btn.contains(pixel_x, pixel_y));
-    off_btn.press(down && off_btn.contains(pixel_x, pixel_y));
-    if (on_btn.justReleased())
-        on_btn.drawButton();
-    if (off_btn.justReleased())
-        off_btn.drawButton();
+    update_button_list(buttons);  //use helper function
     if (on_btn.justPressed()) {
-        on_btn.drawButton(true);
         tft.fillRect(40, 80, 160, 80, GREEN);
     }
     if (off_btn.justPressed()) {
-        off_btn.drawButton(true);
         tft.fillRect(40, 80, 160, 80, RED);
     }
 }
 #endif
-
 
