@@ -1,3 +1,9 @@
+/*
+ * MCUFRIEND_kbv class inherits from Adafruit_GFX class and the Arduino Print class.
+ * Any use of MCUFRIEND_kbv class and examples is dependent on Adafruit and Arduino licenses
+ * The license texts are in the accompanying license.txt file
+ */
+
 #ifndef MCUFRIEND_KBV_H_
 #define MCUFRIEND_KBV_H_   298
 
