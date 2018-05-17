@@ -151,14 +151,14 @@
 #define BMASK         (1<<25)
 #define CMASK         (0xBF << 21)
 #define write_8(x)   {  PIOB->PIO_CODR = BMASK; PIOC->PIO_CODR = CMASK; \
-                        PIOC->PIO_SODR = (((x) & (1<<0)) << 22); \
-                        PIOC->PIO_SODR = (((x) & (1<<1)) << 20); \
                         PIOB->PIO_SODR = (((x) & (1<<2)) << 23); \
-                        PIOC->PIO_SODR = (((x) & (1<<3)) << 25); \
-                        PIOC->PIO_SODR = (((x) & (1<<4)) << 22); \
-                        PIOC->PIO_SODR = (((x) & (1<<5)) << 20); \
-                        PIOC->PIO_SODR = (((x) & (1<<6)) << 18); \
-                        PIOC->PIO_SODR = (((x) & (1<<7)) << 16); \
+                        PIOC->PIO_SODR = (((x) & (1<<0)) << 22) \
+                                       | (((x) & (1<<1)) << 20) \
+                                       | (((x) & (1<<3)) << 25) \
+                                       | (((x) & (1<<4)) << 22) \
+                                       | (((x) & (1<<5)) << 20) \
+                                       | (((x) & (1<<6)) << 18) \
+                                       | (((x) & (1<<7)) << 16); \
 					 }
 
 #define read_8()      ( ((PIOC->PIO_PDSR & (1<<22)) >> 22)\
