@@ -175,7 +175,7 @@
                           PMC->PMC_PCER0 = (1 << ID_PIOB)|(1 << ID_PIOC);\
 						  PIOB->PIO_ODR = BMASK; PIOC->PIO_ODR = CMASK;\
 						}
-#define write8(x)     { write_8(x); WR_ACTIVE; WR_STROBE; }
+#define write8(x)     { write_8(x); WR_ACTIVE; WR_ACTIVE; WR_STROBE; }
 //#define write8(x)     { write_8(x); WR_ACTIVE; WR_STROBE; WR_IDLE; }
 #define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
 #define READ_8(dst)   { RD_STROBE; RD_ACTIVE; dst = read_8(); RD_IDLE; RD_IDLE; }
@@ -414,7 +414,7 @@ void write_8(uint8_t x)
 #define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
 
 #elif defined(STM32F446xx)
-#define WRITE_DELAY { WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; }
+#define WRITE_DELAY { WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; }
 #define READ_DELAY  { RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; }
 #define GPIO_INIT()   { RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN | RCC_AHB1ENR_GPIOBEN | RCC_AHB1ENR_GPIOCEN; }
 #define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
