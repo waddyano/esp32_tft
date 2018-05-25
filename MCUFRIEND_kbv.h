@@ -20,7 +20,7 @@ class MCUFRIEND_kbv : public Adafruit_GFX {
 
 	public:
 //	MCUFRIEND_kbv(int CS=A3, int RS=A2, int WR=A1, int RD=A0, int RST=A4); //shield wiring
-	MCUFRIEND_kbv(int CS=0, int RS=0, int WR=0, int RD=0, int RST=0);  //dummy arguments 
+	MCUFRIEND_kbv(int CS=0, int RS=0, int WR=0, int RD=0, int _RST=0);  //dummy arguments 
 	void     reset(void);                                       // you only need the constructor
 	void     begin(uint16_t ID = 0x9341);                       // you only need the constructor
 	virtual void     drawPixel(int16_t x, int16_t y, uint16_t color);  // and these three
