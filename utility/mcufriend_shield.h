@@ -7,6 +7,14 @@
 #endif
 #if !defined(USE_SPECIAL) || defined (USE_SPECIAL_FAIL)
 
+#define WR_ACTIVE2  {WR_ACTIVE; WR_ACTIVE;}
+#define WR_ACTIVE4  {WR_ACTIVE2; WR_ACTIVE2;}
+#define WR_ACTIVE8  {WR_ACTIVE4; WR_ACTIVE4;}
+#define RD_ACTIVE2  {RD_ACTIVE; RD_ACTIVE;}
+#define RD_ACTIVE4  {RD_ACTIVE2; RD_ACTIVE2;}
+#define RD_ACTIVE8  {RD_ACTIVE4; RD_ACTIVE4;}
+#define RD_ACTIVE16 {RD_ACTIVE8; RD_ACTIVE8;}
+
 #if 0
 //################################### UNO ##############################
 #elif defined(__AVR_ATmega328P__)       //regular UNO shield on UNO
@@ -175,8 +183,7 @@
                           PMC->PMC_PCER0 = (1 << ID_PIOB)|(1 << ID_PIOC);\
 						  PIOB->PIO_ODR = BMASK; PIOC->PIO_ODR = CMASK;\
 						}
-#define write8(x)     { write_8(x); WR_ACTIVE; WR_ACTIVE; WR_STROBE; }
-//#define write8(x)     { write_8(x); WR_ACTIVE; WR_STROBE; WR_IDLE; }
+#define write8(x)     { write_8(x); WR_ACTIVE2; WR_STROBE; }
 #define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
 #define READ_8(dst)   { RD_STROBE; RD_ACTIVE; dst = read_8(); RD_IDLE; RD_IDLE; }
 #define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
@@ -272,14 +279,14 @@ void write_8(uint8_t x)
 #warning regular UNO shield on a Teensy 3.x
 
 #if defined(__MK20DX128__) || defined(__MK20DX256__) // Teensy3.0 || 3.2 96MHz
-#define WRITE_DELAY { WR_ACTIVE; WR_ACTIVE; }
-#define READ_DELAY  { RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; }
+#define WRITE_DELAY { WR_ACTIVE2; }
+#define READ_DELAY  { RD_ACTIVE8; RD_ACTIVE; }
 #elif defined(__MK64FX512__) // Teensy3.5 120MHz thanks to PeteJohno
-#define WRITE_DELAY { WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; }
-#define READ_DELAY  { RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; }
+#define WRITE_DELAY { WR_ACTIVE4; }
+#define READ_DELAY  { RD_ACTIVE8; }
 #elif defined(__MK66FX1M0__) // Teensy3.6 180MHz untested.   delays can possibly be reduced.
-#define WRITE_DELAY { WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; }
-#define READ_DELAY  { RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; }
+#define WRITE_DELAY { WR_ACTIVE8; }
+#define READ_DELAY  { RD_ACTIVE16; }
 #else
 #error unspecified delays
 #endif
@@ -402,20 +409,20 @@ void write_8(uint8_t x)
                       /* AFIO->MAPR |= AFIO_MAPR_SWJ_CFG_1; */ }
 
 #elif defined(STM32F401xE)
-#define WRITE_DELAY { WR_ACTIVE; WR_ACTIVE; }
-#define READ_DELAY  { RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; }
+#define WRITE_DELAY { WR_ACTIVE2; }
+#define READ_DELAY  { RD_ACTIVE4; }
 #define GPIO_INIT()   { RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN | RCC_AHB1ENR_GPIOBEN | RCC_AHB1ENR_GPIOCEN; }
 #define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
 
 #elif defined(STM32F411xE)
-#define WRITE_DELAY { WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; }
-#define READ_DELAY  { RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; }
+#define WRITE_DELAY { WR_ACTIVE2; WR_ACTIVE; }
+#define READ_DELAY  { RD_ACTIVE4; RD_ACTIVE2; }
 #define GPIO_INIT()   { RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN | RCC_AHB1ENR_GPIOBEN | RCC_AHB1ENR_GPIOCEN; }
 #define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
 
 #elif defined(STM32F446xx)
-#define WRITE_DELAY { WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; }
-#define READ_DELAY  { RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; }
+#define WRITE_DELAY { WR_ACTIVE8; }
+#define READ_DELAY  { RD_ACTIVE16;}
 #define GPIO_INIT()   { RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN | RCC_AHB1ENR_GPIOBEN | RCC_AHB1ENR_GPIOCEN; }
 #define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
 
@@ -432,8 +439,8 @@ void write_8(uint8_t x)
 #define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
 
 #elif defined(STM32L476xx)
-#define WRITE_DELAY { WR_ACTIVE; WR_ACTIVE; }
-#define READ_DELAY  { RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; }
+#define WRITE_DELAY { WR_ACTIVE2; }
+#define READ_DELAY  { RD_ACTIVE4; RD_ACTIVE; }
 #define GPIO_INIT()   { RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN | RCC_AHB2ENR_GPIOBEN | RCC_AHB2ENR_GPIOCEN; }
 #define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
 
