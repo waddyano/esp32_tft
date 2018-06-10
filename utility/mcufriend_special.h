@@ -12,7 +12,9 @@
 //#define USE_DUE_16BIT_SHIELD        //RD on PA15 (D24) 
 //#define USE_BOBCACHELOT_TEENSY
 //#define USE_FRDM_K20
-//#define USE_OPENSMART_SHIELD_PINOUT //thanks Michel53
+//#define USE_OPENSMART_SHIELD_PINOUT_UNO
+//#define USE_OPENSMART_SHIELD_PINOUT_MEGA
+//#define USE_OPENSMART_SHIELD_PINOUT_DUE //thanks Michel53
 //#define USE_ELECHOUSE_DUE_16BIT_SHIELD    //Untested yet
 //#define USE_MY_BLUEPILL
 
@@ -809,7 +811,7 @@ static __attribute((always_inline)) void write_8(uint8_t val)
 #define PIN_HIGH(port, pin)   (port)->PIO_SODR = (1<<(pin))
 #define PIN_OUTPUT(port, pin) (port)->PIO_OER = (1<<(pin))
 
-#elif defined(__SAM3X8E__) && defined(USE_OPENSMART_SHIELD_PINOUT)  //OPENSMART shield on DUE
+#elif defined(__SAM3X8E__) && defined(USE_OPENSMART_SHIELD_PINOUT_DUE)  //OPENSMART shield on DUE
 #warning USE_OPENSMART_SHIELD_PINOUT on DUE
  // configure macros for the control pins
 #define RD_PORT PIOA
@@ -946,7 +948,7 @@ static __attribute((always_inline)) void write_8(uint8_t val)
 #define PIN_HIGH(port, pin)   PASTE(port, _PSOR) =  (1<<(pin))
 #define PIN_OUTPUT(port, pin) PASTE(port, _PDDR) |= (1<<(pin))
 
-#elif defined(__AVR_ATmega328P__) && defined(USE_OPENSMART_SHIELD_PINOUT)
+#elif defined(__AVR_ATmega328P__) && defined(USE_OPENSMART_SHIELD_PINOUT_UNO)
 #define RD_PORT PORTC
 #define RD_PIN  0
 #define WR_PORT PORTC
@@ -980,7 +982,7 @@ static __attribute((always_inline)) void write_8(uint8_t val)
 #define PIN_HIGH(p, b)       (p) |= (1<<(b))
 #define PIN_OUTPUT(p, b)     *(&p-1) |= (1<<(b))
 
-#elif defined(__AVR_ATmega2560__) && defined(USE_OPENSMART_SHIELD_PINOUT)
+#elif defined(__AVR_ATmega2560__) && defined(USE_OPENSMART_SHIELD_PINOUT_MEGA)
 #define RD_PORT PORTF
 #define RD_PIN  0
 #define WR_PORT PORTF
