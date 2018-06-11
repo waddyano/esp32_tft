@@ -17,6 +17,7 @@
 //#define USE_OPENSMART_SHIELD_PINOUT_DUE //thanks Michel53
 //#define USE_ELECHOUSE_DUE_16BIT_SHIELD    //Untested yet
 //#define USE_MY_BLUEPILL
+#define USE_ADIGITALEU_TEENSY
 
 #if 0
 #elif defined(__AVR_ATmega328P__) && defined(USE_SSD1289_SHIELD_UNO)    //on UNO
@@ -1072,6 +1073,54 @@ static __attribute((always_inline)) void write_8(uint8_t val)
 #define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
 #define READ_8(dst)   { RD_STROBE; READ_DELAY; dst = read_8(); RD_IDLE; }
 #define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
+
+//####################################### ADIGITALEU_TEENSY ############################
+//UNTESTED
+#elif defined(__MK66FX1M0__) && defined(USE_ADIGITALEU_TEENSY)  // 16bit on a Teensy 3.6
+#warning "Teensy 3.6 16bit port C & D only (for now)"
+// Note: Port usage explained in UTFT Teensy edition ...\libraries\UTFT\hardware\arm\HW_Teensy3.h"
+
+#define USES_16BIT_BUS
+
+#define WRITE_DELAY { WR_ACTIVE8; }
+#define READ_DELAY  { RD_ACTIVE16; }
+
+#define RD_PORT GPIOA
+#define RD_PIN 16       //28 RD
+#define WR_PORT GPIOA
+#define WR_PIN 5        //25 WR
+#define CD_PORT GPIOE
+#define CD_PIN 26       //24 RS 
+#define CS_PORT GPIOA
+#define CS_PIN 14       //26 CS
+#define RESET_PORT GPIOA
+#define RESET_PIN 15    //27 Reset
+
+#define write_8(d) { GPIOC_PDOR = d; } 
+#define write_16(d) { GPIOC_PDOR = d; GPIOD_PDOR = (d >> 8);}
+
+#define read_8() (GPIOC_PDIR)
+#define read_16() (GPIOC_PDIR | GPIOD_PDIR << 8)
+
+#define setWriteDir() {GPIOC_PDDR |=  0xFF; GPIOD_PDDR |=  0xFF; }
+#define setReadDir()  {GPIOC_PDDR &= ~0xFF; GPIOD_PDDR &= ~0xFF; }
+
+#define write8(x)     {write_8(x); WRITE_DELAY; WR_STROBE }
+#define write16(x)    {write_16(x); WRITE_DELAY; WR_STROBE }
+
+#define READ_8(dst) { RD_STROBE; READ_DELAY; dst = read_8(); RD_IDLE; } 
+#define READ_16(dst) { RD_STROBE; READ_DELAY; dst = read_16(); RD_IDLE;}
+
+//Data: Teensy pins -> D0-D15 :
+// Teensy probably initialises some pins for Analog, Timer, Alternate, ...
+// so it is probably wise to use pinMode(n, OUTPUT) for all the ontrol and data lines
+#define GPIO_INIT() { SIM_SCGC5 |= 0x3E00;}  //only enables PORTA-PORTE 
+
+#define PASTE(x, y) x ## y
+
+#define PIN_LOW(port, pin) PASTE(port, _PCOR) = (1<<(pin))
+#define PIN_HIGH(port, pin) PASTE(port, _PSOR) = (1<<(pin))
+#define PIN_OUTPUT(port, pin) PASTE(port, _PDDR) |= (1<<(pin))
 
 #else
 #define USE_SPECIAL_FAIL
