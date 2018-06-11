@@ -1,11 +1,4 @@
 //#define USE_SPECIAL             //check for custom drivers
-#if defined(USE_SPECIAL)
-#include "mcufriend_special.h"
-#if !defined(USE_SPECIAL_FAIL)
-#warning WE ARE USING A SPECIAL CUSTOM DRIVER
-#endif
-#endif
-#if !defined(USE_SPECIAL) || defined (USE_SPECIAL_FAIL)
 
 #define WR_ACTIVE2  {WR_ACTIVE; WR_ACTIVE;}
 #define WR_ACTIVE4  {WR_ACTIVE2; WR_ACTIVE2;}
@@ -14,6 +7,14 @@
 #define RD_ACTIVE4  {RD_ACTIVE2; RD_ACTIVE2;}
 #define RD_ACTIVE8  {RD_ACTIVE4; RD_ACTIVE4;}
 #define RD_ACTIVE16 {RD_ACTIVE8; RD_ACTIVE8;}
+
+#if defined(USE_SPECIAL)
+#include "mcufriend_special.h"
+#if !defined(USE_SPECIAL_FAIL)
+#warning WE ARE USING A SPECIAL CUSTOM DRIVER
+#endif
+#endif
+#if !defined(USE_SPECIAL) || defined (USE_SPECIAL_FAIL)
 
 #if 0
 //################################### UNO ##############################

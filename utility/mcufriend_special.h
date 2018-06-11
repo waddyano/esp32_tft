@@ -90,7 +90,7 @@
 #define setReadDir()  { VPORT2.DIR = 0x00; }
 #define write8(x)     { write_8(x); WR_STROBE; }
 #define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
-#define READ_8(dst)   { RD_STROBE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; dst = read_8(); RD_IDLE; }
+#define READ_8(dst)   { RD_STROBE; RD_ACTIVE2; RD_ACTIVE; dst = read_8(); RD_IDLE; }
 #define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
 
 #define PIN_LOW(p, b)        (p).OUT &= ~(1<<(b))
@@ -116,7 +116,7 @@
 // ST7789 says tRC=160ns for ID and tRC=450ns for Frame Memory
 // ILI9341 says tRC=160ns for ID and tRC=450ns for Frame Memory.  They are FASTER
 #define WRITE_DELAY   { }
-#define READ_DELAY    { RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; }
+#define READ_DELAY    { RD_ACTIVE4; }
 #define write_8(x)    { VPORT2.OUT = x; }
 #define read_8()      ( VPORT2.IN )
 #define setWriteDir() { PORTCFG.VPCTRLA=0x10; PORTCFG.VPCTRLB=0x32; VPORT2.DIR = 0xFF; }
@@ -566,7 +566,7 @@ static __attribute((always_inline)) void write_8(uint8_t val)
 }
 #define write8(x)     { write_8(x); WR_ACTIVE; WR_STROBE; WR_IDLE; }
 #define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
-#define READ_8(dst)   { RD_STROBE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; dst = read_8(); RD_IDLE; RD_IDLE; RD_IDLE; }
+#define READ_8(dst)   { RD_STROBE; RD_ACTIVE4; dst = read_8(); RD_IDLE; RD_IDLE; RD_IDLE; }
 #define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
 // Shield Control macros.
 #define PIN_LOW(port, pin)    (port)->PIO_CODR = (1<<(pin))
@@ -595,7 +595,7 @@ static __attribute((always_inline)) void write_8(uint8_t val)
   #define setReadDir()  { PMC->PMC_PCER0 = (1 << ID_PIOD); PIOD->PIO_ODR = DMASK;}      
 #define write8(x)     { write_8(x); WR_ACTIVE; WR_STROBE; WR_IDLE; WR_IDLE; }
 #define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
-#define READ_8(dst)   { RD_STROBE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; dst = read_8(); RD_IDLE; RD_IDLE; RD_IDLE; }
+#define READ_8(dst)   { RD_STROBE; RD_ACTIVE4; dst = read_8(); RD_IDLE; RD_IDLE; RD_IDLE; }
 #define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
 // Shield Control macros.
 #define PIN_LOW(port, pin)    (port)->PIO_CODR = (1<<(pin))
@@ -631,7 +631,7 @@ static __attribute((always_inline)) void write_8(uint8_t val)
 #define setReadDir()  { PMC->PMC_PCER0 = (1 << ID_PIOC); PIOC->PIO_ODR = CMASK; }
 #define write8(x)     { write16(x & 0xFF); }
 #define write16(x)    { write_16(x); WR_ACTIVE; WR_STROBE; WR_IDLE; WR_IDLE; }
-#define READ_16(dst)  { RD_STROBE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; dst = read_16(); RD_IDLE; RD_IDLE; RD_IDLE; }
+#define READ_16(dst)  { RD_STROBE; RD_ACTIVE4; dst = read_16(); RD_IDLE; RD_IDLE; RD_IDLE; }
 #define READ_8(dst)   { READ_16(dst); dst &= 0xFF; }
 
 // Shield Control macros.
@@ -668,7 +668,7 @@ static __attribute((always_inline)) void write_8(uint8_t val)
 #define setReadDir()  { PMC->PMC_PCER0 = (1 << ID_PIOC); PIOC->PIO_ODR = CMASK; }
 #define write8(x)     { write16(x & 0xFF); }
 #define write16(x)    { write_16(x); WR_ACTIVE; WR_STROBE; WR_IDLE; WR_IDLE; }
-#define READ_16(dst)  { RD_STROBE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; dst = read_16(); RD_IDLE; RD_IDLE; RD_IDLE; }
+#define READ_16(dst)  { RD_STROBE; RD_ACTIVE4; dst = read_16(); RD_IDLE; RD_IDLE; RD_IDLE; }
 #define READ_8(dst)   { READ_16(dst); dst &= 0xFF; }
 
 // Shield Control macros.
@@ -746,8 +746,8 @@ static __attribute((always_inline)) void write_8(uint8_t val)
 					  }
 #define write8(x)     { write16(x & 0xFF); }
 // ILI9486 is slower than ILI9481
-#define write16(x)    { write_16(x); WR_ACTIVE; WR_ACTIVE; WR_STROBE; }
-#define READ_16(dst)  { RD_STROBE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; dst = read_16(); RD_IDLE; RD_IDLE; RD_IDLE; }
+#define write16(x)    { write_16(x); WR_ACTIVE2; WR_STROBE; }
+#define READ_16(dst)  { RD_STROBE; RD_ACTIVE4; dst = read_16(); RD_IDLE; RD_IDLE; RD_IDLE; }
 #define READ_8(dst)   { READ_16(dst); dst &= 0xFF; }
 
 // Shield Control macros.
@@ -801,9 +801,9 @@ static __attribute((always_inline)) void write_8(uint8_t val)
 					  }
 
 // ILI9486 is slower than ILI9481. HX8357-D is slower
-#define write8(x)     { write_8(x); WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; WR_STROBE; WR_IDLE; WR_IDLE; }
+#define write8(x)     { write_8(x); WR_ACTIVE4; WR_STROBE; WR_IDLE; WR_IDLE; }
 #define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
-#define READ_8(dst)   { RD_STROBE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; dst = read_8(); RD_IDLE; RD_IDLE; RD_IDLE; }
+#define READ_8(dst)   { RD_STROBE; RD_ACTIVE4; dst = read_8(); RD_IDLE; RD_IDLE; RD_IDLE; }
 #define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
 
 // Shield Control macros.
@@ -937,9 +937,9 @@ static __attribute((always_inline)) void write_8(uint8_t val)
   #define setWriteDir() {GPIOA_PDDR |=  AMASK;GPIOC_PDDR |=  CMASK;GPIOD_PDDR |=  DMASK; }
   #define setReadDir()  {GPIOA_PDDR &= ~AMASK;GPIOC_PDDR &= ~CMASK;GPIOD_PDDR &= ~DMASK; }
 
-#define write8(x)     { write_8(x); WR_ACTIVE; WR_ACTIVE; WR_STROBE; }
+#define write8(x)     { write_8(x); WR_ACTIVE2; WR_STROBE; }
 #define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
-#define READ_8(dst)   { RD_STROBE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; dst = read_8(); RD_IDLE; }
+#define READ_8(dst)   { RD_STROBE; RD_ACTIVE4; RD_ACTIVE; dst = read_8(); RD_IDLE; }
 #define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
 
 #define PASTE(x, y)   x ## y
