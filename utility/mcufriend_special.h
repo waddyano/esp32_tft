@@ -759,7 +759,7 @@ static __attribute((always_inline)) void write_8(uint8_t val)
 //Data: Teensy pins -> D0-D15 :
 // Teensy probably initialises some pins for Analog, Timer, Alternate, ...
 // so it is probably wise to use pinMode(n, OUTPUT) for all the control and data lines
-#define GPIO_INIT() {pinMode(2, OUTTPUT); for (int i = 5; i <= 15; i++) pinMode(i, OUTPUT); for (int i = 20; i <= 28; i++) pinMode(i, OUTPUT);}
+#define GPIO_INIT() {pinMode(2, OUTPUT); for (int i = 5; i <= 15; i++) pinMode(i, OUTPUT); for (int i = 20; i <= 28; i++) pinMode(i, OUTPUT);}
 
 #define PASTE(x, y) x ## y
 
