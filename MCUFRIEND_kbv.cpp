@@ -577,7 +577,7 @@ void MCUFRIEND_kbv::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_
     while (h-- > 0) {
         end = w;
 #if USING_16BIT_BUS
-#if defined(__SAM3X8E__)
+#if defined(__SAM3X8E__) || defined(__MK66FX1M0__)
 #define STROBE_16BIT {WR_ACTIVE;WR_ACTIVE;WR_ACTIVE;WR_IDLE;WR_IDLE;}
 #else
 #define STROBE_16BIT {WR_ACTIVE; WR_IDLE;}
