@@ -67,8 +67,8 @@ BusOut analog(A0, A1, A2, A3, A4, A5, NC, NC);
 #define READ_16(dst) { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
 
 #define CTL_INIT()   { RD_OUTPUT; WR_OUTPUT; CD_OUTPUT; CS_OUTPUT; RESET_OUTPUT; }
-#define WriteCmd(x)  { CD_COMMAND; write16(x); }
-#define WriteData(x) { CD_DATA; write16(x); }
+#define WriteCmd(x)  { CD_COMMAND; write16(x); CD_DATA; }
+#define WriteData(x) { write16(x); }
 
 #endif   //!USE_SERIAL
 #endif   //MCUFRIEND_KEIL_H_
