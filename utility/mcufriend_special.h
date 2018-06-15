@@ -13,7 +13,7 @@
 //#define USE_OPENSMART_SHIELD_PINOUT_DUE //thanks Michel53
 //#define USE_ELECHOUSE_DUE_16BIT_SHIELD    //Untested yet
 //#define USE_MY_BLUEPILL
-#define USE_ADIGITALEU_TEENSY
+//#define USE_ADIGITALEU_TEENSY
 
 #if 0
 
