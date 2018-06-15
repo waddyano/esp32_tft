@@ -577,9 +577,11 @@ void MCUFRIEND_kbv::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_
     while (h-- > 0) {
         end = w;
 #if USING_16BIT_BUS
-#if defined(__SAM3X8E__)
+#if defined(__MK66FX1M0__)      //180MHz M4
+#define STROBE_16BIT {WR_ACTIVE;WR_ACTIVE;WR_ACTIVE;WR_ACTIVE;WR_ACTIVE;WR_IDLE;WR_IDLE;WR_IDLE;WR_IDLE;WR_IDLE;}
+#elif defined(__SAM3X8E__)      //84MHz M3
 #define STROBE_16BIT {WR_ACTIVE;WR_ACTIVE;WR_ACTIVE;WR_IDLE;WR_IDLE;}
-#else
+#else                           //16MHz AVR
 #define STROBE_16BIT {WR_ACTIVE; WR_IDLE;}
 #endif
         write_16(color);        //we could just do the strobe
