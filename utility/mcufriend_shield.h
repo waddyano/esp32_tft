@@ -7,6 +7,8 @@
 #define RD_ACTIVE4  {RD_ACTIVE2; RD_ACTIVE2;}
 #define RD_ACTIVE8  {RD_ACTIVE4; RD_ACTIVE4;}
 #define RD_ACTIVE16 {RD_ACTIVE8; RD_ACTIVE8;}
+#define WR_IDLE2  {WR_IDLE; WR_IDLE;}
+#define WR_IDLE4  {WR_IDLE2; WR_IDLE2;}
 
 #if defined(USE_SPECIAL)
 #include "mcufriend_special.h"
@@ -423,6 +425,7 @@ void write_8(uint8_t x)
 
 #elif defined(STM32F446xx)
 #define WRITE_DELAY { WR_ACTIVE8; }
+#define IDLE_DELAY  { WR_IDLE;WR_IDLE;WR_IDLE; }
 #define READ_DELAY  { RD_ACTIVE16;}
 #define GPIO_INIT()   { RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN | RCC_AHB1ENR_GPIOBEN | RCC_AHB1ENR_GPIOCEN; }
 #define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
@@ -564,7 +567,11 @@ void write_8(uint8_t x)
 #error REGS group
 #endif
 
-#define write8(x)     { write_8(x); WRITE_DELAY; WR_STROBE; WR_IDLE; }
+#ifndef IDLE_DELAY
+#define IDLE_DELAY    { WR_IDLE; }
+#endif
+
+#define write8(x)     { write_8(x); WRITE_DELAY; WR_STROBE; IDLE_DELAY; }
 #define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
 #define READ_8(dst)   { RD_STROBE; READ_DELAY; dst = read_8(); RD_IDLE; RD_IDLE; }
 #define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
