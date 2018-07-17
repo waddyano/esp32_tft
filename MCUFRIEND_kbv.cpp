@@ -578,11 +578,13 @@ void MCUFRIEND_kbv::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_
         end = w;
 #if USING_16BIT_BUS
 #if defined(__MK66FX1M0__)      //180MHz M4
-#define STROBE_16BIT {WR_ACTIVE;WR_ACTIVE;WR_ACTIVE;WR_ACTIVE;WR_ACTIVE;WR_IDLE;WR_IDLE;WR_IDLE;WR_IDLE;WR_IDLE;}
+#define STROBE_16BIT {WR_ACTIVE4;WR_ACTIVE;WR_IDLE4;WR_IDLE;}   //56ns
 #elif defined(__SAM3X8E__)      //84MHz M3
-#define STROBE_16BIT {WR_ACTIVE;WR_ACTIVE;WR_ACTIVE;WR_IDLE;WR_IDLE;}
+#define STROBE_16BIT {WR_ACTIVE4;WR_ACTIVE2;WR_IDLE4;WR_IDLE2;} //286ns ?ILI9486
+//#define STROBE_16BIT {WR_ACTIVE4;WR_ACTIVE;WR_IDLE4;WR_IDLE;} //238ns SSD1289
+//#define STROBE_16BIT {WR_ACTIVE2;WR_ACTIVE;WR_IDLE2;}      //119ns RM68140
 #else                           //16MHz AVR
-#define STROBE_16BIT {WR_ACTIVE; WR_IDLE;}
+#define STROBE_16BIT {WR_ACTIVE;WR_ACTIVE;WR_IDLE; }            //375ns ?ILI9486
 #endif
         write_16(color);        //we could just do the strobe
         lo = end & 7;
@@ -2557,6 +2559,12 @@ case 0x4532:    // thanks Leodino
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS; //Red 3.5", Blue 3.5"
 //        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | REV_SCREEN; //old Red 3.5"
         static const uint8_t ILI9486_regValues[] PROGMEM = {
+/*
+            0xF2, 9, 0x1C, 0xA3, 0x32, 0x02, 0xB2, 0x12, 0xFF, 0x12, 0x00,        //f.k
+            0xF1, 2, 0x36, 0xA4,        //
+            0xF8, 2, 0x21, 0x04,        //
+            0xF9, 2, 0x00, 0x08,        //
+*/
             0xC0, 2, 0x0d, 0x0d,        //Power Control 1 [0E 0E]
             0xC1, 2, 0x43, 0x00,        //Power Control 2 [43 00]
             0xC2, 1, 0x00,      //Power Control 3 [33]
