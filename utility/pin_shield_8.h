@@ -11,6 +11,17 @@
 #define LPC1768 1768
 #define LPC2103 2103
 #define LPC2148 2148
+
+#define ISTARGET_NUCLEO64 (0 \
+        || defined(TARGET_NUCLEO_F072RB) \
+        || defined(TARGET_NUCLEO_F103RB) \
+        || defined(TARGET_NUCLEO_F401RE) \
+        || defined(TARGET_NUCLEO_F411RE) \
+        || defined(TARGET_NUCLEO_F446RE) \
+        || defined(TARGET_NUCLEO_L433RC_P) \
+        || defined(TARGET_NUCLEO_L476RG) \
+        )
+
 //#warning Using pin_SHIELD_8.h
 
 #if 0
@@ -56,7 +67,7 @@
 #define GP_OUT(port, reg, mask)           GROUP_MODE(port, reg, mask, 0x33333333)
 #define GP_INP(port, reg, mask)           GROUP_MODE(port, reg, mask, 0x44444444)
 
-	// configure macros for the data pins
+    // configure macros for the data pins
 #define write_8(d) { \
         GPIOA->REGS(BSRR) = 0x0703 << 16; \
         GPIOB->REGS(BSRR) = 0x00E0 << 16; \
@@ -83,7 +94,7 @@
 #define setWriteDir() {GP_OUT(GPIOA, CRH, 0xFFF); GP_OUT(GPIOA, CRL, 0xFF); GP_OUT(GPIOB, CRL, 0xFFF00000); }
 #define setReadDir()  {GP_INP(GPIOA, CRH, 0xFFF); GP_INP(GPIOA, CRL, 0xFF); GP_INP(GPIOB, CRL, 0xFFF00000); }
 
-#elif defined(NUCLEO) || defined(TARGET_NUCLEO_F072RB) || defined(TARGET_NUCLEO_F401RE) || defined(TARGET_NUCLEO_F411RE) || defined(TARGET_NUCLEO_F103RB) || defined(TARGET_NUCLEO_L476RG) || defined(TARGET_NUCLEO_F446RE)
+#elif defined(NUCLEO) || ISTARGET_NUCLEO64
 #if __MBED__
 #warning MBED knows everything
 #elif defined(STM32F072xB)
@@ -94,7 +105,7 @@
   #else
   #include <STM32F1XX.h>
   #endif
-#elif defined(STM32L476xx)
+#elif defined(STM32L476xx) || defined(STM32L433xx)
   #include <STM32L4XX.h>
 #elif defined(STM32F401xE) || defined(STM32F411xE) || defined(STM32F446xx)
   #include <STM32F4XX.h>
