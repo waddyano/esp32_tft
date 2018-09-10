@@ -1,8 +1,8 @@
 // this will avoid any library editing
 //
-// but the sketch must use the specific OPENSMART_kbv class and constructor
+// but the sketch must use specific OPENSMART_kbv class constructor
 
-#define USE_SPECIAL
+#define USE_SPECIAL                     //SPECIAL will use the first match 
 //#define USE_OPENSMART_SHIELD_PINOUT     //deprecated
 #define USE_OPENSMART_SHIELD_PINOUT_UNO
 #define USE_OPENSMART_SHIELD_PINOUT_MEGA
@@ -13,4 +13,4 @@
 
 #define MCUFRIEND_kbv OPENSMART_kbv     //rename the class scope 
 
-#include "MCUFRIEND_kbv.cpp"            //same methods, OPENSMART_kbv class scope
+#include "MCUFRIEND_kbv.cpp"            //same methods, but with OPENSMART_kbv class scope
