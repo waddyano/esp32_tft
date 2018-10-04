@@ -93,6 +93,128 @@ ST7789V  tWC = 66ns  tWRH = 15ns  tRCFM = 450ns  tRC = 160ns
 #define PIN_HIGH(p, b)       (p).OUT |= (1<<(b))
 #define PIN_OUTPUT(p, b)     (p).DIR |= (1<<(b))
 
+#elif defined(__AVR_ATmega328P__) && defined(USE_OPENSMART_SHIELD_PINOUT_UNO)
+#define RD_PORT PORTC
+#define RD_PIN  0
+#define WR_PORT PORTC
+#define WR_PIN  1
+#define CD_PORT PORTC
+#define CD_PIN  2
+#define CS_PORT PORTC
+#define CS_PIN  3
+#define RESET_PORT PORTC
+#define RESET_PIN  1  // n/a. so mimic WR_PIN
+
+#define BMASK         B00101111
+#define DMASK         B11010000
+
+#define write_8(x) {                          \
+        PORTD = (PORTD & ~DMASK) | ((x) & DMASK); \
+        PORTB = (PORTB & ~BMASK) | ((x) & BMASK);} // STROBEs are defined later
+
+#define read_8()   ((PIND & DMASK) | (PINB & BMASK))
+
+#define setWriteDir() { DDRD |=  DMASK; DDRB |=  BMASK; }
+#define setReadDir()  { DDRD &= ~DMASK; DDRB &= ~BMASK; }
+
+
+#define write8(x)     { write_8(x); WR_STROBE; }
+#define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
+#define READ_8(dst)   { RD_STROBE; dst = read_8(); RD_IDLE; }
+#define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
+
+#define PIN_LOW(p, b)        (p) &= ~(1<<(b))
+#define PIN_HIGH(p, b)       (p) |= (1<<(b))
+#define PIN_OUTPUT(p, b)     *(&p-1) |= (1<<(b))
+
+#elif defined(__AVR_ATmega2560__) && defined(USE_OPENSMART_SHIELD_PINOUT_MEGA)
+#define RD_PORT PORTF
+#define RD_PIN  0
+#define WR_PORT PORTF
+#define WR_PIN  1
+#define CD_PORT PORTF
+#define CD_PIN  2
+#define CS_PORT PORTF
+#define CS_PIN  3
+#define RESET_PORT PORTF
+#define RESET_PIN  1  // n/a. so mimic WR_PIN
+
+#define BMASK         B10110000 //D13, D11, D10
+#define GMASK         0x20      //D4
+#define HMASK         0x78      //D6, D7, D8, D9
+
+#define write_8(x) {  \
+        PORTH = (PORTH&~HMASK)|(((x)&B11000000)>>3)|(((x)&B00000011)<<5); \
+        PORTB = (PORTB&~BMASK)|(((x)&B00101100)<<2); \
+        PORTG = (PORTG&~GMASK)|(((x)&B00010000)<<1); \
+    }
+#define read_8()(\
+                 ((PINH & B00011000) << 3) | ((PINB & BMASK) >> 2) | \
+                 ((PING & GMASK) >> 1) | ((PINH & B01100000) >> 5) )
+#define setWriteDir() { DDRH |=  HMASK; DDRB |=  BMASK; DDRG |=  GMASK; }
+#define setReadDir()  { DDRH &= ~HMASK; DDRB &= ~BMASK; DDRG &= ~GMASK; }
+
+#define write8(x)     { write_8(x); WR_STROBE; }
+#define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
+#define READ_8(dst)   { RD_STROBE; dst = read_8(); RD_IDLE; }
+#define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
+
+#define PIN_LOW(p, b)        (p) &= ~(1<<(b))
+#define PIN_HIGH(p, b)       (p) |= (1<<(b))
+#define PIN_OUTPUT(p, b)     *(&p-1) |= (1<<(b))
+
+#elif defined(__SAM3X8E__) && defined(USE_OPENSMART_SHIELD_PINOUT_DUE)  //OPENSMART shield on DUE
+#warning USE_OPENSMART_SHIELD_PINOUT on DUE
+ // configure macros for the control pins
+#define RD_PORT PIOA
+#define RD_PIN  16
+#define WR_PORT PIOA
+#define WR_PIN  24
+#define CD_PORT PIOA
+#define CD_PIN  23
+#define CS_PORT PIOA
+#define CS_PIN  22
+#define RESET_PORT PIOA
+#define RESET_PIN  24  // n/a. so mimic WR_PIN
+ // configure macros for data bus
+#define BMASK         (1<<27)
+#define CMASK         (0x12F << 21)
+#define DMASK         (1<<7)
+#define write_8(x)   {  PIOB->PIO_CODR = BMASK; PIOC->PIO_CODR = CMASK; PIOD->PIO_CODR = DMASK; \
+                        PIOC->PIO_SODR = (((x) & (1<<0)) << 22); \
+                        PIOC->PIO_SODR = (((x) & (1<<1)) << 20); \
+                        PIOC->PIO_SODR = (((x) & (1<<2)) << 27); \
+                        PIOD->PIO_SODR = (((x) & (1<<3)) << 4); \
+                        PIOC->PIO_SODR = (((x) & (1<<4)) << 22); \
+                        PIOB->PIO_SODR = (((x) & (1<<5)) << 22); \
+                        PIOC->PIO_SODR = (((x) & (1<<6)) << 18); \
+                        PIOC->PIO_SODR = (((x) & (1<<7)) << 16); \
+					 }
+
+#define read_8()      ( ((PIOC->PIO_PDSR & (1<<22)) >> 22)\
+                      | ((PIOC->PIO_PDSR & (1<<21)) >> 20)\
+                      | ((PIOC->PIO_PDSR & (1<<29)) >> 27)\
+                      | ((PIOD->PIO_PDSR & (1<<7))  >> 4)\
+                      | ((PIOC->PIO_PDSR & (1<<26)) >> 22)\
+                      | ((PIOB->PIO_PDSR & (1<<27)) >> 22)\
+                      | ((PIOC->PIO_PDSR & (1<<24)) >> 18)\
+                      | ((PIOC->PIO_PDSR & (1<<23)) >> 16)\
+                      )
+#define setWriteDir() { PIOB->PIO_OER = BMASK; PIOC->PIO_OER = CMASK; PIOD->PIO_OER = DMASK; }
+#define setReadDir()  { \
+                          PMC->PMC_PCER0 = (1 << ID_PIOB)|(1 << ID_PIOC)|(1 << ID_PIOD);\
+						  PIOB->PIO_ODR = BMASK; PIOC->PIO_ODR = CMASK; PIOD->PIO_ODR = DMASK;\
+						}
+#define write8(x)     { write_8(x); WR_ACTIVE; WR_STROBE; }
+//#define write8(x)     { write_8(x); WR_ACTIVE; WR_STROBE; WR_IDLE; }
+#define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
+#define READ_8(dst)   { RD_STROBE; RD_ACTIVE; dst = read_8(); RD_IDLE; RD_IDLE; }
+#define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
+ // Shield Control macros.
+#define PIN_LOW(port, pin)    (port)->PIO_CODR = (1<<(pin))
+#define PIN_HIGH(port, pin)   (port)->PIO_SODR = (1<<(pin))
+#define PIN_OUTPUT(port, pin) (port)->PIO_OER = (1<<(pin))
+
 #elif defined(__AVR_ATmega2560__) && defined(USE_BLD_BST_MEGA2560)   //regular UNO shield on MEGA2560 using BLD/BST
 #warning regular UNO shield on MEGA2560 using BLD/BST
 #define RD_PORT PORTF
@@ -521,58 +643,6 @@ static __attribute((always_inline)) void write_8(uint8_t val)
 #define PIN_HIGH(port, pin)   (port)->PIO_SODR = (1<<(pin))
 #define PIN_OUTPUT(port, pin) (port)->PIO_OER = (1<<(pin))
 
-#elif defined(__SAM3X8E__) && defined(USE_OPENSMART_SHIELD_PINOUT_DUE)  //OPENSMART shield on DUE
-#warning USE_OPENSMART_SHIELD_PINOUT on DUE
- // configure macros for the control pins
-#define RD_PORT PIOA
-#define RD_PIN  16
-#define WR_PORT PIOA
-#define WR_PIN  24
-#define CD_PORT PIOA
-#define CD_PIN  23
-#define CS_PORT PIOA
-#define CS_PIN  22
-#define RESET_PORT PIOA
-#define RESET_PIN  24  // n/a. so mimic WR_PIN
- // configure macros for data bus
-#define BMASK         (1<<27)
-#define CMASK         (0x12F << 21)
-#define DMASK         (1<<7)
-#define write_8(x)   {  PIOB->PIO_CODR = BMASK; PIOC->PIO_CODR = CMASK; PIOD->PIO_CODR = DMASK; \
-                        PIOC->PIO_SODR = (((x) & (1<<0)) << 22); \
-                        PIOC->PIO_SODR = (((x) & (1<<1)) << 20); \
-                        PIOC->PIO_SODR = (((x) & (1<<2)) << 27); \
-                        PIOD->PIO_SODR = (((x) & (1<<3)) << 4); \
-                        PIOC->PIO_SODR = (((x) & (1<<4)) << 22); \
-                        PIOB->PIO_SODR = (((x) & (1<<5)) << 22); \
-                        PIOC->PIO_SODR = (((x) & (1<<6)) << 18); \
-                        PIOC->PIO_SODR = (((x) & (1<<7)) << 16); \
-					 }
-
-#define read_8()      ( ((PIOC->PIO_PDSR & (1<<22)) >> 22)\
-                      | ((PIOC->PIO_PDSR & (1<<21)) >> 20)\
-                      | ((PIOC->PIO_PDSR & (1<<29)) >> 27)\
-                      | ((PIOD->PIO_PDSR & (1<<7))  >> 4)\
-                      | ((PIOC->PIO_PDSR & (1<<26)) >> 22)\
-                      | ((PIOB->PIO_PDSR & (1<<27)) >> 22)\
-                      | ((PIOC->PIO_PDSR & (1<<24)) >> 18)\
-                      | ((PIOC->PIO_PDSR & (1<<23)) >> 16)\
-                      )
-#define setWriteDir() { PIOB->PIO_OER = BMASK; PIOC->PIO_OER = CMASK; PIOD->PIO_OER = DMASK; }
-#define setReadDir()  { \
-                          PMC->PMC_PCER0 = (1 << ID_PIOB)|(1 << ID_PIOC)|(1 << ID_PIOD);\
-						  PIOB->PIO_ODR = BMASK; PIOC->PIO_ODR = CMASK; PIOD->PIO_ODR = DMASK;\
-						}
-#define write8(x)     { write_8(x); WR_ACTIVE; WR_STROBE; }
-//#define write8(x)     { write_8(x); WR_ACTIVE; WR_STROBE; WR_IDLE; }
-#define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
-#define READ_8(dst)   { RD_STROBE; RD_ACTIVE; dst = read_8(); RD_IDLE; RD_IDLE; }
-#define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
- // Shield Control macros.
-#define PIN_LOW(port, pin)    (port)->PIO_CODR = (1<<(pin))
-#define PIN_HIGH(port, pin)   (port)->PIO_SODR = (1<<(pin))
-#define PIN_OUTPUT(port, pin) (port)->PIO_OER = (1<<(pin))
-
 #elif defined(__MK20DX256__) && defined(USE_BOBCACHELOT_TEENSY) // special for BOBCACHEALOT_TEENSY
 #warning  special for BOBCACHEALOT_TEENSY
 #define RD_PORT GPIOD
@@ -609,76 +679,6 @@ static __attribute((always_inline)) void write_8(uint8_t val)
 #define PIN_LOW(port, pin)    PASTE(port, _PCOR) =  (1<<(pin))
 #define PIN_HIGH(port, pin)   PASTE(port, _PSOR) =  (1<<(pin))
 #define PIN_OUTPUT(port, pin) PASTE(port, _PDDR) |= (1<<(pin))
-
-#elif defined(__AVR_ATmega328P__) && defined(USE_OPENSMART_SHIELD_PINOUT_UNO)
-#define RD_PORT PORTC
-#define RD_PIN  0
-#define WR_PORT PORTC
-#define WR_PIN  1
-#define CD_PORT PORTC
-#define CD_PIN  2
-#define CS_PORT PORTC
-#define CS_PIN  3
-#define RESET_PORT PORTC
-#define RESET_PIN  1  // n/a. so mimic WR_PIN
-
-#define BMASK         B00101111
-#define DMASK         B11010000
-
-#define write_8(x) {                          \
-        PORTD = (PORTD & ~DMASK) | ((x) & DMASK); \
-        PORTB = (PORTB & ~BMASK) | ((x) & BMASK);} // STROBEs are defined later
-
-#define read_8()   ((PIND & DMASK) | (PINB & BMASK))
-
-#define setWriteDir() { DDRD |=  DMASK; DDRB |=  BMASK; }
-#define setReadDir()  { DDRD &= ~DMASK; DDRB &= ~BMASK; }
-
-
-#define write8(x)     { write_8(x); WR_STROBE; }
-#define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
-#define READ_8(dst)   { RD_STROBE; dst = read_8(); RD_IDLE; }
-#define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
-
-#define PIN_LOW(p, b)        (p) &= ~(1<<(b))
-#define PIN_HIGH(p, b)       (p) |= (1<<(b))
-#define PIN_OUTPUT(p, b)     *(&p-1) |= (1<<(b))
-
-#elif defined(__AVR_ATmega2560__) && defined(USE_OPENSMART_SHIELD_PINOUT_MEGA)
-#define RD_PORT PORTF
-#define RD_PIN  0
-#define WR_PORT PORTF
-#define WR_PIN  1
-#define CD_PORT PORTF
-#define CD_PIN  2
-#define CS_PORT PORTF
-#define CS_PIN  3
-#define RESET_PORT PORTF
-#define RESET_PIN  1  // n/a. so mimic WR_PIN
-
-#define BMASK         B10110000 //D13, D11, D10
-#define GMASK         0x20      //D4
-#define HMASK         0x78      //D6, D7, D8, D9
-
-#define write_8(x) {  \
-        PORTH = (PORTH&~HMASK)|(((x)&B11000000)>>3)|(((x)&B00000011)<<5); \
-        PORTB = (PORTB&~BMASK)|(((x)&B00101100)<<2); \
-        PORTG = (PORTG&~GMASK)|(((x)&B00010000)<<1); \
-    }
-#define read_8()(\
-                 ((PINH & B00011000) << 3) | ((PINB & BMASK) >> 2) | \
-                 ((PING & GMASK) >> 1) | ((PINH & B01100000) >> 5) )
-#define setWriteDir() { DDRH |=  HMASK; DDRB |=  BMASK; DDRG |=  GMASK; }
-#define setReadDir()  { DDRH &= ~HMASK; DDRB &= ~BMASK; DDRG &= ~GMASK; }
-
-#define write8(x)     { write_8(x); WR_STROBE; }
-#define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
-#define READ_8(dst)   { RD_STROBE; dst = read_8(); RD_IDLE; }
-#define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
-
-#define PIN_LOW(p, b)        (p) &= ~(1<<(b))
-#define PIN_HIGH(p, b)       (p) |= (1<<(b))
-#define PIN_OUTPUT(p, b)     *(&p-1) |= (1<<(b))
 
 #elif defined(USE_MY_BLUEPILL) && (defined(ARDUINO_GENERIC_STM32F103C) || defined(ARDUINO_NUCLEO_F103C8))
 #warning Uno Shield on MY BLUEPILL
