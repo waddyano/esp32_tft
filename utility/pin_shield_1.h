@@ -723,6 +723,57 @@
 #define PIN_READ(port, pin)   (port).IN.reg & (1u<<(pin))
 
 
+#elif defined(__AVR_ATmega4809__)    //XPRO_4809 with XPRO_SHIELD_ADAPTER
+#warning using XPRO_4809 with XPRO_SHIELD_ADAPTER
+  #include <avr/io.h>
+  #define D0_PORT PORTA
+  #define D0_PIN  1
+  #define D1_PORT PORTA
+  #define D1_PIN  0
+  #define D2_PORT PORTB
+  #define D2_PIN  2
+  #define D3_PORT PORTC
+  #define D3_PIN  6
+  #define D4_PORT PORTC
+  #define D4_PIN  7
+  #define D5_PORT PORTF
+  #define D5_PIN  6
+  #define D6_PORT PORTB
+  #define D6_PIN  3
+  #define D7_PORT PORTE
+  #define D7_PIN  1
+  #define D8_PORT PORTA
+  #define D8_PIN  2
+  #define D9_PORT PORTA
+  #define D9_PIN  3
+  #define D10_PORT PORTA
+  #define D10_PIN  7
+  #define D11_PORT PORTA //PC5
+  #define D11_PIN  4
+  #define D12_PORT PORTA
+  #define D12_PIN  5
+  #define D13_PORT PORTA
+  #define D13_PIN  6
+  #define A0_PORT PORTD
+  #define A0_PIN  2
+  #define A1_PORT PORTD
+  #define A1_PIN  3
+  #define A2_PORT PORTD
+  #define A2_PIN  4
+  #define A3_PORT PORTD
+  #define A3_PIN  5
+  #define A4_PORT PORTC
+  #define A4_PIN  2
+  #define A5_PORT PORTC
+  #define A5_PIN  3
+// Shield Control macros.
+#define PIN_LOW(port, pin)    (port).OUTCLR.reg = (1<<(pin))
+#define PIN_HIGH(port, pin)   (port).OUTSET.reg = (1<<(pin))
+#define PIN_OUTPUT(port, pin) (port).DIR.reg |= (1<<(pin))
+#define PIN_INPUT(port, pin)  (port).DIR.reg &= ~(1u<<(pin))
+#define PIN_READ(port, pin)   (port).IN.reg & (1u<<(pin))
+
+
 #elif defined(__AVR_ATtiny1634__)
   #include <avr/io.h>
   // 
