@@ -1,6 +1,6 @@
 //#define SUPPORT_0139              //S6D0139 +280 bytes
 #define SUPPORT_0154              //S6D0154 +320 bytes
-//#define SUPPORT_1289              //costs about 408 bytes
+#define SUPPORT_1289              //costs about 408 bytes
 //#define SUPPORT_1580              //R61580 Untested
 #define SUPPORT_1963              //only works with 16BIT bus anyway
 //#define SUPPORT_4532              //LGDP4532 +120 bytes.  thanks Leodino
@@ -59,12 +59,29 @@ MCUFRIEND_kbv::MCUFRIEND_kbv(int CS, int RS, int WR, int RD, int _RST):Adafruit_
     // we can not access GPIO pins until AHB has been enabled.
 }
 
-static uint8_t done_reset, is8347, is555;
+static uint8_t done_reset, is8347, is555, is9797;
 static uint16_t color565_to_555(uint16_t color) {
     return (color & 0xFFC0) | ((color & 0x1F) << 1) | ((color & 0x01));  //lose Green LSB, extend Blue LSB
 }
 static uint16_t color555_to_565(uint16_t color) {
     return (color & 0xFFC0) | ((color & 0x0400) >> 5) | ((color & 0x3F) >> 1); //extend Green LSB
+}
+static uint8_t color565_to_r(uint16_t color) {
+    return ((color & 0xF800) >> 8);  // transform to rrrrrrxx
+}
+static uint8_t color565_to_g(uint16_t color) {
+    return ((color & 0x7E0) >> 3);  // transform to ggggggxx
+}
+static uint8_t color565_to_b(uint16_t color) {
+    return ((color & 0x1F) << 3);  // transform to bbbbbbxx
+}
+static void write24(uint16_t color) {
+    uint8_t r = color565_to_r(color);
+    uint8_t g = color565_to_g(color);
+    uint8_t b = color565_to_b(color);
+    write8(r);
+    write8(g);
+    write8(b);
 }
 
 void MCUFRIEND_kbv::reset(void)
@@ -468,7 +485,7 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
             if (val & 0x08)
                 _lcd_drivOut |= 0x0800; //BGR
             WriteCmdData(0x01, _lcd_drivOut);   // set Driver Output Control
-            WriteCmdData(0x11, ORG | 0x6070);   // set GRAM write direction.
+            WriteCmdData(0x11, ORG | ((is9797) ? 0x48B0 : 0x6070));   // set GRAM write direction.
             break;
 #endif
 		}
@@ -493,6 +510,7 @@ void MCUFRIEND_kbv::drawPixel(int16_t x, int16_t y, uint16_t color)
 #endif
     setAddrWindow(x, y, x, y);
 //    CS_ACTIVE; WriteCmd(_MW); write16(color); CS_IDLE; //-0.01s +98B
+    if (is9797) { CS_ACTIVE; WriteCmd(_MW); write24(color); CS_IDLE;} else
     WriteCmdData(_MW, color);
 }
 
@@ -604,6 +622,18 @@ void MCUFRIEND_kbv::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_
             STROBE_16BIT;
         }
 #else
+#if defined(SUPPORT_1289)
+        if (is9797) {
+             uint8_t r = color565_to_r(color);
+             uint8_t g = color565_to_g(color);
+             uint8_t b = color565_to_b(color);
+             do {
+                 write8(r);
+                 write8(g);
+                 write8(b);
+             } while (--end != 0);
+        } else
+#endif
         do {
             write8(hi);
             write8(lo);
@@ -635,8 +665,9 @@ static void pushColors_any(uint16_t cmd, uint8_t * block, int16_t n, bool first,
 		}
         color = (isbigend) ? (h << 8 | l) :  (l << 8 | h);
 #if defined(SUPPORT_9488_555)
-    if (is555) color = color565_to_555(color);
+        if (is555) color = color565_to_555(color);
 #endif
+        if (is9797) write24(color); else
         write16(color);
     }
     CS_IDLE;
@@ -973,6 +1004,7 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
 #endif
 
 #ifdef SUPPORT_1289
+    case 0x9797: is9797 = 1; _lcd_ID = 0x1289;  // and fall through
     case 0x1289:
         _lcd_capable = 0 | XSA_XEA_16BIT | REV_SCREEN;
         // came from MikroElektronika library http://www.hmsprojects.com/tft_lcd.html
