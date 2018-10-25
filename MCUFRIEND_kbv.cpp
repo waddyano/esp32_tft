@@ -67,13 +67,13 @@ static uint16_t color555_to_565(uint16_t color) {
     return (color & 0xFFC0) | ((color & 0x0400) >> 5) | ((color & 0x3F) >> 1); //extend Green LSB
 }
 static uint8_t color565_to_r(uint16_t color) {
-    return ((color & 0xF800) >> 8);  // transform to rrrrrrxx
+    return ((color & 0xF800) >> 8);  // transform to rrrrrxxx
 }
 static uint8_t color565_to_g(uint16_t color) {
-    return ((color & 0x7E0) >> 3);  // transform to ggggggxx
+    return ((color & 0x07E0) >> 3);  // transform to ggggggxx
 }
 static uint8_t color565_to_b(uint16_t color) {
-    return ((color & 0x1F) << 3);  // transform to bbbbbbxx
+    return ((color & 0x001F) << 3);  // transform to bbbbbxxx
 }
 static void write24(uint16_t color) {
     uint8_t r = color565_to_r(color);
@@ -478,14 +478,15 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
             _MC = 0x4E, _MP = 0x4F, _MW = 0x22, _SC = 0x44, _EC = 0x44, _SP = 0x45, _EP = 0x46;
             if (rotation & 1)
                 val ^= 0xD0;    // exchange Landscape modes
-            GS = (val & 0x80) ? (1 << 14) | (1 << 12) : 0;      //called TB (top-bottom)
+            GS = (val & 0x80) ? (1 << 14) : 0;    //called TB (top-bottom), CAD=0
             SS_v = (val & 0x40) ? (1 << 9) : 0;   //called RL (right-left)
             ORG = (val & 0x20) ? (1 << 3) : 0;  //called AM
             _lcd_drivOut = GS | SS_v | (REV << 13) | 0x013F;      //REV=0, BGR=0, MUX=319
             if (val & 0x08)
                 _lcd_drivOut |= 0x0800; //BGR
             WriteCmdData(0x01, _lcd_drivOut);   // set Driver Output Control
-            WriteCmdData(0x11, ORG | ((is9797) ? 0x48B0 : 0x6070));   // set GRAM write direction.
+            if (is9797) WriteCmdData(0x11, ORG | 0x4C30); else  // DFM=2, DEN=1, WM=1, TY=0
+            WriteCmdData(0x11, ORG | 0x6070);   // DFM=3, EN=0, TY=1
             break;
 #endif
 		}
@@ -1004,9 +1005,14 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
 #endif
 
 #ifdef SUPPORT_1289
-    case 0x9797: is9797 = 1; _lcd_ID = 0x1289;  // and fall through
+    case 0x9797:
+        is9797 = 1;
+        _lcd_capable = 0 | XSA_XEA_16BIT | REV_SCREEN | AUTO_READINC | READ_24BITS;
+        _lcd_ID = 0x1289;
+        goto common_1289;
     case 0x1289:
-        _lcd_capable = 0 | XSA_XEA_16BIT | REV_SCREEN;
+        _lcd_capable = 0 | XSA_XEA_16BIT | REV_SCREEN | AUTO_READINC;
+      common_1289:
         // came from MikroElektronika library http://www.hmsprojects.com/tft_lcd.html
         static const uint16_t SSD1289_regValues[] PROGMEM = {
             0x0000, 0x0001,
