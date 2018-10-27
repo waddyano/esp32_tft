@@ -1007,7 +1007,9 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
 #ifdef SUPPORT_1289
     case 0x9797:
         is9797 = 1;
-        _lcd_capable = 0 | XSA_XEA_16BIT | REV_SCREEN | AUTO_READINC | READ_24BITS;
+//        _lcd_capable = 0 | XSA_XEA_16BIT | REV_SCREEN | AUTO_READINC | READ_24BITS;
+// deliberately set READ_BGR to disable Software Scroll in graphictest_kbv example
+        _lcd_capable = 0 | XSA_XEA_16BIT | REV_SCREEN | AUTO_READINC | READ_24BITS | READ_BGR;
         _lcd_ID = 0x1289;
         goto common_1289;
     case 0x1289:
@@ -1018,13 +1020,13 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
             0x0000, 0x0001,
             0x0003, 0xA8A4,
             0x000C, 0x0000,
-            0x000D, 0x080C,     // was 0x800C
+            0x000D, 0x000A,     // VRH=10
             0x000E, 0x2B00,
             0x001E, 0x00B7,
-            0x0001, 0x2B3F,     // was 0x2B3F,
-            0x0002, 0x0400,     // was 0x0600
+            0x0001, 0x2B3F,     // setRotation() alters
+            0x0002, 0x0600,     // B_C=1, EOR=1
             0x0010, 0x0000,
-            0x0011, 0x6070,     // was 0x6070
+            0x0011, 0x6070,     // setRotation() alters 
             0x0005, 0x0000,
             0x0006, 0x0000,
             0x0016, 0xEF1C,
@@ -1032,15 +1034,6 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
             0x0007, 0x0233,
             0x000B, 0x0000,
             0x000F, 0x0000,
-            0x0041, 0x0000,
-            0x0042, 0x0000,
-            0x0048, 0x0000,
-            0x0049, 0x013F,
-            0x004A, 0x0000,
-            0x004B, 0x0000,
-            0x0044, 0xEF95,
-            0x0045, 0x0000,
-            0x0046, 0x013F,
             0x0030, 0x0707,
             0x0031, 0x0204,
             0x0032, 0x0204,
@@ -1054,8 +1047,6 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
             0x0023, 0x0000,
             0x0024, 0x0000,
             0x0025, 0x8000,
-            0x004f, 0x0000,
-            0x004e, 0x0000,
         };
         init_table16(SSD1289_regValues, sizeof(SSD1289_regValues));
         break;
