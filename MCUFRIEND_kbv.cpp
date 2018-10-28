@@ -1,6 +1,6 @@
 //#define SUPPORT_0139              //S6D0139 +280 bytes
 #define SUPPORT_0154              //S6D0154 +320 bytes
-#define SUPPORT_1289              //costs about 408 bytes
+//#define SUPPORT_1289              //costs about 408 bytes
 //#define SUPPORT_1580              //R61580 Untested
 #define SUPPORT_1963              //only works with 16BIT bus anyway
 //#define SUPPORT_4532              //LGDP4532 +120 bytes.  thanks Leodino
