@@ -1,6 +1,6 @@
 //#define SUPPORT_0139              //S6D0139 +280 bytes
 #define SUPPORT_0154              //S6D0154 +320 bytes
-//#define SUPPORT_1289              //costs about 408 bytes
+#define SUPPORT_1289              //costs about 408 bytes
 //#define SUPPORT_1580              //R61580 Untested
 #define SUPPORT_1963              //only works with 16BIT bus anyway
 //#define SUPPORT_4532              //LGDP4532 +120 bytes.  thanks Leodino
@@ -59,12 +59,29 @@ MCUFRIEND_kbv::MCUFRIEND_kbv(int CS, int RS, int WR, int RD, int _RST):Adafruit_
     // we can not access GPIO pins until AHB has been enabled.
 }
 
-static uint8_t done_reset, is8347, is555;
+static uint8_t done_reset, is8347, is555, is9797;
 static uint16_t color565_to_555(uint16_t color) {
     return (color & 0xFFC0) | ((color & 0x1F) << 1) | ((color & 0x01));  //lose Green LSB, extend Blue LSB
 }
 static uint16_t color555_to_565(uint16_t color) {
     return (color & 0xFFC0) | ((color & 0x0400) >> 5) | ((color & 0x3F) >> 1); //extend Green LSB
+}
+static uint8_t color565_to_r(uint16_t color) {
+    return ((color & 0xF800) >> 8);  // transform to rrrrrxxx
+}
+static uint8_t color565_to_g(uint16_t color) {
+    return ((color & 0x07E0) >> 3);  // transform to ggggggxx
+}
+static uint8_t color565_to_b(uint16_t color) {
+    return ((color & 0x001F) << 3);  // transform to bbbbbxxx
+}
+static void write24(uint16_t color) {
+    uint8_t r = color565_to_r(color);
+    uint8_t g = color565_to_g(color);
+    uint8_t b = color565_to_b(color);
+    write8(r);
+    write8(g);
+    write8(b);
 }
 
 void MCUFRIEND_kbv::reset(void)
@@ -461,14 +478,15 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
             _MC = 0x4E, _MP = 0x4F, _MW = 0x22, _SC = 0x44, _EC = 0x44, _SP = 0x45, _EP = 0x46;
             if (rotation & 1)
                 val ^= 0xD0;    // exchange Landscape modes
-            GS = (val & 0x80) ? (1 << 14) | (1 << 12) : 0;      //called TB (top-bottom)
+            GS = (val & 0x80) ? (1 << 14) : 0;    //called TB (top-bottom), CAD=0
             SS_v = (val & 0x40) ? (1 << 9) : 0;   //called RL (right-left)
             ORG = (val & 0x20) ? (1 << 3) : 0;  //called AM
             _lcd_drivOut = GS | SS_v | (REV << 13) | 0x013F;      //REV=0, BGR=0, MUX=319
             if (val & 0x08)
                 _lcd_drivOut |= 0x0800; //BGR
             WriteCmdData(0x01, _lcd_drivOut);   // set Driver Output Control
-            WriteCmdData(0x11, ORG | 0x6070);   // set GRAM write direction.
+            if (is9797) WriteCmdData(0x11, ORG | 0x4C30); else  // DFM=2, DEN=1, WM=1, TY=0
+            WriteCmdData(0x11, ORG | 0x6070);   // DFM=3, EN=0, TY=1
             break;
 #endif
 		}
@@ -493,6 +511,7 @@ void MCUFRIEND_kbv::drawPixel(int16_t x, int16_t y, uint16_t color)
 #endif
     setAddrWindow(x, y, x, y);
 //    CS_ACTIVE; WriteCmd(_MW); write16(color); CS_IDLE; //-0.01s +98B
+    if (is9797) { CS_ACTIVE; WriteCmd(_MW); write24(color); CS_IDLE;} else
     WriteCmdData(_MW, color);
 }
 
@@ -604,6 +623,18 @@ void MCUFRIEND_kbv::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_
             STROBE_16BIT;
         }
 #else
+#if defined(SUPPORT_1289)
+        if (is9797) {
+             uint8_t r = color565_to_r(color);
+             uint8_t g = color565_to_g(color);
+             uint8_t b = color565_to_b(color);
+             do {
+                 write8(r);
+                 write8(g);
+                 write8(b);
+             } while (--end != 0);
+        } else
+#endif
         do {
             write8(hi);
             write8(lo);
@@ -635,8 +666,9 @@ static void pushColors_any(uint16_t cmd, uint8_t * block, int16_t n, bool first,
 		}
         color = (isbigend) ? (h << 8 | l) :  (l << 8 | h);
 #if defined(SUPPORT_9488_555)
-    if (is555) color = color565_to_555(color);
+        if (is555) color = color565_to_555(color);
 #endif
+        if (is9797) write24(color); else
         write16(color);
     }
     CS_IDLE;
@@ -973,20 +1005,28 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
 #endif
 
 #ifdef SUPPORT_1289
+    case 0x9797:
+        is9797 = 1;
+//        _lcd_capable = 0 | XSA_XEA_16BIT | REV_SCREEN | AUTO_READINC | READ_24BITS;
+// deliberately set READ_BGR to disable Software Scroll in graphictest_kbv example
+        _lcd_capable = 0 | XSA_XEA_16BIT | REV_SCREEN | AUTO_READINC | READ_24BITS | READ_BGR;
+        _lcd_ID = 0x1289;
+        goto common_1289;
     case 0x1289:
-        _lcd_capable = 0 | XSA_XEA_16BIT | REV_SCREEN;
+        _lcd_capable = 0 | XSA_XEA_16BIT | REV_SCREEN | AUTO_READINC;
+      common_1289:
         // came from MikroElektronika library http://www.hmsprojects.com/tft_lcd.html
         static const uint16_t SSD1289_regValues[] PROGMEM = {
             0x0000, 0x0001,
             0x0003, 0xA8A4,
             0x000C, 0x0000,
-            0x000D, 0x080C,     // was 0x800C
+            0x000D, 0x000A,     // VRH=10
             0x000E, 0x2B00,
             0x001E, 0x00B7,
-            0x0001, 0x2B3F,     // was 0x2B3F,
-            0x0002, 0x0400,     // was 0x0600
+            0x0001, 0x2B3F,     // setRotation() alters
+            0x0002, 0x0600,     // B_C=1, EOR=1
             0x0010, 0x0000,
-            0x0011, 0x6070,     // was 0x6070
+            0x0011, 0x6070,     // setRotation() alters 
             0x0005, 0x0000,
             0x0006, 0x0000,
             0x0016, 0xEF1C,
@@ -994,15 +1034,6 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
             0x0007, 0x0233,
             0x000B, 0x0000,
             0x000F, 0x0000,
-            0x0041, 0x0000,
-            0x0042, 0x0000,
-            0x0048, 0x0000,
-            0x0049, 0x013F,
-            0x004A, 0x0000,
-            0x004B, 0x0000,
-            0x0044, 0xEF95,
-            0x0045, 0x0000,
-            0x0046, 0x013F,
             0x0030, 0x0707,
             0x0031, 0x0204,
             0x0032, 0x0204,
@@ -1016,8 +1047,6 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
             0x0023, 0x0000,
             0x0024, 0x0000,
             0x0025, 0x8000,
-            0x004f, 0x0000,
-            0x004e, 0x0000,
         };
         init_table16(SSD1289_regValues, sizeof(SSD1289_regValues));
         break;
