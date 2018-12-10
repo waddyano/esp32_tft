@@ -576,9 +576,9 @@ void write_8(uint8_t x)
 #define RESET_PIN  5
 
 // configure macros for the data pins
-#define DMASK (1<<15)
-#define EMASK ((1<<3)|(1<<5)|(1<<6))
-#define FMASK ((1<<12)|(1<<15)|(1<<14)|(1<<13))
+#define DMASK ((1<<15))                         //#1
+#define EMASK ((1<<13)|(1<<11)|(1<<9))          //#3, #5, #6
+#define FMASK ((1<<12)|(1<<15)|(1<<14)|(1<<13)) //#0, #2, #4, #7
 
 #define write_8(d) { \
         GPIOD->REGS(BSRR) = DMASK << 16; \
@@ -604,10 +604,10 @@ void write_8(uint8_t x)
                             | ((GPIOF->REGS(IDR) & (1<<13)) >> 6)))
 
 
-//                                           PD15                PE13,PE11,PE9          PF15,PF14,PF13,PF12
+//                                             PD15                PE13,PE11,PE9          PF15,PF14,PF13,PF12
 #define setWriteDir() { setReadDir(); \
-                        GPIOD->MODER |=  0x400000; GPIOE->MODER |=  0x04440000; GPIOF->MODER |=  0x55000000; }
-#define setReadDir()  { GPIOD->MODER &= ~0xC00000; GPIOE->MODER &= ~0x0CCC0000; GPIOF->MODER &= ~0xFF000000; }
+                        GPIOD->MODER |=  0x40000000; GPIOE->MODER |=  0x04440000; GPIOF->MODER |=  0x55000000; }
+#define setReadDir()  { GPIOD->MODER &= ~0xC0000000; GPIOE->MODER &= ~0x0CCC0000; GPIOF->MODER &= ~0xFF000000; }
 
 #elif defined(ARDUINO_MAPLE_REV3) // Uno Shield on MAPLE_REV3 board
 #warning Uno Shield on MAPLE_REV3 board
