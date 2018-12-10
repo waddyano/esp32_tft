@@ -362,7 +362,9 @@ void write_8(uint8_t x)
                    || defined(ARDUINO_NUCLEO_F446RE) || defined(ARDUINO_NUCLEO_L053R8) \
                    || defined(ARDUINO_NUCLEO_L152RE) || defined(ARDUINO_NUCLEO_L476RG) \
                     )
-#define IS_NUCLEO144 ( defined(ARDUINO_NUCLEO_F767ZI) \
+#define IS_NUCLEO144 ( defined(ARDUINO_NUCLEO_F207ZG) \
+                   || defined(ARDUINO_NUCLEO_F429ZI) || defined(ARDUINO_NUCLEO_F767ZI) \
+                   || defined(ARDUINO_NUCLEO_L496ZG) || defined(ARDUINO_NUCLEO_L496ZG_P) \
                     )
 // F1xx, F4xx, L4xx have different registers and styles.  General Macros
 #if defined(__STM32F1__)   //weird Maple Core
@@ -411,6 +413,14 @@ void write_8(uint8_t x)
 #define GPIO_INIT()   { RCC->AHBENR |= RCC_AHBENR_GPIOAEN | RCC_AHBENR_GPIOBEN | RCC_AHBENR_GPIOCEN; }
 #define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
 
+#elif defined(STM32F207xx)
+#warning DELAY macros untested yet
+#define WRITE_DELAY { WR_ACTIVE8; } //120MHz
+#define IDLE_DELAY  { WR_IDLE2;WR_IDLE; }
+#define READ_DELAY  { RD_ACTIVE16;}
+#define GPIO_INIT()   { RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN | RCC_AHB1ENR_GPIOBEN | RCC_AHB1ENR_GPIOCEN; }
+#define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
+
 #elif defined(STM32F303xE)
 #define WRITE_DELAY { }
 #define READ_DELAY  { RD_ACTIVE; }
@@ -418,14 +428,22 @@ void write_8(uint8_t x)
                       /* AFIO->MAPR |= AFIO_MAPR_SWJ_CFG_1; */ }
 
 #elif defined(STM32F401xE)
-#define WRITE_DELAY { WR_ACTIVE2; }
+#define WRITE_DELAY { WR_ACTIVE2; } //84MHz
 #define READ_DELAY  { RD_ACTIVE4; }
 #define GPIO_INIT()   { RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN | RCC_AHB1ENR_GPIOBEN | RCC_AHB1ENR_GPIOCEN; }
 #define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
 
 #elif defined(STM32F411xE)
-#define WRITE_DELAY { WR_ACTIVE2; WR_ACTIVE; }
+#define WRITE_DELAY { WR_ACTIVE2; WR_ACTIVE; } //100MHz
 #define READ_DELAY  { RD_ACTIVE4; RD_ACTIVE2; }
+#define GPIO_INIT()   { RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN | RCC_AHB1ENR_GPIOBEN | RCC_AHB1ENR_GPIOCEN; }
+#define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
+
+#elif defined(STM32F429xx)
+#warning DELAY macros untested yet
+#define WRITE_DELAY { WR_ACTIVE8; } //180MHz
+#define IDLE_DELAY  { WR_IDLE2;WR_IDLE; }
+#define READ_DELAY  { RD_ACTIVE16;}
 #define GPIO_INIT()   { RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN | RCC_AHB1ENR_GPIOBEN | RCC_AHB1ENR_GPIOCEN; }
 #define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
 
@@ -437,6 +455,7 @@ void write_8(uint8_t x)
 #define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
 
 #elif defined(STM32F767xx)
+#warning DELAY macros untested yet
 #define WRITE_DELAY { WR_ACTIVE8;WR_ACTIVE8; } //216MHz
 #define IDLE_DELAY  { WR_IDLE4;WR_IDLE; }
 #define READ_DELAY  { RD_ACTIVE16;RD_ACTIVE16;}
@@ -456,7 +475,14 @@ void write_8(uint8_t x)
 #define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
 
 #elif defined(STM32L476xx)
-#define WRITE_DELAY { WR_ACTIVE2; }
+#define WRITE_DELAY { WR_ACTIVE2; } //80MHz
+#define READ_DELAY  { RD_ACTIVE4; RD_ACTIVE; }
+#define GPIO_INIT()   { RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN | RCC_AHB2ENR_GPIOBEN | RCC_AHB2ENR_GPIOCEN; }
+#define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
+
+#elif defined(STM32L496xx)
+#warning DELAY macros untested yet
+#define WRITE_DELAY { WR_ACTIVE2; } //80MHz
 #define READ_DELAY  { RD_ACTIVE4; RD_ACTIVE; }
 #define GPIO_INIT()   { RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN | RCC_AHB2ENR_GPIOBEN | RCC_AHB2ENR_GPIOCEN; }
 #define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
