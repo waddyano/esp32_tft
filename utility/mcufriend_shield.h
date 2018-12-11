@@ -515,22 +515,26 @@ void write_8(uint8_t x)
 
 #elif IS_NUCLEO64 // Uno Shield on NUCLEO-64
 #warning Uno Shield on NUCLEO-64
-#define RD_PORT GPIOA
+#define RD_PORT GPIOA    //PA0
 #define RD_PIN  0
-#define WR_PORT GPIOA
+#define WR_PORT GPIOA    //PA1
 #define WR_PIN  1
-#define CD_PORT GPIOA
+#define CD_PORT GPIOA    //PA4
 #define CD_PIN  4
-#define CS_PORT GPIOB
+#define CS_PORT GPIOB    //PB0
 #define CS_PIN  0
-#define RESET_PORT GPIOC
+#define RESET_PORT GPIOC //PC1
 #define RESET_PIN  1
 
 // configure macros for the data pins
+#define AMASK ((1<<9)|(1<<10)|(1<<8))        //#0, #2, #7
+#define BMASK ((1<<3)|(1<<5)|(1<<4)|(1<<10)) //#3, #4, #5, #6
+#define CMASK ((1<<7))                       //#1
+
 #define write_8(d) { \
-        GPIOA->REGS(BSRR) = 0x0700 << 16; \
-        GPIOB->REGS(BSRR) = 0x0438 << 16; \
-        GPIOC->REGS(BSRR) = 0x0080 << 16; \
+        GPIOA->REGS(BSRR) = AMASK << 16; \
+        GPIOB->REGS(BSRR) = BMASK << 16; \
+        GPIOC->REGS(BSRR) = CMASK << 16; \
         GPIOA->REGS(BSRR) = (  ((d) & (1<<0)) << 9) \
                             | (((d) & (1<<2)) << 8) \
                             | (((d) & (1<<7)) << 1); \
@@ -564,15 +568,15 @@ void write_8(uint8_t x)
 
 #elif IS_NUCLEO144 // Uno Shield on NUCLEO-144
 #warning Uno Shield on NUCLEO-144
-#define RD_PORT GPIOA
+#define RD_PORT GPIOA    //PA3
 #define RD_PIN  3
-#define WR_PORT GPIOC
+#define WR_PORT GPIOC    //PC0
 #define WR_PIN  0
-#define CD_PORT GPIOC
+#define CD_PORT GPIOC    //PC3
 #define CD_PIN  3
-#define CS_PORT GPIOF
+#define CS_PORT GPIOF    //PF3
 #define CS_PIN  3
-#define RESET_PORT GPIOF
+#define RESET_PORT GPIOF //PF5
 #define RESET_PIN  5
 
 // configure macros for the data pins
