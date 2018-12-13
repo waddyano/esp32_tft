@@ -21,6 +21,10 @@
         || defined(TARGET_NUCLEO_L476RG) \
         )
 
+#define ISTARGET_NUCLEO144 (0 \
+        || defined(TARGET_NUCLEO_F767ZI) \
+        )
+
 //#warning Using pin_SHIELD_1.h
 
 #if 0
@@ -192,6 +196,62 @@
 #define PIN_OUTPUT(port, pin) {if (pin > 7) PIN_MODE4((port)->CRH, (pin&7), 0x3); else  PIN_MODE4((port)->CRL, pin, 0x3); } //50MHz push-pull only 0-7
 #define PIN_INPUT(port, pin) {if (pin > 7) PIN_MODE4((port)->CRH, (pin&7), 0x4); else  PIN_MODE4((port)->CRL, pin, 0x4); }  //input
 
+
+#elif defined(NUCLEO144) || ISTARGET_NUCLEO144
+#define PIN_MODE2(reg, pin, mode) reg=(reg&~(0x3<<((pin)<<1)))|(mode<<((pin)<<1))
+#if __MBED__
+#warning MBED knows everything
+#elif defined(STM32F767xx)
+  #include <STM32F7XX.h>
+#endif
+  #define D0_PORT GPIOG
+  #define D0_PIN  9
+  #define D1_PORT GPIOG
+  #define D1_PIN  14
+  #define D2_PORT GPIOF
+  #define D2_PIN  15
+  #define D3_PORT GPIOE
+  #define D3_PIN  13
+  #define D4_PORT GPIOF
+  #define D4_PIN  14
+  #define D5_PORT GPIOE
+  #define D5_PIN  11
+  #define D6_PORT GPIOE
+  #define D6_PIN  9
+  #define D7_PORT GPIOF
+  #define D7_PIN  13
+  #define D8_PORT GPIOF
+  #define D8_PIN  12
+  #define D9_PORT GPIOD
+  #define D9_PIN  15
+  #define D10_PORT GPIOD
+  #define D10_PIN  14
+  #define D11_PORT GPIOA
+  #define D11_PIN  7
+  #define D12_PORT GPIOA
+  #define D12_PIN  6
+  #define D13_PORT GPIOA
+  #define D13_PIN  5
+  #define A0_PORT GPIOA
+  #define A0_PIN  3
+  #define A1_PORT GPIOC
+  #define A1_PIN  0
+  #define A2_PORT GPIOC
+  #define A2_PIN  3
+  #define A3_PORT GPIOF
+  #define A3_PIN  3
+  #define A4_PORT GPIOF
+  #define A4_PIN  5
+  #define A5_PORT GPIOF
+  #define A5_PIN  10
+// Shield Control macros
+#define PIN_LOW(port, pin)    (port)->BSRR = (1<<((pin)+16))
+#define PIN_HIGH(port, pin)   (port)->BSRR = (1<<(pin))
+//#define PIN_LOW(port, pin)    (port)->ODR &= ~(1<<(pin))
+//#define PIN_HIGH(port, pin)   (port)->ODR |=  (1<<(pin))
+#define PIN_READ(port, pin)   (port)->IDR & (1<<(pin))
+#define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
+#define PIN_INPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x0)   //.kbv check this
 
 #elif defined(NUCLEO) || ISTARGET_NUCLEO64
 #define PIN_MODE2(reg, pin, mode) reg=(reg&~(0x3<<((pin)<<1)))|(mode<<((pin)<<1))

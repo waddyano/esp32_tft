@@ -22,6 +22,10 @@
         || defined(TARGET_NUCLEO_L476RG) \
         )
 
+#define ISTARGET_NUCLEO144 (0 \
+        || defined(TARGET_NUCLEO_F767ZI) \
+        )
+
 //#warning Using pin_SHIELD_8.h
 
 #if 0
@@ -94,6 +98,49 @@
 #define setWriteDir() {GP_OUT(GPIOA, CRH, 0xFFF); GP_OUT(GPIOA, CRL, 0xFF); GP_OUT(GPIOB, CRL, 0xFFF00000); }
 #define setReadDir()  {GP_INP(GPIOA, CRH, 0xFFF); GP_INP(GPIOA, CRL, 0xFF); GP_INP(GPIOB, CRL, 0xFFF00000); }
 
+#elif defined(NUCLEO144) || ISTARGET_NUCLEO144
+#if __MBED__
+#warning MBED knows everything
+#elif defined(STM32F767xx)
+  #include <STM32F7XX.h>
+#endif
+
+#define REGS(x) x
+// configure macros for the data pins
+#define DMASK ((1<<15))                         //#1
+#define EMASK ((1<<13)|(1<<11)|(1<<9))          //#3, #5, #6
+#define FMASK ((1<<12)|(1<<15)|(1<<14)|(1<<13)) //#0, #2, #4, #7
+
+#define write_8(d) { \
+        GPIOD->REGS(BSRR) = DMASK << 16; \
+        GPIOE->REGS(BSRR) = EMASK << 16; \
+        GPIOF->REGS(BSRR) = FMASK << 16; \
+        GPIOD->REGS(BSRR) = (  ((d) & (1<<1)) << 14); \
+        GPIOE->REGS(BSRR) = (  ((d) & (1<<3)) << 10) \
+                            | (((d) & (1<<5)) << 6) \
+                            | (((d) & (1<<6)) << 3); \
+        GPIOF->REGS(BSRR) = (  ((d) & (1<<0)) << 12) \
+                            | (((d) & (1<<2)) << 13) \
+                            | (((d) & (1<<4)) << 10) \
+                            | (((d) & (1<<7)) << 6); \
+    }
+
+#define read_8() (       (  (  (GPIOF->REGS(IDR) & (1<<12)) >> 12) \
+                            | ((GPIOD->REGS(IDR) & (1<<15)) >> 14) \
+                            | ((GPIOF->REGS(IDR) & (1<<15)) >> 13) \
+                            | ((GPIOE->REGS(IDR) & (1<<13)) >> 10) \
+                            | ((GPIOF->REGS(IDR) & (1<<14)) >> 10) \
+                            | ((GPIOE->REGS(IDR) & (1<<11)) >> 6) \
+                            | ((GPIOE->REGS(IDR) & (1<<9))  >> 3) \
+                            | ((GPIOF->REGS(IDR) & (1<<13)) >> 6)))
+
+
+//                                             PD15                PE13,PE11,PE9          PF15,PF14,PF13,PF12
+#define setWriteDir() { setReadDir(); \
+                        GPIOD->MODER |=  0x40000000; GPIOE->MODER |=  0x04440000; GPIOF->MODER |=  0x55000000; }
+#define setReadDir()  { GPIOD->MODER &= ~0xC0000000; GPIOE->MODER &= ~0x0CCC0000; GPIOF->MODER &= ~0xFF000000; }
+    
+
 #elif defined(NUCLEO) || ISTARGET_NUCLEO64
 #if __MBED__
 #warning MBED knows everything
