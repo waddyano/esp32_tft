@@ -534,7 +534,7 @@
 #define PIN_INPUT(port, pin)  (port)->PDDR &= ~(1u<<(pin))
 #define PIN_READ(port, pin)   (port)->PDIR & (1u<<(pin))
 
-#elif defined(MKL05Z4)
+#elif defined(MKL05Z4) || defined(TARGET_KL05Z)
   #include <MKL05Z4.h>
   #define D0_PORT PTB
   #define D0_PIN  2
