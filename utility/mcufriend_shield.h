@@ -88,6 +88,34 @@
 #define PIN_HIGH(p, b)       (p) |= (1<<(b))
 #define PIN_OUTPUT(p, b)     *(&p-1) |= (1<<(b))
 
+//################################### TEENSY++2.0 ##############################
+#elif defined(__AVR_AT90USB1286__)       //regular UNO shield on TEENSY++ 2.0 thanks tysonlt
+#define RD_PORT PORTF
+#define RD_PIN  0
+#define WR_PORT PORTF
+#define WR_PIN  1
+#define CD_PORT PORTF
+#define CD_PIN  2
+#define CS_PORT PORTF
+#define CS_PIN  3
+#define RESET_PORT PORTF
+#define RESET_PIN  4
+
+#define EMASK         0x03              //more intuitive style for mixed Ports
+#define DMASK         0xFC              //does exactly the same as previous
+#define write_8(x)    { PORTE = (PORTE & ~EMASK) | ((x) & EMASK); PORTD = (PORTD & ~DMASK) | ((x) & DMASK); }
+#define read_8()      ( (PINE & EMASK) | (PIND & DMASK) )
+#define setWriteDir() { DDRE |=  EMASK; DDRD |=  DMASK; }
+#define setReadDir()  { DDRE &= ~EMASK; DDRD &= ~DMASK; }
+#define write8(x)     { write_8(x); WR_STROBE; }
+#define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
+#define READ_8(dst)   { RD_STROBE; dst = read_8(); RD_IDLE; }
+#define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
+
+#define PIN_LOW(p, b)        (p) &= ~(1<<(b))
+#define PIN_HIGH(p, b)       (p) |= (1<<(b))
+#define PIN_OUTPUT(p, b)     *(&p-1) |= (1<<(b))
+
 //################################# ZERO and M0_PRO ############################
 #elif defined(__SAMD21G18A__)   //regular UNO shield on ZERO or M0_PRO
 #include "sam.h"
