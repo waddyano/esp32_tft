@@ -439,9 +439,10 @@ void write_8(uint8_t x)
 
 #elif defined(STM32F303xE)
 #define WRITE_DELAY { }
-#define READ_DELAY  { RD_ACTIVE; }
+#define READ_DELAY  { RD_ACTIVE8; }  //thanks MasterT
 #define GPIO_INIT()   { RCC->AHBENR |= RCC_AHBENR_GPIOAEN | RCC_AHBENR_GPIOBEN | RCC_AHBENR_GPIOCEN; \
                       /* AFIO->MAPR |= AFIO_MAPR_SWJ_CFG_1; */ }
+#define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1) //thanks fpiSTM
 
 #elif defined(STM32F401xE)
 #define WRITE_DELAY { WR_ACTIVE2; }
