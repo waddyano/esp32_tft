@@ -9,6 +9,8 @@
 #define RD_ACTIVE16 {RD_ACTIVE8; RD_ACTIVE8;}
 #define WR_IDLE2  {WR_IDLE; WR_IDLE;}
 #define WR_IDLE4  {WR_IDLE2; WR_IDLE2;}
+#define RD_IDLE2  {RD_IDLE; RD_IDLE;}
+#define RD_IDLE4  {RD_IDLE2; RD_IDLE2;}
 
 #if defined(USE_SPECIAL)
 #include "mcufriend_special.h"
@@ -390,6 +392,10 @@ void write_8(uint8_t x)
                    || defined(ARDUINO_NUCLEO_F446RE) || defined(ARDUINO_NUCLEO_L053R8) \
                    || defined(ARDUINO_NUCLEO_L152RE) || defined(ARDUINO_NUCLEO_L476RG) \
                     )
+#define IS_NUCLEO144 ( defined(ARDUINO_NUCLEO_F207ZG) \
+                   || defined(ARDUINO_NUCLEO_F429ZI) || defined(ARDUINO_NUCLEO_F767ZI) \
+                   || defined(ARDUINO_NUCLEO_L496ZG) || defined(ARDUINO_NUCLEO_L496ZG_P) \
+                    )
 // F1xx, F4xx, L4xx have different registers and styles.  General Macros
 #if defined(__STM32F1__)   //weird Maple Core
 #define REGS(x) regs->x
@@ -437,6 +443,14 @@ void write_8(uint8_t x)
 #define GPIO_INIT()   { RCC->AHBENR |= RCC_AHBENR_GPIOAEN | RCC_AHBENR_GPIOBEN | RCC_AHBENR_GPIOCEN; }
 #define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
 
+#elif defined(STM32F207xx)
+#warning DELAY macros untested yet
+#define WRITE_DELAY { WR_ACTIVE8; } //120MHz
+#define IDLE_DELAY  { WR_IDLE2;WR_IDLE; }
+#define READ_DELAY  { RD_ACTIVE16;}
+#define GPIO_INIT()   { RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN | RCC_AHB1ENR_GPIOCEN | RCC_AHB1ENR_GPIODEN | RCC_AHB1ENR_GPIOEEN | RCC_AHB1ENR_GPIOFEN; }
+#define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
+
 #elif defined(STM32F303xE)
 #define WRITE_DELAY { }
 #define READ_DELAY  { RD_ACTIVE8; }  //thanks MasterT
@@ -445,22 +459,38 @@ void write_8(uint8_t x)
 #define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1) //thanks fpiSTM
 
 #elif defined(STM32F401xE)
-#define WRITE_DELAY { WR_ACTIVE2; }
+#define WRITE_DELAY { WR_ACTIVE2; } //84MHz
 #define READ_DELAY  { RD_ACTIVE4; }
 #define GPIO_INIT()   { RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN | RCC_AHB1ENR_GPIOBEN | RCC_AHB1ENR_GPIOCEN; }
 #define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
 
 #elif defined(STM32F411xE)
-#define WRITE_DELAY { WR_ACTIVE2; WR_ACTIVE; }
+#define WRITE_DELAY { WR_ACTIVE2; WR_ACTIVE; } //100MHz
 #define READ_DELAY  { RD_ACTIVE4; RD_ACTIVE2; }
 #define GPIO_INIT()   { RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN | RCC_AHB1ENR_GPIOBEN | RCC_AHB1ENR_GPIOCEN; }
 #define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
 
+#elif defined(STM32F429xx)
+#warning DELAY macros untested yet
+#define WRITE_DELAY { WR_ACTIVE8; } //180MHz
+#define IDLE_DELAY  { WR_IDLE2;WR_IDLE; }
+#define READ_DELAY  { RD_ACTIVE16;}
+#define GPIO_INIT()   { RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN | RCC_AHB1ENR_GPIOCEN | RCC_AHB1ENR_GPIODEN | RCC_AHB1ENR_GPIOEEN | RCC_AHB1ENR_GPIOFEN; }
+#define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
+
 #elif defined(STM32F446xx)
-#define WRITE_DELAY { WR_ACTIVE8; }
+#define WRITE_DELAY { WR_ACTIVE8; } //180MHz
 #define IDLE_DELAY  { WR_IDLE2;WR_IDLE; }
 #define READ_DELAY  { RD_ACTIVE16;}
 #define GPIO_INIT()   { RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN | RCC_AHB1ENR_GPIOBEN | RCC_AHB1ENR_GPIOCEN; }
+#define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
+
+#elif defined(STM32F767xx)
+#warning DELAY macros untested yet
+#define WRITE_DELAY { WR_ACTIVE8;WR_ACTIVE2; } //216MHz
+#define IDLE_DELAY  { WR_IDLE2;WR_IDLE; }
+#define READ_DELAY  { RD_ACTIVE16;RD_ACTIVE16;RD_ACTIVE4;}
+#define GPIO_INIT()   { RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN | RCC_AHB1ENR_GPIOCEN | RCC_AHB1ENR_GPIODEN | RCC_AHB1ENR_GPIOEEN | RCC_AHB1ENR_GPIOFEN; }
 #define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
 
 #elif defined(STM32L053xx)
@@ -476,9 +506,16 @@ void write_8(uint8_t x)
 #define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
 
 #elif defined(STM32L476xx)
-#define WRITE_DELAY { WR_ACTIVE2; }
+#define WRITE_DELAY { WR_ACTIVE2; } //80MHz
 #define READ_DELAY  { RD_ACTIVE4; RD_ACTIVE; }
 #define GPIO_INIT()   { RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN | RCC_AHB2ENR_GPIOBEN | RCC_AHB2ENR_GPIOCEN; }
+#define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
+
+#elif defined(STM32L496xx)
+#warning DELAY macros untested yet
+#define WRITE_DELAY { WR_ACTIVE2; } //80MHz
+#define READ_DELAY  { RD_ACTIVE4; RD_ACTIVE; }
+#define GPIO_INIT()   { RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN | RCC_AHB2ENR_GPIOCEN | RCC_AHB2ENR_GPIODEN | RCC_AHB2ENR_GPIOEEN | RCC_AHB2ENR_GPIOFEN; }
 #define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
 
 #else
@@ -507,24 +544,28 @@ void write_8(uint8_t x)
 #define setWriteDir() {GP_OUT(GPIOA, CRL, 0xFFFFFFFF); }
 #define setReadDir()  {GP_INP(GPIOA, CRL, 0xFFFFFFFF); }
 
-#elif IS_NUCLEO64 // Uno Shield on NUCLEO
-#warning Uno Shield on NUCLEO
-#define RD_PORT GPIOA
+#elif IS_NUCLEO64 // Uno Shield on NUCLEO-64
+#warning Uno Shield on NUCLEO-64
+#define RD_PORT GPIOA    //PA0
 #define RD_PIN  0
-#define WR_PORT GPIOA
+#define WR_PORT GPIOA    //PA1
 #define WR_PIN  1
-#define CD_PORT GPIOA
+#define CD_PORT GPIOA    //PA4
 #define CD_PIN  4
-#define CS_PORT GPIOB
+#define CS_PORT GPIOB    //PB0
 #define CS_PIN  0
-#define RESET_PORT GPIOC
+#define RESET_PORT GPIOC //PC1
 #define RESET_PIN  1
 
 // configure macros for the data pins
+#define AMASK ((1<<9)|(1<<10)|(1<<8))        //#0, #2, #7
+#define BMASK ((1<<3)|(1<<5)|(1<<4)|(1<<10)) //#3, #4, #5, #6
+#define CMASK ((1<<7))                       //#1
+
 #define write_8(d) { \
-        GPIOA->REGS(BSRR) = 0x0700 << 16; \
-        GPIOB->REGS(BSRR) = 0x0438 << 16; \
-        GPIOC->REGS(BSRR) = 0x0080 << 16; \
+        GPIOA->REGS(BSRR) = AMASK << 16; \
+        GPIOB->REGS(BSRR) = BMASK << 16; \
+        GPIOC->REGS(BSRR) = CMASK << 16; \
         GPIOA->REGS(BSRR) = (  ((d) & (1<<0)) << 9) \
                             | (((d) & (1<<2)) << 8) \
                             | (((d) & (1<<7)) << 1); \
@@ -555,6 +596,53 @@ void write_8(uint8_t x)
                         GPIOA->MODER |=  0x150000; GPIOB->MODER |=  0x100540; GPIOC->MODER |=  0x4000; }
 #define setReadDir()  { GPIOA->MODER &= ~0x3F0000; GPIOB->MODER &= ~0x300FC0; GPIOC->MODER &= ~0xC000; }
 #endif
+
+#elif IS_NUCLEO144 // Uno Shield on NUCLEO-144
+#warning Uno Shield on NUCLEO-144
+#define RD_PORT GPIOA    //PA3
+#define RD_PIN  3
+#define WR_PORT GPIOC    //PC0
+#define WR_PIN  0
+#define CD_PORT GPIOC    //PC3
+#define CD_PIN  3
+#define CS_PORT GPIOF    //PF3
+#define CS_PIN  3
+#define RESET_PORT GPIOF //PF5
+#define RESET_PIN  5
+
+// configure macros for the data pins
+#define DMASK ((1<<15))                         //#1
+#define EMASK ((1<<13)|(1<<11)|(1<<9))          //#3, #5, #6
+#define FMASK ((1<<12)|(1<<15)|(1<<14)|(1<<13)) //#0, #2, #4, #7
+
+#define write_8(d) { \
+        GPIOD->REGS(BSRR) = DMASK << 16; \
+        GPIOE->REGS(BSRR) = EMASK << 16; \
+        GPIOF->REGS(BSRR) = FMASK << 16; \
+        GPIOD->REGS(BSRR) = (  ((d) & (1<<1)) << 14); \
+        GPIOE->REGS(BSRR) = (  ((d) & (1<<3)) << 10) \
+                            | (((d) & (1<<5)) << 6) \
+                            | (((d) & (1<<6)) << 3); \
+        GPIOF->REGS(BSRR) = (  ((d) & (1<<0)) << 12) \
+                            | (((d) & (1<<2)) << 13) \
+                            | (((d) & (1<<4)) << 10) \
+                            | (((d) & (1<<7)) << 6); \
+    }
+
+#define read_8() (       (  (  (GPIOF->REGS(IDR) & (1<<12)) >> 12) \
+                            | ((GPIOD->REGS(IDR) & (1<<15)) >> 14) \
+                            | ((GPIOF->REGS(IDR) & (1<<15)) >> 13) \
+                            | ((GPIOE->REGS(IDR) & (1<<13)) >> 10) \
+                            | ((GPIOF->REGS(IDR) & (1<<14)) >> 10) \
+                            | ((GPIOE->REGS(IDR) & (1<<11)) >> 6) \
+                            | ((GPIOE->REGS(IDR) & (1<<9))  >> 3) \
+                            | ((GPIOF->REGS(IDR) & (1<<13)) >> 6)))
+
+
+//                                             PD15                PE13,PE11,PE9          PF15,PF14,PF13,PF12
+#define setWriteDir() { setReadDir(); \
+                        GPIOD->MODER |=  0x40000000; GPIOE->MODER |=  0x04440000; GPIOF->MODER |=  0x55000000; }
+#define setReadDir()  { GPIOD->MODER &= ~0xC0000000; GPIOE->MODER &= ~0x0CCC0000; GPIOF->MODER &= ~0xFF000000; }
 
 #elif defined(ARDUINO_MAPLE_REV3) // Uno Shield on MAPLE_REV3 board
 #warning Uno Shield on MAPLE_REV3 board
@@ -606,7 +694,7 @@ void write_8(uint8_t x)
 
 #define write8(x)     { write_8(x); WRITE_DELAY; WR_STROBE; IDLE_DELAY; }
 #define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
-#define READ_8(dst)   { RD_STROBE; READ_DELAY; dst = read_8(); RD_IDLE; RD_IDLE; }
+#define READ_8(dst)   { RD_STROBE; READ_DELAY; dst = read_8(); RD_IDLE2; RD_IDLE; }
 #define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
 
 //################################### ESP32 ##############################
