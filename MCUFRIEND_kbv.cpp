@@ -1489,7 +1489,7 @@ case 0x4532:    // thanks Leodino
 #endif
 
 #ifdef SUPPORT_7735
-    case 0x9163:                //
+    case 0x7735:                //
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | REV_SCREEN | READ_24BITS;
         static const uint8_t PROGMEM table7735S[] = {
             //  (COMMAND_BYTE), n, data_bytes....
