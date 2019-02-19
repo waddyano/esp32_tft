@@ -2055,7 +2055,7 @@ case 0x4532:    // thanks Leodino
 
 #ifdef SUPPORT_9163
     case 0x9163:                //
-        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | REV_SCREEN | READ_24BITS;
+        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | INVERT_GS | READ_24BITS;
         static const uint8_t PROGMEM table9163C[] = {
             //  (COMMAND_BYTE), n, data_bytes....
             0x26, 1, 0x04,       // [01] GAMMASET
