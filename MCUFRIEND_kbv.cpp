@@ -262,8 +262,8 @@ uint16_t MCUFRIEND_kbv::readID(void)
     if (ret == 0xAC11)          //?unknown [xx 61 AC 11]
         return 0xAC11;
     ret32 = readReg32(0xD3);      //[xx 91 63 00]
-	ret = ret32 >> 8;
-	if (ret == 0x9163) return ret;
+    ret = ret32 >> 8;
+    if (ret == 0x9163) return ret;
     ret = readReg32(0xD3);      //for ILI9488, 9486, 9340, 9341
     msb = ret >> 8;
     if (msb == 0x93 || msb == 0x94 || msb == 0x98 || msb == 0x77 || msb == 0x16)
@@ -2055,7 +2055,7 @@ case 0x4532:    // thanks Leodino
 
 #ifdef SUPPORT_9163
     case 0x9163:                //
-        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | INVERT_GS | READ_24BITS;
+        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_24BITS;
         static const uint8_t PROGMEM table9163C[] = {
             //  (COMMAND_BYTE), n, data_bytes....
             0x26, 1, 0x04,       // [01] GAMMASET
@@ -2064,6 +2064,7 @@ case 0x4532:    // thanks Leodino
             0xE1, 16, 0x0f, 0x1b, 0x0f, 0x17, 0x33, 0x2c, 0x29, 0x2e, 0x30, 0x30, 0x39, 0x3f, 0x00, 0x07, 0x03, 0x10,
             0xB1, 2, 0x08, 0x02,  //[0E 14] FRMCTR1 if GM==011 61.7Hz
             0xB4, 1, 0x07,       // [02] INVCTR
+            0xB8, 1, 0x01,       // [00] GSCTRL
             0xC0, 2, 0x0A, 0x02, // [0A 05] PWCTR1 if LCM==10
             0xC1, 1, 0x02,       // [07] PWCTR2
             0xC5, 2, 0x50, 0x63, // [43 4D] VMCTR1
