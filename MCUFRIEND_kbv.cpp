@@ -399,13 +399,14 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
         } else if (is8347) {
             _MC = 0x02, _MP = 0x06, _MW = 0x22, _SC = 0x02, _EC = 0x04, _SP = 0x06, _EP = 0x08;
             if (_lcd_ID == 0x0065) {             //HX8352-B
-                if (!(val & 0x10)) val ^= 0x81;  //(!ML) flip MY, GS
+                val |= 0x01;    //GS=1
+                if ((val & 0x10)) val ^= 0xD3;  //(ML) flip MY, MX, ML, SS, GS
                 if (r & 1) _MC = 0x82, _MP = 0x80;
                 else _MC = 0x80, _MP = 0x82;
             }
-			if (_lcd_ID == 0x5252) {
-			    val |= 0x02;   //VERT_SCROLLON
-				if (val & 0x10) val |= 0x04;   //if (ML) SS=1 kludge mirror in XXX_REV modes
+            if (_lcd_ID == 0x5252) {             //HX8352-A
+                val |= 0x02;   //VERT_SCROLLON
+                if ((val & 0x10)) val ^= 0xD4;  //(ML) flip MY, MX, SS. GS=1
             }
 			goto common_BGR;
         }
@@ -1709,7 +1710,7 @@ case 0x4532:    // thanks Leodino
 
 #ifdef SUPPORT_8352B
     case 0x0065:       //HX8352-B
-        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | INVERT_GS | READ_24BITS | REV_SCREEN;
+        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_24BITS | REV_SCREEN;
         is8347 = 1;
         static const uint8_t HX8352B_regValues[] PROGMEM = {
             // Register setting for EQ setting
