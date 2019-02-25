@@ -6,7 +6,7 @@
 //#define SUPPORT_4532              //LGDP4532 +120 bytes.  thanks Leodino
 #define SUPPORT_4535              //LGDP4535 +180 bytes
 #define SUPPORT_68140             //RM68140 +52 bytes defaults to PIXFMT=0x55
-#define SUPPORT_7735
+//#define SUPPORT_7735
 #define SUPPORT_7781              //ST7781 +172 bytes
 //#define SUPPORT_8230              //UC8230 +118 bytes
 //#define SUPPORT_8347D             //HX8347-D, HX8347-G, HX8347-I, HX8367-A +520 bytes, 0.27s
@@ -14,8 +14,8 @@
 //#define SUPPORT_8352A             //HX8352A +486 bytes, 0.27s
 //#define SUPPORT_8352B             //HX8352B
 //#define SUPPORT_8357D_GAMMA       //monster 34 byte 
-#define SUPPORT_9163              //
-//#define SUPPORT_9225              //ILI9225-B, ILI9225-G ID=0x9225, ID=0x9226 +380 bytes
+//#define SUPPORT_9163              //
+//#define SUPPORT_9225              //ILI9225-B, ILI9225-G ID=0x9225, ID=0x9226, ID=0x6813 +380 bytes
 //#define SUPPORT_9326_5420         //ILI9326, SPFD5420 +246 bytes
 //#define SUPPORT_9342              //costs +114 bytes
 //#define SUPPORT_9806              //UNTESTED
@@ -421,7 +421,6 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
         switch (_lcd_ID) {
 #if defined(SUPPORT_9225)
         case 0x9225:
-        case 0x9226:
             _SC = 0x37, _EC = 0x36, _SP = 0x39, _EP = 0x38;
             _MC = 0x20, _MP = 0x21, _MW = 0x22;
             GS = (val & 0x80) ? (1 << 9) : 0;
@@ -758,7 +757,6 @@ void MCUFRIEND_kbv::vertScroll(int16_t top, int16_t scrollines, int16_t offset)
 #endif
 #if defined(SUPPORT_0154) || defined(SUPPORT_9225)  //thanks tongbajiel
     case 0x9225:
-    case 0x9226:
 	case 0x0154:
         WriteCmdData(0x31, sea);        //SEA
         WriteCmdData(0x32, top);        //SSA
@@ -808,7 +806,6 @@ void MCUFRIEND_kbv::invertDisplay(boolean i)
     case 0x0139:
 #endif
     case 0x9225:                                        //REV is in reg(0x07) like Samsung
-    case 0x9226:
     case 0x0154:
         WriteCmdData(0x07, 0x13 | (_lcd_rev << 2));     //.kbv kludge
         break;
@@ -2121,8 +2118,10 @@ case 0x4532:    // thanks Leodino
 #define ILI9225C_INVOFF  0x20
 #define ILI9225C_INVON   0x21
 
-    case 0x9225:
+    case 0x6813:
     case 0x9226:
+        _lcd_ID = 0x9225;                //fall through
+    case 0x9225:
         _lcd_capable = REV_SCREEN | READ_BGR;     //thanks tongbajiel
         static const uint16_t ILI9225_regValues[] PROGMEM = {
             /* Start Initial Sequence */
