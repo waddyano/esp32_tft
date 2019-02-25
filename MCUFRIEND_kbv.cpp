@@ -6,6 +6,7 @@
 //#define SUPPORT_4532              //LGDP4532 +120 bytes.  thanks Leodino
 #define SUPPORT_4535              //LGDP4535 +180 bytes
 #define SUPPORT_68140             //RM68140 +52 bytes defaults to PIXFMT=0x55
+#define SUPPORT_7735
 #define SUPPORT_7781              //ST7781 +172 bytes
 //#define SUPPORT_8230              //UC8230 +118 bytes
 //#define SUPPORT_8347D             //HX8347-D, HX8347-G, HX8347-I, HX8367-A +520 bytes, 0.27s
@@ -13,6 +14,7 @@
 //#define SUPPORT_8352A             //HX8352A +486 bytes, 0.27s
 //#define SUPPORT_8352B             //HX8352B
 //#define SUPPORT_8357D_GAMMA       //monster 34 byte 
+#define SUPPORT_9163              //
 //#define SUPPORT_9225              //ILI9225-B, ILI9225-G ID=0x9225, ID=0x9226 +380 bytes
 //#define SUPPORT_9326_5420         //ILI9326, SPFD5420 +246 bytes
 //#define SUPPORT_9342              //costs +114 bytes
@@ -253,10 +255,15 @@ uint16_t MCUFRIEND_kbv::readID(void)
 //        return 0x1526;          //subsequent begin() enables Command Access
     if (ret == 0x1526)          //R61526 [xx 06 15 26] if I have written NVM
         return 0x1526;          //subsequent begin() enables Command Access
+	if (ret == 0x89F0)          //ST7735S: [xx 7C 89 F0]
+        return 0x7735;
 	if (ret == 0x8552)          //ST7789V: [xx 85 85 52]
         return 0x7789;
     if (ret == 0xAC11)          //?unknown [xx 61 AC 11]
         return 0xAC11;
+    ret32 = readReg32(0xD3);      //[xx 91 63 00]
+    ret = ret32 >> 8;
+    if (ret == 0x9163) return ret;
     ret = readReg32(0xD3);      //for ILI9488, 9486, 9340, 9341
     msb = ret >> 8;
     if (msb == 0x93 || msb == 0x94 || msb == 0x98 || msb == 0x77 || msb == 0x16)
@@ -1484,6 +1491,31 @@ case 0x4532:    // thanks Leodino
         break;
 #endif
 
+#ifdef SUPPORT_7735
+    case 0x7735:                //
+        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | REV_SCREEN | READ_24BITS;
+        static const uint8_t PROGMEM table7735S[] = {
+            //  (COMMAND_BYTE), n, data_bytes....
+            0xB1, 3, 0x01, 0x2C, 0x2D,  // [05 3C 3C] FRMCTR1 if GM==11
+            0xB2, 3, 0x01, 0x2C, 0x2D,  // [05 3C 3C]
+            0xB3, 6, 0x01, 0x2C, 0x2D, 0x01, 0x2C, 0x2D, // [05 3C 3C 05 3C 3C]
+            0xB4, 1, 0x07,              // [07] INVCTR Column inversion
+            //ST7735XR Power Sequence
+            0xC0, 3, 0xA2, 0x02, 0x84,  // [A8 08 84] PWCTR1
+            0xC1, 1, 0xC5,              // [C0]
+            0xC2, 2, 0x0A, 0x00,        // [0A 00]
+            0xC3, 2, 0x8A, 0x2A,        // [8A 26]
+            0xC4, 2, 0x8A, 0xEE,        // [8A EE]
+            0xC5, 1, 0x0E,              // [05] VMCTR1 VCOM
+        };
+        table8_ads = table7735S, table_size = sizeof(table7735S);   //
+        p16 = (int16_t *) & HEIGHT;
+        *p16 = 160;
+        p16 = (int16_t *) & WIDTH;
+        *p16 = 128;
+        break;
+#endif
+
 #ifdef SUPPORT_7781
     case 0x7783:
         _lcd_capable = AUTO_READINC | REV_SCREEN | INVERT_GS;
@@ -2018,6 +2050,32 @@ case 0x4532:    // thanks Leodino
             0x0007, 0x0173, //Display on setting
         };
         init_table16(UC8230_regValues, sizeof(UC8230_regValues));
+        break;
+#endif
+
+#ifdef SUPPORT_9163
+    case 0x9163:                //
+        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_24BITS;
+        static const uint8_t PROGMEM table9163C[] = {
+            //  (COMMAND_BYTE), n, data_bytes....
+            0x26, 1, 0x04,       // [01] GAMMASET
+            0xF2, 1, 0x01,       // [00] GAMRSEL
+            0xE0, 16, 0x0f, 0x1a, 0x0f, 0x18, 0x2f, 0x28, 0x20, 0x22, 0x1f, 0x1b, 0x23, 0x37, 0x00, 0x07, 0x02, 0x10,
+            0xE1, 16, 0x0f, 0x1b, 0x0f, 0x17, 0x33, 0x2c, 0x29, 0x2e, 0x30, 0x30, 0x39, 0x3f, 0x00, 0x07, 0x03, 0x10,
+            0xB1, 2, 0x08, 0x02,  //[0E 14] FRMCTR1 if GM==011 61.7Hz
+            0xB4, 1, 0x07,       // [02] INVCTR
+            0xB8, 1, 0x01,       // [00] GSCTRL
+            0xC0, 2, 0x0A, 0x02, // [0A 05] PWCTR1 if LCM==10
+            0xC1, 1, 0x02,       // [07] PWCTR2
+            0xC5, 2, 0x50, 0x63, // [43 4D] VMCTR1
+            0xC7, 1, 0,          // [40] VCOMOFFS
+            //  0x33, 6, 0, 0, 0, 128 + 0, 0, 0, //VSCLLDEF
+        };
+        table8_ads = table9163C, table_size = sizeof(table9163C);   //
+        p16 = (int16_t *) & HEIGHT;
+        *p16 = 160;
+        p16 = (int16_t *) & WIDTH;
+        *p16 = 128;
         break;
 #endif
 
