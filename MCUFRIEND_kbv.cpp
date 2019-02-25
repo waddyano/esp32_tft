@@ -6,7 +6,6 @@
 //#define SUPPORT_4532              //LGDP4532 +120 bytes.  thanks Leodino
 #define SUPPORT_4535              //LGDP4535 +180 bytes
 #define SUPPORT_68140             //RM68140 +52 bytes defaults to PIXFMT=0x55
-#define SUPPORT_7735
 #define SUPPORT_7781              //ST7781 +172 bytes
 //#define SUPPORT_8230              //UC8230 +118 bytes
 //#define SUPPORT_8347D             //HX8347-D, HX8347-G, HX8347-I, HX8367-A +520 bytes, 0.27s
@@ -255,8 +254,6 @@ uint16_t MCUFRIEND_kbv::readID(void)
 //        return 0x1526;          //subsequent begin() enables Command Access
     if (ret == 0x1526)          //R61526 [xx 06 15 26] if I have written NVM
         return 0x1526;          //subsequent begin() enables Command Access
-	if (ret == 0x89F0)          //ST7735S: [xx 7C 89 F0]
-        return 0x7735;
 	if (ret == 0x8552)          //ST7789V: [xx 85 85 52]
         return 0x7789;
     if (ret == 0xAC11)          //?unknown [xx 61 AC 11]
@@ -1485,31 +1482,6 @@ case 0x4532:    // thanks Leodino
         *p16 = 480;
         p16 = (int16_t *) & WIDTH;
         *p16 = 320;
-        break;
-#endif
-
-#ifdef SUPPORT_7735
-    case 0x9163:                //
-        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | REV_SCREEN | READ_24BITS;
-        static const uint8_t PROGMEM table7735S[] = {
-            //  (COMMAND_BYTE), n, data_bytes....
-            0xB1, 3, 0x01, 0x2C, 0x2D,  // [05 3C 3C] FRMCTR1 if GM==11
-            0xB2, 3, 0x01, 0x2C, 0x2D,  // [05 3C 3C]
-            0xB3, 6, 0x01, 0x2C, 0x2D, 0x01, 0x2C, 0x2D, // [05 3C 3C 05 3C 3C]
-            0xB4, 1, 0x07,              // [07] INVCTR Column inversion
-            //ST7735XR Power Sequence
-            0xC0, 3, 0xA2, 0x02, 0x84,  // [A8 08 84] PWCTR1
-            0xC1, 1, 0xC5,              // [C0]
-            0xC2, 2, 0x0A, 0x00,        // [0A 00]
-            0xC3, 2, 0x8A, 0x2A,        // [8A 26]
-            0xC4, 2, 0x8A, 0xEE,        // [8A EE]
-            0xC5, 1, 0x0E,              // [05] VMCTR1 VCOM
-        };
-        table8_ads = table7735S, table_size = sizeof(table7735S);   //
-        p16 = (int16_t *) & HEIGHT;
-        *p16 = 160;
-        p16 = (int16_t *) & WIDTH;
-        *p16 = 128;
         break;
 #endif
 
