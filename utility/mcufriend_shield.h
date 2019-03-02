@@ -22,7 +22,7 @@
 
 #if 0
 //################################### UNO ##############################
-#elif defined(__AVR_ATmega328P__)       //regular UNO shield on UNO
+#elif defined(__AVR_ATmega328P__) || defined(__AVR_ATmega328PB__)       //regular UNO shield on UNO
 #define RD_PORT PORTC
 #define RD_PIN  0
 #define WR_PORT PORTC
