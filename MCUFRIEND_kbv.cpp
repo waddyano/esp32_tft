@@ -2056,18 +2056,14 @@ case 0x4532:    // thanks Leodino
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_24BITS;
         static const uint8_t PROGMEM table9163C[] = {
             //  (COMMAND_BYTE), n, data_bytes....
-            0x26, 1, 0x04,       // [01] GAMMASET
-            0xF2, 1, 0x01,       // [00] GAMRSEL
-            0xE0, 16, 0x0f, 0x1a, 0x0f, 0x18, 0x2f, 0x28, 0x20, 0x22, 0x1f, 0x1b, 0x23, 0x37, 0x00, 0x07, 0x02, 0x10,
-            0xE1, 16, 0x0f, 0x1b, 0x0f, 0x17, 0x33, 0x2c, 0x29, 0x2e, 0x30, 0x30, 0x39, 0x3f, 0x00, 0x07, 0x03, 0x10,
-            0xB1, 2, 0x08, 0x02,  //[0E 14] FRMCTR1 if GM==011 61.7Hz
+            0x26, 1, 0x02,       // [01] GAMMASET use CURVE=1, 2, 4, 8
+            0xB1, 2, 0x08, 0x02, // [0E 14] FRMCTR1 if GM==011 61.7Hz
             0xB4, 1, 0x07,       // [02] INVCTR
             0xB8, 1, 0x01,       // [00] GSCTRL
             0xC0, 2, 0x0A, 0x02, // [0A 05] PWCTR1 if LCM==10
             0xC1, 1, 0x02,       // [07] PWCTR2
             0xC5, 2, 0x50, 0x63, // [43 4D] VMCTR1
             0xC7, 1, 0,          // [40] VCOMOFFS
-            //  0x33, 6, 0, 0, 0, 128 + 0, 0, 0, //VSCLLDEF
         };
         table8_ads = table9163C, table_size = sizeof(table9163C);   //
         p16 = (int16_t *) & HEIGHT;
