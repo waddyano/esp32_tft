@@ -291,6 +291,7 @@ int16_t MCUFRIEND_kbv::readGRAM(int16_t x, int16_t y, uint16_t * block, int16_t 
     uint8_t r, g, b, tmp;
     if (!is8347 && _lcd_capable & MIPI_DCS_REV1) // HX8347 uses same register
         _MR = 0x2E;
+    if (_lcd_ID == 0x1602) _MR = 0x2E;
     setAddrWindow(x, y, x + w - 1, y + h - 1);
     while (n > 0) {
         if (!(_lcd_capable & MIPI_DCS_REV1)) {
@@ -663,6 +664,15 @@ static void pushColors_any(uint16_t cmd, uint8_t * block, int16_t n, bool first,
     if (first) {
         WriteCmd(cmd);
     }
+
+    if (!isconst && !isbigend) {
+        uint16_t *block16 = (uint16_t*)block;
+        while (n-- > 0) {
+            color = *block16++;
+            write16(color);
+        }
+    } else
+
     while (n-- > 0) {
         if (isconst) {
             h = pgm_read_byte(block++);
@@ -2428,8 +2438,14 @@ case 0x4532:    // thanks Leodino
         *p16 = 240;
         break;
     case 0x1602:
-        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | INVERT_GS | READ_24BITS; //thanks Dumper
-		goto common_9329;
+        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS; //does not readGRAM
+        static const uint8_t XX1602_regValues[] PROGMEM = {
+            0xB8, 1, 0x01,      //GS [00]
+            0xC0, 1, 0x0E,      //??Power [0A]
+        };
+        table8_ads = XX1602_regValues, table_size = sizeof(XX1602_regValues);
+        break;
+
     case 0x2053:    //weird from BangGood
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_24BITS | REV_SCREEN | READ_BGR;
 		goto common_9329;
