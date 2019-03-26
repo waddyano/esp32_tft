@@ -92,6 +92,10 @@
 
 //################################### TEENSY++2.0 ##############################
 #elif defined(__AVR_AT90USB1286__)       //regular UNO shield on TEENSY++ 2.0 thanks tysonlt
+
+//LCD pins  |D7 |D6 |D5 |D4 |D3 |D2 |D1 |D0 | |RD |WR |RS |CS |RST|
+//AVR   pin |PD7|PD6|PD5|PD4|PD3|PD2|PE1|PE0| |PF0|PF1|PF2|PF3|PF4|
+
 #define RD_PORT PORTF
 #define RD_PIN  0
 #define WR_PORT PORTF
@@ -284,6 +288,10 @@ void write_8(uint8_t x)
 //################################### UNO SHIELD on BOBUINO ##############################
 #elif defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega644P__) //UNO shield on BOBUINO
 #warning regular UNO shield on BOBUINO
+
+//LCD pins  |D7 |D6 |D5 |D4 |D3 |D2 |D1 |D0 | |RD |WR |RS |CS |RST|
+//AVR   pin |PB3|PB2|PB1|PB0|PD3|PD2|PD6|PD5| |PA7|PA6|PA5|PA4|PA3|
+
 #define RD_PORT PORTA
 #define RD_PIN  7
 #define WR_PORT PORTA
@@ -314,6 +322,9 @@ void write_8(uint8_t x)
 //####################################### TEENSY ############################
 #elif defined(__MK20DX128__) || defined(__MK20DX256__) || defined(__MK64FX512__) || defined(__MK66FX1M0__) // regular UNO shield on a Teensy 3.x
 #warning regular UNO shield on a Teensy 3.x
+
+//LCD pins  |D7 |D6 |D5 |D4  |D3  |D2 |D1 |D0 | |RD |WR |RS |CS |RST|
+//MK20 pin  |PD2|PD4|PD7|PA13|PA12|PD2|PC3|PD3| |PD1|PC0|PB0|PB1|PB3|
 
 #if defined(__MK20DX128__) || defined(__MK20DX256__) // Teensy3.0 || 3.2 96MHz
 #define WRITE_DELAY { WR_ACTIVE2; }
@@ -532,6 +543,10 @@ void write_8(uint8_t x)
 #if 0
 #elif defined(ARDUINO_GENERIC_STM32F103C) || defined(ARDUINO_NUCLEO_F103C8) || defined(ARDUINO_BLUEPILL_F103C8)
 #warning Uno Shield on BLUEPILL
+
+//LCD pins  |D7 |D6 |D5 |D4 |D3 |D2 |D1 |D0 | |RD |WR |RS |CS |RST|
+//STM32 pin |PA7|PA6|PA5|PA4|PA3|PA2|PA1|PA0| |PB0|PB6|PB7|PB8|PB9|
+
 #define RD_PORT GPIOB
 //#define RD_PIN  5
 #define RD_PIN  0  //hardware mod to Adapter.  Allows use of PB5 for SD Card

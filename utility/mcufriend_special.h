@@ -816,6 +816,9 @@ static __attribute((always_inline)) void write_8(uint8_t val)
 #elif defined(USE_MY_BLUEPILL) && (defined(ARDUINO_GENERIC_STM32F103C) || defined(ARDUINO_NUCLEO_F103C8))
 #warning Uno Shield on MY BLUEPILL
 
+//LCD pins  |D7  |D6  |D5 |D4 |D3 |D2 |D1  |D0 | |RD |WR |RS |CS |RST|
+//STM32 pin |PA11|PA10|PA9|PA8|PB7|PB6|PA10|PA9| |PB1|PB0|PA7|PA6|PA5|
+
 #if defined(ARDUINO_NUCLEO_F103C8)   //regular CMSIS libraries
 #define REGS(x) x
 #define GPIO_INIT()   { RCC->APB2ENR |= RCC_APB2ENR_IOPAEN | RCC_APB2ENR_IOPBEN | RCC_APB2ENR_IOPCEN | RCC_APB2ENR_IOPDEN | RCC_APB2ENR_AFIOEN; \
