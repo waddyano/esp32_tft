@@ -111,14 +111,14 @@
   #define D8_PIN  0
   #define D9_PORT GPIOA
   #define D9_PIN  1
-  #define D10_PORT GPIOB //GPIOA
-  #define D10_PIN  12    //15
+  #define D10_PORT GPIOA
+  #define D10_PIN  15
   #define D11_PORT GPIOB
-  #define D11_PIN  15    //5
+  #define D11_PIN  5
   #define D12_PORT GPIOB
-  #define D12_PIN  14    //4
+  #define D12_PIN  4
   #define D13_PORT GPIOB
-  #define D13_PIN  13    //3
+  #define D13_PIN  3
   #define A0_PORT GPIOB
   #define A0_PIN  5      //original pcb uses SPI pin 
 //  #define A0_PIN  0      //hardware mod to Adapter to PB0.  Allows use of PB5 for SD Card
