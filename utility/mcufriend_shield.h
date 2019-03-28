@@ -545,7 +545,7 @@ void write_8(uint8_t x)
 #warning Uno Shield on BLUEPILL
 
 //LCD pins  |D7 |D6 |D5 |D4 |D3 |D2 |D1 |D0 | |RD |WR |RS |CS |RST| |SD_SS|SD_DI|SD_DO|SD_SCK|
-//STM32 pin |PA7|PA6|PA5|PA4|PA3|PA2|PA1|PA0| |PB0|PB6|PB7|PB8|PB9| |PB12 |PB15 |PB14 |PB13  | **SPI2**
+//STM32 pin |PA7|PA6|PA5|PA4|PA3|PA2|PA1|PA0| |PB0|PB6|PB7|PB8|PB9| |PA15 |PB5  |PB4  |PB3   | **ALT-SPI1**
 
 #define RD_PORT GPIOB
 //#define RD_PIN  5
