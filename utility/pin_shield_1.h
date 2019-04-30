@@ -686,11 +686,12 @@
   #define D0_PIN  11
   #define D1_PORT PORT->Group[0]
   #define D1_PIN  10
-  #define D2_PORT PORT->Group[0]
+	//M0 and Zero physical PA08 and PA14 are swapped
+  #define D2_PORT PORT->Group[0] //PA08  (Zero-D4)
   #define D2_PIN  8
   #define D3_PORT PORT->Group[0]
   #define D3_PIN  9
-  #define D4_PORT PORT->Group[0]
+  #define D4_PORT PORT->Group[0] //PA14  (Zero-D2)
   #define D4_PIN  14
   #define D5_PORT PORT->Group[0]
   #define D5_PIN  15
@@ -710,17 +711,28 @@
   #define D12_PIN  19
   #define D13_PORT PORT->Group[0]
   #define D13_PIN  17
-  #define A0_PORT PORT->Group[0]
+	//M0 and Zero Arduino digital pin numbering is DIFFERENT
+  #define D16_PORT PORT->Group[0] //PA22 (SDA)  (Zero-D20)
+  #define D16_PIN  22
+  #define D17_PORT PORT->Group[0] //PA23 (SCL)  (Zero-D21)
+  #define D17_PIN  23
+  #define D18_PORT PORT->Group[0] //PA12 (MISO) (Zero-D22)
+  #define D18_PIN  12
+  #define D20_PORT PORT->Group[1] //PB11 (SCK)  (Zero-D24)
+  #define D20_PIN  11
+  #define D21_PORT PORT->Group[1] //PB10 (MOSI) (Zero-D23)
+  #define D21_PIN  10
+  #define A0_PORT PORT->Group[0] //PA02(M0-D24) (Zero-D14)   
   #define A0_PIN  2
-  #define A1_PORT PORT->Group[1]
+  #define A1_PORT PORT->Group[1] //PB08
   #define A1_PIN  8
-  #define A2_PORT PORT->Group[1]
+  #define A2_PORT PORT->Group[1] //PB09
   #define A2_PIN  9
-  #define A3_PORT PORT->Group[0]
+  #define A3_PORT PORT->Group[0] //PA04
   #define A3_PIN  4
-  #define A4_PORT PORT->Group[0]
+  #define A4_PORT PORT->Group[0] //PA05
   #define A4_PIN  5
-  #define A5_PORT PORT->Group[1]
+  #define A5_PORT PORT->Group[1] //PB02
   #define A5_PIN  2
 
 #endif
