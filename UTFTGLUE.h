@@ -53,11 +53,12 @@ class UTFTGLUE : public MCUFRIEND_kbv
 	void InitLCD(byte orientation=LANDSCAPE) {
 	     MCUFRIEND_kbv::reset();
 		 uint16_t ID = MCUFRIEND_kbv::readID();
-		 if (ID == 0) ID = 0x9341;        //DealExtreme with EXTC=0
-//		 if (ID == 0x0089 || ID == 0x8989) ID = 0x1289;
-//		 if (ID == 0x00D3 || ID == 0xD3D3) ID = 0x9481;   //write-only controller
-//		 if (ID == 0x00D3 || ID == 0xD3D3) ID = 0x9486;   //write-only controller
-		 if (ID == 0x00D3 || ID == 0xD3D3) ID = 0x9090;   //write-only controller HX8357-D
+//		 if (ID == 0) ID = 0x9341;        //DealExtreme with EXTC=0
+//		 if (ID == 0x8989) ID = 0x1289;
+//		 if (ID == 0xD3D3) ID = 0x9481;   //write-only controller
+//		 if (ID == 0xD3D3) ID = 0x9486;   //write-only controller
+		 if (ID == 0xD3D3) ID = 0x9090;   //write-only controller ? HX8357-C 
+//		 if (ID == 0xD3D3) ID = 0x1289;   //write-only controller SSD1289
 //         if (ID == 0x9327 && orientation == LANDSCAPE) orientation = 3;
 		 MCUFRIEND_kbv::begin(ID);
 		 MCUFRIEND_kbv::setRotation(_orient = orientation);
@@ -180,5 +181,23 @@ class UTFTGLUE : public MCUFRIEND_kbv
 	}
     uint16_t setrgb(byte r, byte g, byte b)  { return ((r&0xF8) << 8) | ((g&0xFC) << 3) | (b>>3);}
 };
+
+#define VGA_BLACK       0x0000
+#define VGA_WHITE       0xFFFF
+#define VGA_RED         0xF800
+#define VGA_GREEN       0x0400
+#define VGA_BLUE        0x001F
+#define VGA_SILVER      0xC618
+#define VGA_GRAY        0x8410
+#define VGA_MAROON      0x8000
+#define VGA_YELLOW      0xFFE0
+#define VGA_OLIVE       0x8400
+#define VGA_LIME        0x07E0
+#define VGA_AQUA        0x07FF
+#define VGA_TEAL        0x0410
+#define VGA_NAVY        0x0010
+#define VGA_FUCHSIA     0xF81F
+#define VGA_PURPLE      0x8010
+#define VGA_TRANSPARENT 0xFFFFFFFF
 
 #endif /* UTFTGLUE_H_ */
