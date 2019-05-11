@@ -15,6 +15,7 @@
 //#define USE_ELECHOUSE_DUE_16BIT_SHIELD    //Untested yet
 //#define USE_MY_BLUEPILL
 //#define USE_ADIGITALEU_TEENSY
+//#define USE_MIKROELEKTRONIKA
 
 /*
 HX8357C  tWC = 50ns  tWRH = 15ns  tRCFM = 450ns  tRC = 160ns
@@ -33,9 +34,26 @@ ST7789V  tWC = 66ns  tWRH = 15ns  tRCFM = 450ns  tRC = 160ns
 
 #if 0
 
-#elif defined(__AVR_ATxmega128A1__)   // Home made shield with Xplained
+#elif defined(__AVR_ATxmega128A1__)   // Xplained or MIKROE
+#if defined(USE_MIKROELEKTRONIKA)
+#warning MIKROELEKTRONIKA DEV BOARD
+#define VPMAP10 0x18    // VPORT0=J, 1=B, 2=K, 3=D
+#define VPMAP32 0x39    // VPORT0=J, 1=B, 2=K, 3=D
+#define RD_PORT VPORT0  //PJ2.
+#define RD_PIN  2
+#define WR_PORT VPORT0
+#define WR_PIN  3
+#define CD_PORT VPORT0
+#define CD_PIN  4
+#define CS_PORT VPORT0
+#define CS_PIN  5
+#define RESET_PORT VPORT0 //PJ1
+#define RESET_PIN  1
+#else
 #warning Home made shield with Xplained
-#define RD_PORT VPORT0  //PF0.    VPORT0=F, 1=B, 2=C, 3=D
+#define VPMAP10 0x15    // VPORT0=F, 1=B, 2=C, 3=D
+#define VPMAP32 0x32    // VPORT0=F, 1=B, 2=C, 3=D
+#define RD_PORT VPORT0  //PF0.
 #define RD_PIN  0
 #define WR_PORT VPORT0
 #define WR_PIN  1
@@ -43,14 +61,17 @@ ST7789V  tWC = 66ns  tWRH = 15ns  tRCFM = 450ns  tRC = 160ns
 #define CD_PIN  2
 #define CS_PORT VPORT0
 #define CS_PIN  3
-#define RESET_PORT VPORT0
+#define RESET_PORT VPORT0 //PK4
 #define RESET_PIN  4
+#endif
 
 // VPORTs are very fast.   CBI, SBI are only one cycle.    Hence all those RD_ACTIVEs
 // ILI9320 data sheet says tDDR=100ns.    We need 218ns to read REGs correctly.
+#define WRITE_DELAY   { }
+#define READ_DELAY    { RD_ACTIVE4; }
 #define write_8(x)    { VPORT2.OUT = x; }
 #define read_8()      ( VPORT2.IN )
-#define setWriteDir() { PORTCFG.VPCTRLA=0x15; PORTCFG.VPCTRLB=0x32; VPORT2.DIR = 0xFF; }
+#define setWriteDir() { PORTCFG.VPCTRLA=VPMAP10; PORTCFG.VPCTRLB=VPMAP32; VPORT2.DIR = 0xFF; }
 #define setReadDir()  { VPORT2.DIR = 0x00; }
 #define write8(x)     { write_8(x); WR_STROBE; }
 #define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
