@@ -407,6 +407,7 @@ void write_8(uint8_t x)
 #define IS_NUCLEO144 ( defined(ARDUINO_NUCLEO_F207ZG) \
                    || defined(ARDUINO_NUCLEO_F429ZI) || defined(ARDUINO_NUCLEO_F767ZI) \
                    || defined(ARDUINO_NUCLEO_L496ZG) || defined(ARDUINO_NUCLEO_L496ZG_P) \
+                   || defined(ARDUINO_NUCLEO_H743ZI) \
                     )
 // F1xx, F4xx, L4xx have different registers and styles.  General Macros
 #if defined(__STM32F1__)   //weird Maple Core
@@ -509,6 +510,14 @@ void write_8(uint8_t x)
 #define IDLE_DELAY  { WR_IDLE2;WR_IDLE; }
 #define READ_DELAY  { RD_ACTIVE16;RD_ACTIVE16;RD_ACTIVE4;}
 #define GPIO_INIT()   { RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN | RCC_AHB1ENR_GPIOCEN | RCC_AHB1ENR_GPIODEN | RCC_AHB1ENR_GPIOEEN | RCC_AHB1ENR_GPIOFEN; }
+#define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
+
+#elif defined(STM32H743xx)   // thanks MagicianT
+#warning STM32H743xx< DELAY macros untested yet
+#define WRITE_DELAY { WR_ACTIVE8;WR_ACTIVE2; } //F_CPU=400MHz
+#define IDLE_DELAY  { WR_IDLE2;WR_IDLE; }
+#define READ_DELAY  { RD_ACTIVE16;RD_ACTIVE16;RD_ACTIVE4;}
+#define GPIO_INIT()   { RCC->AHB4ENR |= RCC_AHB4ENR_GPIOAEN | RCC_AHB4ENR_GPIOCEN | RCC_AHB4ENR_GPIODEN | RCC_AHB4ENR_GPIOEEN | RCC_AHB4ENR_GPIOFEN; }
 #define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
 
 #elif defined(STM32L053xx)
