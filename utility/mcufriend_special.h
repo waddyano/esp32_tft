@@ -25,6 +25,7 @@ ILI9481  tWC =100ns  tWRH = 30ns  tRCFM = 450ns  tRC = 450ns
 ILI9486  tWC = 66ns  tWRH = 15ns  tRCFM = 450ns  tRC = 160ns (tWCFM= 286ns on mystery 9486_16)
 ILI9486L tWC = 50ns  tWRH = 15ns  tRCFM = 450ns  tRC = 160ns
 ILI9488  tWC = 30ns  tWRH = 15ns  tRCFM = 450ns  tRC = 160ns
+NT35310  tWC = 40ns  tWRH = 19ns  tRCFM = 400ns  tRC = 160ns
 RM68140  tWC = 50ns  tWRH = 15ns  tRCFM = 450ns  tRC = 160ns (tWCFM= 119ns)
 SPFD5408 tWC =125ns  tWRH = 70ns  tRCFM = 450ns  tRC = 450ns
 SSD1289  tWC =100ns  tWRH = 50ns  tRCFM =1000ns  tRC =1000ns (tWCFM= 238ns)
