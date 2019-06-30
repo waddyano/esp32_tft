@@ -18,6 +18,9 @@
 //#define USE_MIKROELEKTRONIKA
 
 /*
+HX8347A  tWC =100ns  tWRH = 35ns  tRCFM = 450ns  tRC = ?  ns
+HX8347D  tWC = 66ns  tWRH = 15ns  tRCFM = 450ns  tRC = 160ns
+HX8347I  tWC =100ns  tWRH = 15ns  tRCFM = 600ns  tRC = 160ns
 HX8357C  tWC = 50ns  tWRH = 15ns  tRCFM = 450ns  tRC = 160ns
 ILI9320  tWC =100ns  tWRH = 50ns  tRCFM = 300ns  tRC = 300ns
 ILI9341  tWC = 66ns  tWRH = 15ns  tRCFM = 450ns  tRC = 160ns
@@ -36,10 +39,16 @@ ST7789V  tWC = 66ns  tWRH = 15ns  tRCFM = 450ns  tRC = 160ns
 #if 0
 
 #elif defined(__AVR_ATxmega128A1__)   // Xplained or MIKROE
-#if defined(USE_MIKROELEKTRONIKA)
-#warning MIKROELEKTRONIKA DEV BOARD
-#define VPMAP10 0x18    // VPORT0=J, 1=B, 2=K, 3=D
-#define VPMAP32 0x39    // VPORT0=J, 1=B, 2=K, 3=D
+#if defined(USE_MIKROELEKTRONIKA)     // HX8347-D 16.2ns@62MHz 20.9ns@48MHz
+#if F_CPU > 46000000
+#error MIKROELEKTRONIKA must be less than 48MHz
+#else
+#warning MIKROELEKTRONIKA DEV BOARD (48MHz max)
+#endif
+#define WRITE_DELAY   { }
+#define READ_DELAY    { RD_ACTIVE4; }
+#define VPMAP10 0x58    // VPORT0=J, 1=F, 2=K, 3=D
+#define VPMAP32 0x39    // VPORT0=J, 1=F, 2=K, 3=D
 #define RD_PORT VPORT0  //PJ2.
 #define RD_PIN  2
 #define WR_PORT VPORT0
@@ -52,6 +61,8 @@ ST7789V  tWC = 66ns  tWRH = 15ns  tRCFM = 450ns  tRC = 160ns
 #define RESET_PIN  1
 #else
 #warning Home made shield with Xplained
+#define WRITE_DELAY   { }
+#define READ_DELAY    { RD_ACTIVE4; }
 #define VPMAP10 0x15    // VPORT0=F, 1=B, 2=C, 3=D
 #define VPMAP32 0x32    // VPORT0=F, 1=B, 2=C, 3=D
 #define RD_PORT VPORT0  //PF0.
@@ -68,15 +79,14 @@ ST7789V  tWC = 66ns  tWRH = 15ns  tRCFM = 450ns  tRC = 160ns
 
 // VPORTs are very fast.   CBI, SBI are only one cycle.    Hence all those RD_ACTIVEs
 // ILI9320 data sheet says tDDR=100ns.    We need 218ns to read REGs correctly.
-#define WRITE_DELAY   { }
-#define READ_DELAY    { RD_ACTIVE4; }
 #define write_8(x)    { VPORT2.OUT = x; }
 #define read_8()      ( VPORT2.IN )
 #define setWriteDir() { PORTCFG.VPCTRLA=VPMAP10; PORTCFG.VPCTRLB=VPMAP32; VPORT2.DIR = 0xFF; }
 #define setReadDir()  { VPORT2.DIR = 0x00; }
-#define write8(x)     { write_8(x); WR_STROBE; }
+#define write8(x)     { write_8(x); WRITE_DELAY; WR_STROBE; }
 #define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
-#define READ_8(dst)   { RD_STROBE; RD_ACTIVE2; RD_ACTIVE; dst = read_8(); RD_IDLE; }
+//#define READ_8(dst)   { RD_STROBE; RD_ACTIVE2; RD_ACTIVE; dst = read_8(); RD_IDLE; }
+#define READ_8(dst)   { RD_STROBE; READ_DELAY; dst = read_8(); RD_IDLE; }
 #define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
 
 #define PIN_LOW(p, b)        (p).OUT &= ~(1<<(b))
