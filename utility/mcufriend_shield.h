@@ -90,6 +90,73 @@
 #define PIN_HIGH(p, b)       (p) |= (1<<(b))
 #define PIN_OUTPUT(p, b)     *(&p-1) |= (1<<(b))
 
+//################################### MEGA4809 NANO_EVERY ##############################
+#elif defined(__AVR_ATmega4809__) && defined(ARDUINO_AVR_NANO_EVERY)   // EVERY-4809 with Nano-Shield_Adapter
+#warning EVERY-4809 with Nano-Shield_Adapter using VPORT.OUT and BLD/BST
+#define RD_PORT VPORTD  //
+#define RD_PIN  3
+#define WR_PORT VPORTD
+#define WR_PIN  2
+#define CD_PORT VPORTD
+#define CD_PIN  1
+#define CS_PORT VPORTD
+#define CS_PIN  0
+#define RESET_PORT VPORTF
+#define RESET_PIN  2
+
+#define AMASK         (3<<0)
+#define BMASK         (5<<0)
+#define CMASK         (1<<6)
+#define EMASK         (1<<3)
+#define FMASK         (3<<4)
+static __attribute((always_inline))
+void write_8(uint8_t val)
+{
+    asm volatile("in __tmp_reg__,0x01" "\n\t"    //VPORTA.OUT
+                 "BST %0,2" "\n\t" "BLD __tmp_reg__,0" "\n\t"
+                 "BST %0,7" "\n\t" "BLD __tmp_reg__,1" "\n\t"
+                 "out 0x01,__tmp_reg__" : : "a" (val));
+    asm volatile("in __tmp_reg__,0x05" "\n\t"    //VPORTB.OUT
+                 "BST %0,1" "\n\t" "BLD __tmp_reg__,0" "\n\t"
+                 "BST %0,5" "\n\t" "BLD __tmp_reg__,2" "\n\t"
+                 "out 0x05,__tmp_reg__" : : "a" (val));
+    asm volatile("in __tmp_reg__,0x09" "\n\t"    //VPORTC.OUT
+                 "BST %0,4" "\n\t" "BLD __tmp_reg__,6" "\n\t"
+                 "out 0x09,__tmp_reg__" : : "a" (val));
+    asm volatile("in __tmp_reg__,0x11" "\n\t"    //VPORTE.OUT
+                 "BST %0,0" "\n\t" "BLD __tmp_reg__,3" "\n\t"
+                 "out 0x11,__tmp_reg__" : : "a" (val));
+    asm volatile("in __tmp_reg__,0x15" "\n\t"    //VPORTF.OUT
+                 "BST %0,3" "\n\t" "BLD __tmp_reg__,5" "\n\t"
+                 "BST %0,6" "\n\t" "BLD __tmp_reg__,4" "\n\t"
+                 "out 0x15,__tmp_reg__" : : "a" (val));
+}
+
+#define read_8()      ( 0 \
+                        | ((VPORTA_IN & (1<<0)) << 2)\
+                        | ((VPORTA_IN & (1<<1)) << 6)\
+                        | ((VPORTB_IN & (1<<0)) << 1)\
+                        | ((VPORTB_IN & (1<<2)) << 3)\
+                        | ((VPORTC_IN & CMASK) >> 2)\
+                        | ((VPORTE_IN & EMASK) >> 3)\
+                        | ((VPORTF_IN & (1<<5)) >> 2)\
+                        | ((VPORTF_IN & (1<<4)) << 2)\
+                      )
+#define setWriteDir() { VPORTA_DIR |=  AMASK; VPORTB_DIR |=  BMASK; VPORTC_DIR |=  CMASK; VPORTE_DIR |=  EMASK; VPORTF_DIR |=  FMASK; }
+#define setReadDir()  { VPORTA_DIR &= ~AMASK; VPORTB_DIR &= ~BMASK; VPORTC_DIR &= ~CMASK; VPORTE_DIR &= ~EMASK; VPORTF_DIR &= ~FMASK; }
+
+//#define WRITE_DELAY   { WR_ACTIVE; WR_ACTIVE; }   //6.47s no_inline
+#define WRITE_DELAY   { WR_ACTIVE2; WR_ACTIVE; }   //-Os=5.43s @20MHz always_inline. (-O1=5.41s, -O3=5.25s) 
+#define READ_DELAY    { RD_ACTIVE4; }              //ID=0x7789
+#define write8(x)     { write_8(x); WRITE_DELAY; WR_STROBE; }
+#define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
+#define READ_8(dst)   { RD_STROBE; READ_DELAY; dst = read_8(); RD_IDLE; }
+#define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
+
+#define PIN_LOW(p, b)        (p).OUT &= ~(1<<(b))
+#define PIN_HIGH(p, b)       (p).OUT |= (1<<(b))
+#define PIN_OUTPUT(p, b)     (p).DIR |= (1<<(b))
+
 //################################### TEENSY++2.0 ##############################
 #elif defined(__AVR_AT90USB1286__)       //regular UNO shield on TEENSY++ 2.0 thanks tysonlt
 
