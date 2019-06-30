@@ -4,10 +4,14 @@
  * Created: 12/05/2019 14:25:06
  *  Author: David Prentice
  *  
- *  Might just as well ALWAYS use FreeFonts.
- *  knows FreeSmallFont, FreeBigFont and FreeSevenSegNumFont
- *  any other Fonts just need to #include "FreeOtherXXX.h"
- *  and #define OtherXXX &FreeOtherXXX
+ *  1. replace "UTFT.h" with "UTFTGLUE.h"
+ *  2. replace UTFT constructor with UTFTGLUE(model_ID, 0,0,0,0,0)
+ *  3. remove smallFont, BigFont, SeveSegNumFont declarations
+ *  4. UTFTGLUE uses FreeFonts or NULL (System 5x7)
+ *
+ *  5. knows FreeSmallFont, FreeBigFont and FreeSevenSegNumFont
+ *  6. any other Fonts just need to #include "FreeOtherXXX.h"
+ *  7. #define OtherXXX &FreeOtherXXX
  */ 
 
 #warning   @@@@@@@@@@@@@@@@@@@@@@@@@ <UTFTGLUE.h> @@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -38,8 +42,8 @@ class UTFTGLUE : public MCUFRIEND_kbv
 {
     public:
 //  UTFTGLUE() : MCUFRIEND_kbv() {}
-    UTFTGLUE(byte model, int RS, int WR,int CS, int RST, int RD = A0)
-             : MCUFRIEND_kbv(CS, RS, WR, RD, RST) {}
+    UTFTGLUE(int model_ID, int RS, int WR,int CS, int RST, int RD = A0)
+             : MCUFRIEND_kbv(CS, RS, WR, RD, RST) { _model_ID = model_ID; }
     void InitLCD(byte orientation=LANDSCAPE) {
         MCUFRIEND_kbv::reset();
         uint16_t ID = MCUFRIEND_kbv::readID();
@@ -143,6 +147,7 @@ class UTFTGLUE : public MCUFRIEND_kbv
 //  void LCD_Write_DATA(char VH,char VL);
 //  void dispBitmap(File inFile);
     uint8_t _ascend, _descend, _dig_wid;
+    uint16_t _model_ID;
 
     protected:
     uint16_t _fcolor;
