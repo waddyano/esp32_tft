@@ -795,6 +795,61 @@
 #define PIN_READ(port, pin)   (port).IN.reg & (1u<<(pin))
 
 
+#elif defined(__AVR_ATmega4809__) && defined(ARDUINO_AVR_NANO_EVERY)   //NANO-EVERY
+#warning using NANO-EVERY
+  #include <avr/io.h>
+  #define D0_PORT PORTC
+  #define D0_PIN  5
+  #define D1_PORT PORTC
+  #define D1_PIN  4
+  #define D2_PORT PORTA
+  #define D2_PIN  0
+  #define D3_PORT PORTF
+  #define D3_PIN  5
+  #define D4_PORT PORTC
+  #define D4_PIN  6
+  #define D5_PORT PORTB
+  #define D5_PIN  2
+  #define D6_PORT PORTF
+  #define D6_PIN  4
+  #define D7_PORT PORTA
+  #define D7_PIN  1
+  #define D8_PORT PORTE
+  #define D8_PIN  3
+  #define D9_PORT PORTB
+  #define D9_PIN  0
+  #define D10_PORT PORTB //PB1
+  #define D10_PIN  1
+  #define D11_PORT PORTE
+  #define D11_PIN  0
+  #define D12_PORT PORTE
+  #define D12_PIN  1
+  #define D13_PORT PORTE
+  #define D13_PIN  2
+  #define A0_PORT PORTD
+  #define A0_PIN  3
+  #define A1_PORT PORTD
+  #define A1_PIN  2
+  #define A2_PORT PORTD
+  #define A2_PIN  1
+  #define A3_PORT PORTD
+  #define A3_PIN  0
+  #define A4_PORT PORTF
+  #define A4_PIN  2
+  #define A5_PORT PORTF
+  #define A5_PIN  3
+  #define A6_PORT PORTD
+  #define A6_PIN  5
+  #define A7_PORT PORTD
+  #define A7_PIN  4
+// Shield Control macros.
+#define PIN_LOW(port, pin)    (port).OUTCLR.reg = (1<<(pin))
+#define PIN_HIGH(port, pin)   (port).OUTSET.reg = (1<<(pin))
+#define PIN_OUTPUT(port, pin) (port).DIR.reg |= (1<<(pin))
+#define PIN_INPUT(port, pin)  (port).DIR.reg &= ~(1u<<(pin))
+#define PIN_READ(port, pin)   (port).IN.reg & (1u<<(pin))
+
+
 #elif defined(__AVR_ATmega4809__)    //XPRO_4809 with XPRO_SHIELD_ADAPTER
 #warning using XPRO_4809 with XPRO_SHIELD_ADAPTER
   #include <avr/io.h>
