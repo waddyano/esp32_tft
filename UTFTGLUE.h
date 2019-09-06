@@ -29,7 +29,7 @@
 #include <MCUFRIEND_kbv.h>
 
 #include <Adafruit_GFX.h>
-#if defined(__arm)
+#if defined(__arm__) && !defined(TEENSYDUINO)
 #include <avr/dtostrf.h>
 #endif
 
@@ -60,6 +60,7 @@ class UTFTGLUE : public MCUFRIEND_kbv
     void clrScr() { MCUFRIEND_kbv::fillScreen(0x0000);}
     void drawPixel(int x, int y) { MCUFRIEND_kbv::drawPixel(x, y, _fcolor);}
     void drawLine(int x1, int y1, int x2, int y2) { MCUFRIEND_kbv::drawLine(x1, y1, x2, y2, _fcolor);}
+    void fillScr(uint16_t color) { MCUFRIEND_kbv::fillScreen(color);}
     void fillScr(byte r, byte g, byte b) { MCUFRIEND_kbv::fillScreen(setrgb(r, g, b));}
     void drawRect(int x1, int y1, int x2, int y2) {
         int w = x2 - x1 + 1, h = y2 - y1 + 1;
@@ -108,11 +109,11 @@ class UTFTGLUE : public MCUFRIEND_kbv
         char buf[20];
         dtostrf(num, length, dec, buf); 
         for (int i = 0; buf[i] == ' '; i++) buf[i] = filler;
-        settextcursor(buf, x, y, length * _dig_wid * MCUFRIEND_kbv::textsize); 
+        settextcursor(buf, x, y, length * _dig_wid * MCUFRIEND_kbv::textsize_x); 
         MCUFRIEND_kbv::print(buf);
     }
     void setTextSize(int sz) { MCUFRIEND_kbv::setTextSize(gfxFont == NULL ? sz : 1); } // ####### GFX ########
-    void setFont(GFXfont* font) {
+    void setFont(const GFXfont* font) {
         MCUFRIEND_kbv::setFont(font);
         _ascend = 8;
         _descend = 1;
@@ -141,9 +142,10 @@ class UTFTGLUE : public MCUFRIEND_kbv
 //  void drawBitmap(int x, int y, int sx, int sy, bitmapdatatype data, int deg, int rox, int roy);
 //  void lcdOff();
 //  void lcdOn();
-//  void setContrast(char c);
+    void setContrast(char c) {}
     int  getDisplayXSize() { return MCUFRIEND_kbv::width(); }
     int  getDisplayYSize() { return MCUFRIEND_kbv::height(); }
+	void	setBrightness(byte br) {}
 //  void LCD_Write_DATA(char VH,char VL);
 //  void dispBitmap(File inFile);
     uint8_t _ascend, _descend, _dig_wid;
