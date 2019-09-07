@@ -16,6 +16,7 @@
 //#define USE_MY_BLUEPILL
 //#define USE_ADIGITALEU_TEENSY
 //#define USE_MIKROELEKTRONIKA
+//#define USE_XPRO_MEGA4809
 
 /*
 HX8347A  tWC =100ns  tWRH = 35ns  tRCFM = 450ns  tRC = ?  ns
@@ -127,7 +128,7 @@ ST7789V  tWC = 66ns  tWRH = 15ns  tRCFM = 450ns  tRC = 160ns
 #define PIN_OUTPUT(p, b)     (p).DIR |= (1<<(b))
 
 //################################# XPRO-4809 with XPRO-Shield_Adapter ############################
-#elif defined(__AVR_ATmega4809__) && !defined(USE_BLD_BST_MEGA4809)   // XPRO-4809 with XPRO-Shield_Adapter
+#elif defined(__AVR_ATmega4809__) && !defined(USE_BLD_BST_MEGA4809) && defined(USE_XPRO_MEGA4809) // XPRO-4809 with XPRO-Shield_Adapter
 #warning XPRO-4809 with XPRO-Shield_Adapter using PORT.OUTSET
 #define RD_PORT PORTD  //
 #define RD_PIN  2
@@ -174,7 +175,7 @@ ST7789V  tWC = 66ns  tWRH = 15ns  tRCFM = 450ns  tRC = 160ns
 #define PIN_HIGH(p, b)       (p).OUTSET = (1<<(b))
 #define PIN_OUTPUT(p, b)     (p).DIRSET = (1<<(b))
 
-#elif defined(__AVR_ATmega4809__) && defined(USE_BLD_BST_MEGA4809)   // XPRO-4809 with XPRO-Shield_Adapter
+#elif defined(__AVR_ATmega4809__) && defined(USE_BLD_BST_MEGA4809) && defined(USE_XPRO_MEGA4809)  // XPRO-4809 with XPRO-Shield_Adapter
 #warning XPRO-4809 with XPRO-Shield_Adapter using VPORT.OUT and BLD/BST
 #define RD_PORT VPORTD  //
 #define RD_PIN  2
