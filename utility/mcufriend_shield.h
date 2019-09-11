@@ -620,13 +620,13 @@ void write_8(uint8_t x)
 #define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
 
 #elif defined(STM32L053xx)
-#define WRITE_DELAY { }
+#define WRITE_DELAY { } //32MHz M0+
 #define READ_DELAY  { RD_ACTIVE; }
 #define GPIO_INIT()   { RCC->IOPENR |= RCC_IOPENR_GPIOAEN | RCC_IOPENR_GPIOBEN | RCC_IOPENR_GPIOCEN; }
 #define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
 
 #elif defined(STM32L152xE)
-#define WRITE_DELAY { }
+#define WRITE_DELAY { } //32MHz M3
 #define READ_DELAY  { RD_ACTIVE; }
 #define GPIO_INIT()   { RCC->AHBENR |= RCC_AHBENR_GPIOAEN | RCC_AHBENR_GPIOBEN | RCC_AHBENR_GPIOCEN; }
 #define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
