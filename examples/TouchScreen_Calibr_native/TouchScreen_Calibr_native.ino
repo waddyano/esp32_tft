@@ -30,8 +30,13 @@ TSPoint_kbv tp;                            //global point
 
 #define WHITE 0xFFFF
 #define RED   0xF800
-#define GRAY  0x8410
+#define BLUE  0x001F
+#define GREEN 0x07E0
 #define BLACK 0x0000
+
+//#define GRAY  0x2408        //un-highlighted cross-hair
+#define GRAY      BLUE     //idle cross-hair colour
+#define GRAY_DONE RED      //finished cross-hair
 
 void readResistiveTouch(void)
 {
@@ -129,7 +134,8 @@ boolean diagnose_pins()
         ts = TouchScreen_kbv(XP, YP, XM, YM, 300);    //re-initialise with pins
         return true;                              //success
     }
-    Serial.println(F("BROKEN TOUCHSCREEN"));
+    if (found == 0) Serial.println(F("MISSING TOUCHSCREEN"));
+    else Serial.println(F("BROKEN TOUCHSCREEN"));
     return false;
 }
 
@@ -266,7 +272,7 @@ void calibrate(int x, int y, int i, String msg)
     drawCrossHair(x, y, WHITE);
     readCoordinates();
     centerprint("* RELEASE *", text_y_center);
-    drawCrossHair(x, y, GRAY);
+    drawCrossHair(x, y, GRAY_DONE);
     rx[i] = cx;
     ry[i] = cy;
     Serial.print("\r\ncx="); Serial.print(cx);
@@ -341,6 +347,13 @@ void report()
     tft.println(buf);
     Serial.println(buf);
     sprintf(buf, "y = map(p.x, TOP=%d, BOT=%d, 0, %d)", TS_TOP, TS_BOT, TS_HT);
+    tft.println(buf);
+    Serial.println(buf);
+
+    int16_t x_range = TS_LEFT - TS_RT, y_range = TS_TOP - TS_BOT;
+    if (abs(x_range) > 800 && abs(y_range) > 700) //LANDSCAPE
+        return;
+    sprintf(buf, "\n*** UNUSUAL CALIBRATION RANGES %d %d", x_range, y_range);
     tft.println(buf);
     Serial.println(buf);
 }
