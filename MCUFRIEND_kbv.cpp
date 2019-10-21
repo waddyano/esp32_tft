@@ -2470,12 +2470,12 @@ case 0x4532:    // thanks Leodino
         table8_ads = ILI9329_regValues, table_size = sizeof(ILI9329_regValues);
         break;
 
-    case 0x9340:                //ILI9340 thanks Ravi_kanchan2004.
+    case 0x9340:                //ILI9340 thanks Ravi_kanchan2004 and valmor_jr
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_24BITS | REV_SCREEN;
         goto common_9341;
     case 0x9341:
-      common_9341:	
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_24BITS;
+      common_9341:	
         static const uint8_t ILI9341_regValues_2_4[] PROGMEM = {        // BOE 2.4"
             0xF6, 3, 0x01, 0x01, 0x00,  //Interface Control needs EXTC=1 MV_EOR=0, TM=0, RIM=0
             0xCF, 3, 0x00, 0x81, 0x30,  //Power Control B [00 81 30]
