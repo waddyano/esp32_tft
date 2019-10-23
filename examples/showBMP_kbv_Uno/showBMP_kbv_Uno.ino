@@ -170,7 +170,9 @@ uint8_t showBMP(char *nm, int x, int y)
             h = tft.height() - y;
 
         if (bmpDepth <= PALETTEDEPTH) {   // these modes have separate palette
-            bmpFile.seek(BMPIMAGEOFFSET); //palette is always @ 54
+            //bmpFile.seek(BMPIMAGEOFFSET); //palette is always @ 54
+            bmpFile.seek(50); //colorsimportant
+            bmpFile.seek(read32() ? 122 : 54); //important or regular palette
             bitmask = 0xFF;
             if (bmpDepth < 8)
                 bitmask >>= bmpDepth;
