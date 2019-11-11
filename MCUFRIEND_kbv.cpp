@@ -147,9 +147,11 @@ static uint16_t read16bits(void)
     if (ret > 255)              //ID might say 0x00D3
         return ret;
 #else
+    delay(1);    //1us should be adequate
     READ_8(ret);
 #endif
     //all MIPI_DCS_REV1 style params are 8-bit
+    delay(1);    //1us should be adequate
     READ_8(lo);
     return (ret << 8) | lo;
 }
@@ -201,14 +203,17 @@ uint16_t MCUFRIEND_kbv::readID(void)
     ret = readReg(0x67);        //HX8347-A
     if (ret == 0x4747)
         return 0x8347;
+    ret = readReg40(0xEF);      //ILI9327: [xx 02 04 93 27 FF] 
+    if (ret == 0x9327)
+        return 0x9327;
 //#if defined(SUPPORT_1963) && USING_16BIT_BUS 
     ret = readReg32(0xA1);      //SSD1963: [01 57 61 01]
     if (ret == 0x6101)
         return 0x1963;
     if (ret == 0xFFFF)          //R61526: [xx FF FF FF]
         return 0x1526;          //subsequent begin() enables Command Access
-//    if (ret == 0xFF00)          //R61520: [xx FF FF 00]
-//        return 0x1520;          //subsequent begin() enables Command Access
+    if (ret == 0xFF00)          //R61520: [xx FF FF 00]
+        return 0x1520;          //subsequent begin() enables Command Access
 //#endif
 	ret = readReg40(0xBF);
 	if (ret == 0x8357)          //HX8357B: [xx 01 62 83 57 FF]
@@ -231,9 +236,6 @@ uint16_t MCUFRIEND_kbv::readID(void)
     ret = readReg32(0xD7);
     if (ret == 0x8031)          //weird unknown from BangGood [xx 20 80 31] PrinceCharles
         return 0x8031;
-    ret = readReg40(0xEF);      //ILI9327: [xx 02 04 93 27 FF] 
-    if (ret == 0x9327)
-        return 0x9327;
     ret = readReg32(0xFE) >> 8; //weird unknown from BangGood [04 20 53] 
     if (ret == 0x2053)
         return 0x2053;
