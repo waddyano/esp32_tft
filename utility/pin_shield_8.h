@@ -435,6 +435,38 @@
                       PORTA.WRCONFIG.reg = (DMASK>>16) | (1<<17) | (1<<28) | (1<<30) | (1<<31); \
                         }       
 #endif
+
+//####################################### DUE ############################
+#elif defined(__SAM3X8E__)      //regular UNO shield on DUE
+ // configure macros for data bus
+#define BMASK         (1<<25)
+#define CMASK         (0xBF << 21)
+#define write_8(x)   {  PIOB->PIO_CODR = BMASK; PIOC->PIO_CODR = CMASK; \
+                        PIOB->PIO_SODR = (((x) & (1<<2)) << 23); \
+                        PIOC->PIO_SODR = (((x) & (1<<0)) << 22) \
+                                       | (((x) & (1<<1)) << 20) \
+                                       | (((x) & (1<<3)) << 25) \
+                                       | (((x) & (1<<4)) << 22) \
+                                       | (((x) & (1<<5)) << 20) \
+                                       | (((x) & (1<<6)) << 18) \
+                                       | (((x) & (1<<7)) << 16); \
+					 }
+
+#define read_8()      ( ((PIOC->PIO_PDSR & (1<<22)) >> 22)\
+                      | ((PIOC->PIO_PDSR & (1<<21)) >> 20)\
+                      | ((PIOB->PIO_PDSR & (1<<25)) >> 23)\
+                      | ((PIOC->PIO_PDSR & (1<<28)) >> 25)\
+                      | ((PIOC->PIO_PDSR & (1<<26)) >> 22)\
+                      | ((PIOC->PIO_PDSR & (1<<25)) >> 20)\
+                      | ((PIOC->PIO_PDSR & (1<<24)) >> 18)\
+                      | ((PIOC->PIO_PDSR & (1<<23)) >> 16)\
+                      )
+#define setWriteDir() { PIOB->PIO_OER = BMASK; PIOC->PIO_OER = CMASK; }
+#define setReadDir()  { \
+                          PMC->PMC_PCER0 = (1 << ID_PIOB)|(1 << ID_PIOC);\
+						  PIOB->PIO_ODR = BMASK; PIOC->PIO_ODR = CMASK;\
+						}
+
 #else
 #error MCU unselected
 #endif        // MCUs

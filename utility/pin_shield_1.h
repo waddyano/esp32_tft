@@ -744,6 +744,57 @@
 #define PIN_READ(port, pin)   (port).IN.reg & (1u<<(pin))
 
 
+//####################################### DUE ############################
+#elif defined(__SAM3X8E__)
+  #include <sam.h>
+  #define D0_PORT PIOA
+  #define D0_PIN  8
+  #define D1_PORT PIOA
+  #define D1_PIN  9
+  #define D2_PORT PIOB
+  #define D2_PIN  25
+  #define D3_PORT PIOC
+  #define D3_PIN  28
+  #define D4_PORT PIOC   //also PA29
+  #define D4_PIN  26
+  #define D5_PORT PIOC
+  #define D5_PIN  25
+  #define D6_PORT PIOC
+  #define D6_PIN  24
+  #define D7_PORT PIOC
+  #define D7_PIN  23
+  #define D8_PORT PIOC
+  #define D8_PIN  22
+  #define D9_PORT PIOC
+  #define D9_PIN  21
+  #define D10_PORT PIOC  //also PA28
+  #define D10_PIN  29
+  #define D11_PORT PIOD
+  #define D11_PIN  7
+  #define D12_PORT PIOD
+  #define D12_PIN  8
+  #define D13_PORT PIOB
+  #define D13_PIN  27
+  #define A0_PORT PIOA
+  #define A0_PIN  16
+  #define A1_PORT PIOA
+  #define A1_PIN  24
+  #define A2_PORT PIOA
+  #define A2_PIN  23
+  #define A3_PORT PIOA
+  #define A3_PIN  22
+  #define A4_PORT PIOA
+  #define A4_PIN  6
+  #define A5_PORT PIOA
+  #define A5_PIN  4
+// Shield Control macros.
+#define PIN_LOW(port, pin)    (port)->PIO_CODR = (1<<(pin))
+#define PIN_HIGH(port, pin)   (port)->PIO_SODR = (1<<(pin))
+#define PIN_OUTPUT(port, pin) (port)->PIO_OER = (1<<(pin))
+#define PIN_INPUT(port, pin)  (port)->PIO_ODR &= ~(1u<<(pin))
+#define PIN_READ(port, pin)   (port)->PIO_PDSR & (1u<<(pin))
+
+
 #elif defined(__AVR_ATxmegaA4U__)
   #include <avr/io.h>
   // PD6, PD7 is used for USB.   I could have used PORTA for bus,  PORTC for MSPI, SPI and remap
