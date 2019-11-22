@@ -52,15 +52,31 @@
 #define WR_STROBE { WR_ACTIVE; WR_IDLE; }         //PWLW=TWRL=50ns
 #define RD_STROBE RD_IDLE, RD_ACTIVE, RD_ACTIVE, RD_ACTIVE   //PWLR=TRDL=150ns
 
-#if defined(TEENSY) || defined(__ARM_ARCH_7EM__) // -O2: F411@100MHz = 1.44s 
+#if defined(__ARM_ARCH_7M__) || defined(__ARM_ARCH_7EM__) || __TARGET_ARCH_THUMB == 4 // -O2: F411@100MHz = 1.44s 
 //#define WRITE_DELAY { WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; }
 //#define READ_DELAY  { RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; }
 #if 0
-#elif defined(STM32F401xx)
+#elif defined(MK20D5)
+#warning 50Hz
+#define WRITE_DELAY { } //50MHz
+#define READ_DELAY  { RD_ACTIVE; }
+#elif defined(STM32F103xB)
+#warning 72MHz
+#define WRITE_DELAY { } //72MHz
+#define READ_DELAY  { RD_ACTIVE; }
+#elif defined(STM32L476xx)
+#warning 80MHz
+#define WRITE_DELAY { WR_ACTIVE2; } //80MHz
+#define READ_DELAY  { RD_ACTIVE4; }
+#elif defined(__SAM3X8E__)
+#warning 84MHz
+#define WRITE_DELAY { WR_ACTIVE; } //84MHz
+#define READ_DELAY  { RD_ACTIVE; }
+#elif defined(STM32F401xE)
 #warning 84MHz
 #define WRITE_DELAY { WR_ACTIVE2; } //100MHz
 #define READ_DELAY  { RD_ACTIVE4; }
-#elif defined(STM32F411xx)
+#elif defined(STM32F411xE)
 #define WRITE_DELAY { WR_ACTIVE2; WR_ACTIVE; } //100MHz
 #define READ_DELAY  { RD_ACTIVE4; RD_ACTIVE2; }
 #elif defined(STM32F446xx)
@@ -80,9 +96,6 @@
 #else 
 #error check specific STM32
 #endif
-#elif defined(__ARM_ARCH_7M__) // -O2: F103@72MHz = 2.68s
-#define WRITE_DELAY { }
-#define READ_DELAY  { RD_ACTIVE;  }
 #elif defined(__ARM_ARCH_6M__) // -O2: F072@48MHz = 5.03s
 #define WRITE_DELAY { }
 #define READ_DELAY  { }

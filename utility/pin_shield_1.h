@@ -746,7 +746,7 @@
 
 //####################################### DUE ############################
 #elif defined(__SAM3X8E__)
-  #include <sam.h>
+  #include <sam3xa.h>
   #define D0_PORT PIOA
   #define D0_PIN  8
   #define D1_PORT PIOA
