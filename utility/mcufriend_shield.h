@@ -418,7 +418,71 @@ void write_8(uint8_t x)
 #define PIN_HIGH(p, b)       (p) |= (1<<(b))
 #define PIN_OUTPUT(p, b)     *(&p-1) |= (1<<(b))
 
-//####################################### TEENSY ############################
+//####################################### TEENSY 4.0 ############################
+#elif defined(__IMXRT1062__) // regular UNO shield on a Teensy 4.x
+#warning regular UNO shield on a Teensy 4.0
+
+//LCD pins  |D7  |D6  |D5 |D4 |D3 |D2 |D1  |D0  | |RD  |WR  |RS  |CS  |RST |  A5
+//MXRT pin  |7.17|7.10|9.8|9.6|9.5|9.4|7.11|7.16| |6.18|6.19|6.23|6.22|6.17|6.16
+
+#if 0
+#elif defined(__IMXRT1062__)
+#define WRITE_DELAY { WR_ACTIVE8;WR_ACTIVE8; }
+#define IDLE_DELAY  { WR_IDLE2;WR_IDLE; }
+#define READ_DELAY  { RD_ACTIVE16;RD_ACTIVE16; }
+#else
+#error unspecified delays
+#endif
+
+#define RD_PORT GPIO6
+#define RD_PIN 18
+#define WR_PORT GPIO6
+#define WR_PIN 19
+#define CD_PORT GPIO6
+#define CD_PIN 23
+#define CS_PORT GPIO6
+#define CS_PIN 22
+#define RESET_PORT GPIO6
+#define RESET_PIN 17
+
+// configure macros for the data pins
+#define GMASK ((1<<17)|(1<<10)|(1<<11)|(1<<16))
+#define IMASK ((1<<8)|(1<<6)|(1<<5)|(1<<4))
+
+#define write_8(d) { \
+        GPIO7_DR_CLEAR = GMASK; GPIO9_DR_CLEAR = IMASK; \
+        GPIO7_DR_SET = (((d) & (1 << 0)) << 16) \
+                     | (((d) & (1 << 1)) << 10) \
+                     | (((d) & (1 << 6)) << 4) \
+                     | (((d) & (1 << 7)) << 10); \
+        GPIO9_DR_SET = (((d) & (1 << 2)) << 2) \
+                     | (((d) & (1 << 3)) << 2) \
+                     | (((d) & (1 << 4)) << 2) \
+                     | (((d) & (1 << 5)) << 3); \
+        }
+#define read_8()   ((((GPIO7_PSR & (1 << 16)) >> 16) \
+                   | ((GPIO7_PSR & (1 << 11)) >> 10) \
+                   | ((GPIO9_PSR & (1 << 4)) >> 2) \
+                   | ((GPIO9_PSR & (1 << 5)) >> 2) \
+                   | ((GPIO9_PSR & (1 << 6)) >> 2) \
+                   | ((GPIO9_PSR & (1 << 8)) >> 3) \
+                   | ((GPIO7_PSR & (1 << 10)) >> 4) \
+                   | ((GPIO7_PSR & (1 << 17)) >> 10)))
+#define setWriteDir() {GPIO7_GDIR |=  GMASK;GPIO9_GDIR |=  IMASK; }
+#define setReadDir()  {GPIO7_GDIR &= ~GMASK;GPIO9_GDIR &= ~IMASK; }
+#define write8(x)     { write_8(x); WRITE_DELAY; WR_STROBE; IDLE_DELAY; }
+#define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
+#define READ_8(dst)   { RD_STROBE; READ_DELAY; dst = read_8(); RD_IDLE2; RD_IDLE; }
+#define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
+#define GPIO_INIT() {for (int i = 2; i <= 9; i++) pinMode(i, OUTPUT); for (int i = A0; i <= A4; i++) pinMode(i, OUTPUT);}
+
+#define PASTE(x, y) x ## y
+
+#define PIN_LOW(port, pin) PASTE(port, _DR_CLEAR) = (1<<(pin))
+#define PIN_HIGH(port, pin) PASTE(port, _DR_SET) = (1<<(pin))
+#define PIN_OUTPUT(port, pin) PASTE(port, _GDIR) |= (1<<(pin))
+
+//####################################### TEENSY 3.x ############################
 #elif defined(__MK20DX128__) || defined(__MK20DX256__) || defined(__MK64FX512__) || defined(__MK66FX1M0__) // regular UNO shield on a Teensy 3.x
 #warning regular UNO shield on a Teensy 3.x
 
@@ -433,6 +497,7 @@ void write_8(uint8_t x)
 #define READ_DELAY  { RD_ACTIVE8; }
 #elif defined(__MK66FX1M0__) // Teensy3.6 180MHz untested.   delays can possibly be reduced.
 #define WRITE_DELAY { WR_ACTIVE8; }
+#define IDLE_DELAY  { WR_IDLE2; }
 #define READ_DELAY  { RD_ACTIVE16; }
 #else
 #error unspecified delays
@@ -475,10 +540,10 @@ void write_8(uint8_t x)
                    | ((GPIOD_PDIR & (1 << 2)) << 5)))
 #define setWriteDir() {GPIOA_PDDR |= AMASK;GPIOC_PDDR |= CMASK;GPIOD_PDDR |= DMASK; }
 #define setReadDir() {GPIOA_PDDR &= ~AMASK;GPIOC_PDDR &= ~CMASK;GPIOD_PDDR &= ~DMASK; }
-#define write8(x) { write_8(x); WRITE_DELAY; WR_STROBE; } //PJ adjusted
-#define write16(x) { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
-#define READ_8(dst) { RD_STROBE; READ_DELAY; dst = read_8(); RD_IDLE; } //PJ adjusted
-#define READ_16(dst) { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
+#define write8(x)     { write_8(x); WRITE_DELAY; WR_STROBE; IDLE_DELAY; }
+#define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
+#define READ_8(dst)   { RD_STROBE; READ_DELAY; dst = read_8(); RD_IDLE; } //PJ adjusted
+#define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
 //#define GPIO_INIT() {SIM_SCGC5 |= 0x3E00;}  //PORTA-PORTE
 #define GPIO_INIT() {for (int i = 2; i <= 9; i++) pinMode(i, OUTPUT); for (int i = A0; i <= A4; i++) pinMode(i, OUTPUT);}
 
