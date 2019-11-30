@@ -359,4 +359,68 @@
 #define PIN_HIGH(port, pin)   (port).OUTSET.reg = (1<<(pin))
 #define PIN_OUTPUT(port, pin) (port).DIR.reg |= (1<<(pin))
 
-//###################################################################################
+//###################################### TEENSY 4 BETA ####################################
+#elif defined(__IMXRT1052__)// regular UNO shield on a Teensy 4.x
+#warning regular UNO shield on UNKNOWN Teensy 4.0
+
+//LCD pins  |D7  |D6  |D5 |D4 |D3 |D2 |D1  |D0  | |RD  |WR  |RS  |CS  |RST |  A5
+//MXRT pin  |4.16|4.17|2.7|2.6|2.5|2.4|4.11|4.10| |1.18|1.19|1.23|1.22|1.17|1.16
+
+#if 0
+#elif defined(__IMXRT1052__)
+#define WRITE_DELAY { WR_ACTIVE8;WR_ACTIVE8; }
+#define IDLE_DELAY  { WR_IDLE2;WR_IDLE; }
+#define READ_DELAY  { RD_ACTIVE16;RD_ACTIVE16; }
+#else
+#error unspecified delays
+#endif
+
+#define RD_PORT GPIO1
+#define RD_PIN 18
+#define WR_PORT GPIO1
+#define WR_PIN 19
+#define CD_PORT GPIO1
+#define CD_PIN 23
+#define CS_PORT GPIO1
+#define CS_PIN 22
+#define RESET_PORT GPIO1
+#define RESET_PIN 17
+
+// configure macros for the data pins
+#define DMASK ((1<<16)|(1<<17)|(1<<11)|(1<<10))
+#define BMASK ((1<<7)|(1<<6)|(1<<5)|(1<<4))
+
+#define write_8(d) { \
+        GPIO4_DR_CLEAR = DMASK; GPIO2_DR_CLEAR = BMASK; \
+        GPIO4_DR_SET = (((d) & (1 << 0)) << 10) \
+                     | (((d) & (1 << 1)) << 10) \
+                     | (((d) & (1 << 6)) << 11) \
+                     | (((d) & (1 << 7)) << 9); \
+        GPIO2_DR_SET = (((d) & (1 << 2)) << 2) \
+                     | (((d) & (1 << 3)) << 2) \
+                     | (((d) & (1 << 4)) << 2) \
+                     | (((d) & (1 << 5)) << 2); \
+        }
+#define read_8()   ((((GPIO4_PSR & (1 << 10)) >> 10) \
+                   | ((GPIO4_PSR & (1 << 11)) >> 10) \
+                   | ((GPIO2_PSR & (1 << 4)) >> 2) \
+                   | ((GPIO2_PSR & (1 << 5)) >> 2) \
+                   | ((GPIO2_PSR & (1 << 6)) >> 2) \
+                   | ((GPIO2_PSR & (1 << 7)) >> 2) \
+                   | ((GPIO4_PSR & (1 << 17)) >> 11) \
+                   | ((GPIO4_PSR & (1 << 16)) >> 9)))
+#define setWriteDir() {GPIO4_GDIR |=  DMASK;GPIO2_GDIR |=  BMASK; }
+#define setReadDir()  {GPIO4_GDIR &= ~DMASK;GPIO2_GDIR &= ~BMASK; }
+#define write8(x)     { write_8(x); WRITE_DELAY; WR_STROBE; IDLE_DELAY; }
+#define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
+#define READ_8(dst)   { RD_STROBE; READ_DELAY; dst = read_8(); RD_IDLE2; RD_IDLE; }
+#define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
+#define GPIO_INIT() {for (int i = 2; i <= 9; i++) pinMode(i, OUTPUT); for (int i = A0; i <= A4; i++) pinMode(i, OUTPUT);}
+
+#define PASTE(x, y) x ## y
+
+#define PIN_LOW(port, pin) PASTE(port, _DR_CLEAR) = (1<<(pin))
+#define PIN_HIGH(port, pin) PASTE(port, _DR_SET) = (1<<(pin))
+#define PIN_OUTPUT(port, pin) PASTE(port, _GDIR) |= (1<<(pin))
+
+//#################################################################################################################
