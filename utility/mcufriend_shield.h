@@ -491,9 +491,11 @@ void write_8(uint8_t x)
 
 #if defined(__MK20DX128__) || defined(__MK20DX256__) // Teensy3.0 || 3.2 96MHz
 #define WRITE_DELAY { WR_ACTIVE2; }
+#define IDLE_DELAY  { }
 #define READ_DELAY  { RD_ACTIVE8; RD_ACTIVE; }
 #elif defined(__MK64FX512__) // Teensy3.5 120MHz thanks to PeteJohno
 #define WRITE_DELAY { WR_ACTIVE4; }
+#define IDLE_DELAY  { WR_IDLE; }
 #define READ_DELAY  { RD_ACTIVE8; }
 #elif defined(__MK66FX1M0__) // Teensy3.6 180MHz untested.   delays can possibly be reduced.
 #define WRITE_DELAY { WR_ACTIVE8; }
