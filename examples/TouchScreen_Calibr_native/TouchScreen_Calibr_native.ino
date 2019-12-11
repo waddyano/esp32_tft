@@ -19,7 +19,8 @@ MCUFRIEND_kbv tft;
 int XP = 27, YP = 4, XM = 15, YM = 14;  //most common configuration
 #else
 int XP = 6, YP = A1, XM = A2, YM = 7;  //most common configuration
-//int XP = 7, YP = A2, XM = A1, YM = 6;  //most common configuration
+//int XP = 7, YP = A2, XM = A1, YM = 6;  //next common configuration
+//int XP=PB7,XM=PA6,YP=PA7,YM=PB6; //BLUEPILL must have Analog for YP, XM 
 #endif
 //#include <TouchScreen.h>         //Adafruit Library
 //TouchScreen ts(XP, YP, XM, YM, 300);   //re-initialised after diagnose
