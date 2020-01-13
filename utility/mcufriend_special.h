@@ -2,6 +2,7 @@
 
 //#define USE_MEGA_8BIT_PROTOSHIELD
 //#define USE_MEGA_8BIT_SHIELD      // 4.7sec Mega2560 Shield
+//#define USE_MEGA_8BIT_PORTC_SHIELD // 4.7sec Mega2560 Shield
 //#define USE_MEGA_16BIT_SHIELD     // 2.14sec Mega2560 Shield 
 //#define USE_BLD_BST_MEGA32U4
 //#define USE_BLD_BST_MEGA2560      // 12.23sec Uno Shield (17.38s C)
@@ -480,6 +481,33 @@ static __attribute((always_inline)) void write_8(uint8_t val)
 #define read_8()      ( PINA )
 #define setWriteDir() { DDRA = 0xFF; }
 #define setReadDir()  { DDRA = 0x00; }
+#define write8(x)     { write_8(x); WR_ACTIVE; WR_STROBE; } // HX8357-D is slower
+#define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
+#define READ_8(dst)   { RD_STROBE; dst = read_8(); RD_IDLE; }
+#define READ_16(dst)  { RD_STROBE; dst = read_8(); RD_IDLE; RD_STROBE; dst = (dst<<8) | read_8(); RD_IDLE; }
+
+#define PIN_LOW(p, b)        (p) &= ~(1<<(b))
+#define PIN_HIGH(p, b)       (p) |= (1<<(b))
+#define PIN_OUTPUT(p, b)     *(&p-1) |= (1<<(b))
+
+#elif defined(__AVR_ATmega2560__) && defined(USE_MEGA_8BIT_PORTC_SHIELD)
+#warning USE_MEGA_8BIT_PORTC_SHIELD for Mihael54
+#define RD_PORT PORTL
+#define RD_PIN  6        //PL6 (D43).   Graham has PA15 (D24) on Due Shield 
+#define WR_PORT PORTG
+#define WR_PIN  2        //D39 CTE
+#define CD_PORT PORTD
+#define CD_PIN  7        //D38 CTE
+#define CS_PORT PORTG
+#define CS_PIN  1        //D40 CTE
+#define RESET_PORT PORTG
+#define RESET_PIN  0     //D41 CTE
+
+#define write_8(x)   { PORTC = x;}
+
+#define read_8()      ( PINC )
+#define setWriteDir() { DDRC = 0xFF; }
+#define setReadDir()  { DDRC = 0x00; }
 #define write8(x)     { write_8(x); WR_ACTIVE; WR_STROBE; } // HX8357-D is slower
 #define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
 #define READ_8(dst)   { RD_STROBE; dst = read_8(); RD_IDLE; }
