@@ -278,6 +278,69 @@ void write_8(uint8_t val)
 #define PIN_HIGH(port, pin)   (port).OUTSET.reg = (1<<(pin))
 #define PIN_OUTPUT(port, pin) (port).DIR.reg |= (1<<(pin))
 
+//####################################### GRAND CENTRAL M4 ############################
+#elif defined(__SAMD51P20A__)      //regular UNO shield on GRAND CENTRAL M4
+//LCD pins   |D7  |D6  |D5  |D4  |D3  |D2  |D1 |D0  | |RD |WR |RS |CS |RST|
+//SAMD51 pin |PD21|PD20|PC21|PC20|PC19|PC18|PB2|PB18| |PA2|PA5|PB3|PC0|PC1|
+#define WRITE_DELAY { WR_ACTIVE4; }
+#define IDLE_DELAY  { WR_IDLE2; }
+#define READ_DELAY  { RD_ACTIVE8;}
+ // configure macros for the control pins
+#define RD_PORT PORT->Group[0]
+#define RD_PIN  2
+#define WR_PORT PORT->Group[0]
+#define WR_PIN  5
+#define CD_PORT PORT->Group[1]
+#define CD_PIN  3
+#define CS_PORT PORT->Group[2]
+#define CS_PIN  0
+#define RESET_PORT PORT->Group[2]
+#define RESET_PIN  1
+ // configure macros for data bus
+#define BMASK         ((1<<18)|(1<<2))   //BMASK has bits in H and L for WRCONFIG
+#define CMASK         (0x0F << 18)       //CMASK only has bits in H
+#define DMASK         (0x03 << 20)
+#define WRMASK        ((0<<22) | (1<<28) | (1<<30)) //
+#define RDMASK        ((1<<17) | (1<<28) | (1<<30)) //
+#define write_8(x)   {  PORT->Group[1].OUTCLR.reg = BMASK; PORT->Group[2].OUTCLR.reg = CMASK; PORT->Group[3].OUTCLR.reg = DMASK; \
+                        PORT->Group[1].OUTSET.reg  = (((x) & (1<<0)) << 18) | (((x) & (1<<1)) << 1); \
+                        PORT->Group[2].OUTSET.reg  = (((x) & (15<<2)) << 16); \
+                        PORT->Group[3].OUTSET.reg  = (((x) & (3<<6)) << 14); \
+					 }
+
+#define read_8()      ( ((PORT->Group[1].IN.reg & (1<<18)) >> 18)\
+                      | ((PORT->Group[1].IN.reg & (1<<2)) >> 1)\
+                      | ((PORT->Group[2].IN.reg & (15<<18)) >> 16)\
+                      | ((PORT->Group[3].IN.reg & (3<<20)) >> 14)\
+                      )
+#define setWriteDir() { \
+                        PORT->Group[1].DIRSET.reg = BMASK; \
+                        PORT->Group[1].WRCONFIG.reg = (BMASK & 0xFFFF) | WRMASK; \
+                        PORT->Group[1].WRCONFIG.reg = (BMASK >> 16) | WRMASK | (1<<31); \
+                        PORT->Group[2].DIRSET.reg = CMASK; \
+                        PORT->Group[2].WRCONFIG.reg = (CMASK >> 16) | WRMASK | (1<<31); \
+                        PORT->Group[3].DIRSET.reg = DMASK; \
+                        PORT->Group[3].WRCONFIG.reg = (DMASK >> 16) | WRMASK | (1<<31); \
+                      }
+#define setReadDir()  { \
+                        PORT->Group[1].DIRCLR.reg = BMASK; \
+                        PORT->Group[1].WRCONFIG.reg = (BMASK & 0xFFFF) | RDMASK; \
+                        PORT->Group[1].WRCONFIG.reg = (BMASK >> 16) | RDMASK | (1<<31); \
+                        PORT->Group[2].DIRCLR.reg = CMASK; \
+                        PORT->Group[2].WRCONFIG.reg = (CMASK >> 16) | RDMASK | (1<<31); \
+                        PORT->Group[3].DIRCLR.reg = DMASK; \
+                        PORT->Group[3].WRCONFIG.reg = (DMASK >> 16) | RDMASK | (1<<31); \
+					  }
+#define write8(x)     { write_8(x); WRITE_DELAY; WR_STROBE; IDLE_DELAY; }
+#define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
+#define READ_8(dst)   { RD_STROBE; READ_DELAY; dst = read_8(); RD_IDLE2; RD_IDLE; }
+#define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
+
+ // Shield Control macros.
+#define PIN_LOW(port, pin)    (port).OUTCLR.reg = (1<<(pin))
+#define PIN_HIGH(port, pin)   (port).OUTSET.reg = (1<<(pin))
+#define PIN_OUTPUT(port, pin) (port).DIRSET.reg = (1<<(pin))
+
 //####################################### DUE ############################
 #elif defined(__SAM3X8E__)      //regular UNO shield on DUE
 #define WRITE_DELAY { WR_ACTIVE; }
