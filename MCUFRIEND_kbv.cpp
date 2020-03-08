@@ -2473,7 +2473,8 @@ case 0x4532:    // thanks Leodino
         break;
 
     case 0x9340:                //ILI9340 thanks Ravi_kanchan2004 and valmor_jr
-        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_24BITS | REV_SCREEN;
+        //_lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_24BITS | REV_SCREEN; //Ravi
+        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_24BITS; //my new shield
         goto common_9341;
     case 0x9341:
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_24BITS;
