@@ -36,6 +36,8 @@ SPFD5408 tWC =125ns  tWRH = 70ns  tRCFM = 450ns  tRC = 450ns
 SSD1289  tWC =100ns  tWRH = 50ns  tRCFM =1000ns  tRC =1000ns (tWCFM= 238ns)
 SSD1963  tWC = 26ns  tWRH = 13ns  tRCFM = 110ns  tRC =  72ns
 ST7789V  tWC = 66ns  tWRH = 15ns  tRCFM = 450ns  tRC = 160ns
+ST7793   tWC = 75ns  tWRH = 25ns  tRCFM = 450ns  tRC = 450ns
+ST7796S  tWC = 66ns  tWRH = 15ns  tRCFM = 450ns  tRC = 160ns
 */
 
 #if 0
