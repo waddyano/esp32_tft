@@ -64,7 +64,7 @@ ST7796S  tWC = 66ns  tWRH = 15ns  tRCFM = 450ns  tRC = 160ns
 #define RESET_PORT VPORT0 //PJ1
 #define RESET_PIN  1
 #else
-#warning Home made shield with Xplained
+#warning Home made shield with Xplained CTL=J1 (PC), DATA=J4 (PF)
 #define WRITE_DELAY   { }
 #define READ_DELAY    { RD_ACTIVE4; }
 #define VPMAP10 0x15    // VPORT0=F, 1=B, 2=C, 3=D
@@ -96,6 +96,7 @@ ST7796S  tWC = 66ns  tWRH = 15ns  tRCFM = 450ns  tRC = 160ns
 #define PIN_LOW(p, b)        (p).OUT &= ~(1<<(b))
 #define PIN_HIGH(p, b)       (p).OUT |= (1<<(b))
 #define PIN_OUTPUT(p, b)     (p).DIR |= (1<<(b))
+
 #elif defined(__AVR_ATxmega32A4U__) || defined(__AVR_ATxmega128A4U__) // Home made shield with Batsocks module
 #warning Home made shield with Batsocks module
 #define RD_PORT VPORT1   //PB0.   VPORT0=A, 1=B, 2=C, 3=D
@@ -121,6 +122,38 @@ ST7796S  tWC = 66ns  tWRH = 15ns  tRCFM = 450ns  tRC = 160ns
 #define read_8()      ( VPORT2.IN )
 #define setWriteDir() { PORTCFG.VPCTRLA=0x10; PORTCFG.VPCTRLB=0x32; VPORT2.DIR = 0xFF; }
 #define setReadDir()  { VPORT2.DIR = 0x00; }
+#define write8(x)     { write_8(x); WRITE_DELAY; WR_STROBE; }
+#define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
+#define READ_8(dst)   { RD_STROBE; READ_DELAY; dst = read_8(); RD_IDLE; }
+#define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
+
+#define PIN_LOW(p, b)        (p).OUT &= ~(1<<(b))
+#define PIN_HIGH(p, b)       (p).OUT |= (1<<(b))
+#define PIN_OUTPUT(p, b)     (p).DIR |= (1<<(b))
+
+#elif defined(__AVR_ATxmega32E5__)   // Xplained E5 F_CPU <= 46MHz
+#warning Home made shield with Xplained E5: CTL=J2 (PD), DATA=J0 (PA)
+#define CTLPORT       VPORT2 //PORTD on J2
+#define DATPORT       VPORT0 //PORTA on J3, SW103=hdr 
+#define WRITE_DELAY   { }
+#define READ_DELAY    { RD_ACTIVE4; }
+#define RD_PORT CTLPORT
+#define RD_PIN  0
+#define WR_PORT CTLPORT
+#define WR_PIN  1
+#define CD_PORT CTLPORT
+#define CD_PIN  2
+#define CS_PORT CTLPORT
+#define CS_PIN  3
+#define RESET_PORT CTLPORT //10k p.u. to 3V3
+#define RESET_PIN  4
+
+// VPORTs are very fast.   CBI, SBI are only one cycle.    Hence all those RD_ACTIVEs
+// ILI9320 data sheet says tDDR=100ns.    We need 218ns to read REGs correctly.
+#define write_8(x)    { DATPORT.OUT = x; }
+#define read_8()      ( DATPORT.IN )
+#define setWriteDir() { DATPORT.DIR = 0xFF; }
+#define setReadDir()  { DATPORT.DIR = 0x00; }
 #define write8(x)     { write_8(x); WRITE_DELAY; WR_STROBE; }
 #define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
 #define READ_8(dst)   { RD_STROBE; READ_DELAY; dst = read_8(); RD_IDLE; }
