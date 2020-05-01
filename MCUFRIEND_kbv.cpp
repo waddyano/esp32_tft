@@ -2708,7 +2708,17 @@ case 0x4532:    // thanks Leodino
         break;
     case 0x7796:
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS;   //thanks to safari1
-        goto common_9488;
+        static const uint8_t PROGMEM ST7796_regValues[] = {
+            0xB7, 1, 0xC6,              //Entry Mode      [06]
+            0xE8, 8, 0x40, 0x8A, 0x00, 0x00, 0x29, 0x19, 0xA5, 0x33, //Adj3 [40 8A 00 00 25 0A 38 33]
+        };
+        table8_ads = ST7796_regValues, table_size = sizeof(ST7796_regValues);
+        p16 = (int16_t *) & HEIGHT;
+        *p16 = 480;
+        p16 = (int16_t *) & WIDTH;
+        *p16 = 320;
+        break;
+        //goto common_9488;
     case 0x9487:                //with thanks to Charlyf
     case 0x9488:
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_24BITS;
