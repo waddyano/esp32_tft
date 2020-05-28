@@ -122,8 +122,9 @@
 #define PIN_HIGH(p, b)       (p).OUT |= (1<<(b))
 #define PIN_OUTPUT(p, b)     (p).DIR |= (1<<(b))
 
-//################################### MEGA4809 NANO_EVERY ##############################
-#elif defined(__AVR_ATmega4809__) && defined(ARDUINO_AVR_NANO_EVERY)   // EVERY-4809 with Nano-Shield_Adapter
+//########################## MEGA4809 NANO_EVERY or UNO_WIFI_REV2 ##############################
+#elif defined(__AVR_ATmega4809__) && (defined(ARDUINO_AVR_NANO_EVERY) || defined(ARDUINO_AVR_UNO_WIFI_REV2))
+#if defined(ARDUINO_AVR_NANO_EVERY)
 #warning EVERY-4809 with Nano-Shield_Adapter using VPORT.OUT and BLD/BST
 #define RD_PORT VPORTD  //
 #define RD_PIN  3
@@ -135,6 +136,19 @@
 #define CS_PIN  0
 #define RESET_PORT VPORTF
 #define RESET_PIN  2
+#elif defined(ARDUINO_AVR_UNO_WIFI_REV2)
+#warning UNO_WIFI_REV2 using VPORT.OUT and BLD/BST
+#define RD_PORT VPORTD  //
+#define RD_PIN  0
+#define WR_PORT VPORTD
+#define WR_PIN  1
+#define CD_PORT VPORTD
+#define CD_PIN  2
+#define CS_PORT VPORTD
+#define CS_PIN  3
+#define RESET_PORT VPORTD
+#define RESET_PIN  4
+#endif
 
 #define AMASK         (3<<0)
 #define BMASK         (5<<0)
