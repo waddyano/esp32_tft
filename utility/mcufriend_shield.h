@@ -670,9 +670,9 @@ void write_8(uint8_t x)
 // Family specific Macros.  F103 needs ST and Maple compatibility
 // note that ILI9320 class of controller has much slower Read cycles
 #if 0
-#elif defined(__STM32F1__) || defined(ARDUINO_NUCLEO_F103C8) || defined(ARDUINO_BLUEPILL_F103C8) || defined(ARDUINO_NUCLEO_F103RB)
+#elif defined(__STM32F1__) || defined(ARDUINO_BLUEPILL_F103C8) || defined(ARDUINO_BLUEPILL_F103CB) || defined(ARDUINO_NUCLEO_F103RB)
 #define WRITE_DELAY { }
-#define READ_DELAY  { RD_ACTIVE; }
+#define READ_DELAY  { RD_ACTIVE4; }
 #if defined(__STM32F1__)  //MapleCore crts.o does RCC.  not understand regular syntax anyway
 #define GPIO_INIT()      
 #else
@@ -797,7 +797,7 @@ void write_8(uint8_t x)
 #endif
 
 #if 0
-#elif defined(ARDUINO_GENERIC_STM32F103C) || defined(ARDUINO_NUCLEO_F103C8) || defined(ARDUINO_BLUEPILL_F103C8)
+#elif defined(ARDUINO_GENERIC_STM32F103C) || defined(ARDUINO_BLUEPILL_F103C8) || defined(ARDUINO_BLUEPILL_F103CB)
 #warning Uno Shield on BLUEPILL
 
 //LCD pins  |D7 |D6 |D5 |D4 |D3 |D2 |D1 |D0 | |RD |WR |RS |CS |RST| |SD_SS|SD_DI|SD_DO|SD_SCK|
