@@ -267,6 +267,7 @@ uint16_t MCUFRIEND_kbv::readID(void)
     ret = ret32 >> 8;
     if (ret == 0x9163) return ret;
     ret = readReg32(0xD3);      //for ILI9488, 9486, 9340, 9341
+    if (ret == 0x3229) return ret;
     msb = ret >> 8;
     if (msb == 0x93 || msb == 0x94 || msb == 0x98 || msb == 0x77 || msb == 0x16)
         return ret;             //0x9488, 9486, 9340, 9341, 7796
@@ -1377,6 +1378,49 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
         *p16 = 800;
         break;
 #endif
+
+    case 0x3229:
+        _lcd_capable = 0 | AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | INVERT_SS; // | READ_24BITS;
+        static const uint8_t UNK3229_regValues[] PROGMEM = {
+            //----------------Star Initial Sequence-------//
+            //            0x11, 0, // exit sleep
+            0x06, 0, //enter extern command [cmd=0x0607]
+            0x07, 0,
+            0xb1, 2, 0x00, 0x12,      //RTN [00 12]
+            0xb4, 1, 0x02,            //line inversion [02]
+            0xb6, 4, 0x00, 0x20, 0x27, 0x00, //[0A 82 27 00]
+            0xca, 1, 0x01,            // [23]
+            0xcb, 1, 0x03,            // [20]
+            0xc0, 1, 0x13,            //vrh [21]
+            TFTLCD_DELAY8, 20,
+            0xc5, 1, 0xcc,            // [00]
+            0xc6, 1, 0x00,            // [00]
+            0xc7, 1, 0x04,            //osc [83]
+            0xc8, 1, 0x03,            // [20]
+            0xcc, 1, 0x06,            //vcm [31]
+            0xcd, 1, 0x1c,            //vdv [18]
+            0xf9, 2, 0x15, 0x15,      // ?? 13bit 454 [37]
+            0xf3, 3, 0x0a, 0x02, 0x0a, // [06 03 06]
+            0xf6, 3, 0x01, 0x10, 0x00, // [01 10 00]
+            /*
+                        0xe0, 1, 0x05,            //I don't believe these registers
+                        0xe1, 1, 0x32,            //safer to use power-on defaults
+                        0xe2, 1, 0x77,
+                        0xe3, 1, 0x77,
+                        0xe4, 1, 0x7f,
+                        0xe5, 1, 0xfa,
+                        0xe6, 1, 0x00,
+                        0xe7, 1, 0x74,
+                        0xe8, 1, 0x27,
+                        0xe9, 1, 0x10,
+                        0xea, 1, 0xc0,
+                        0xeb, 1, 0x25,
+            */
+            0xfa, 0, //exit extern command [cmd=0xFAFB]
+            0xfb, 0,
+        };
+        table8_ads = UNK3229_regValues, table_size = sizeof(UNK3229_regValues); //
+        break;
 
 #ifdef SUPPORT_4532
 //Support for LG Electronics LGDP4532 (also 4531 i guess) by Leodino v1.0 2-Nov-2016
