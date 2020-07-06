@@ -846,11 +846,8 @@ void MCUFRIEND_kbv::invertDisplay(bool i)
 #define TFTLCD_DELAY8 0x7F
 static void init_table(const void *table, int16_t size)
 {
-#ifdef SUPPORT_8357D_GAMMA
-    uint8_t *p = (uint8_t *) table, dat[36];            //HX8357_99 has GAMMA[34] 
-#else
-    uint8_t *p = (uint8_t *) table, dat[24];            //R61526 has GAMMA[22] 
-#endif
+    //copes with any uint8_t table.  Even HX8347 style
+    uint8_t *p = (uint8_t *) table;
     while (size > 0) {
         uint8_t cmd = pgm_read_byte(p++);
         uint8_t len = pgm_read_byte(p++);
@@ -858,9 +855,20 @@ static void init_table(const void *table, int16_t size)
             delay(len);
             len = 0;
         } else {
-            for (uint8_t i = 0; i < len; i++)
-                dat[i] = pgm_read_byte(p++);
-            WriteCmdParamN(cmd, len, dat);
+            CS_ACTIVE;
+            CD_COMMAND;
+            write8(cmd);
+            for (uint8_t d = 0; d++ < len; ) {
+                uint8_t x = pgm_read_byte(p++);
+                CD_DATA;
+                write8(x);
+                if (is8347 && d < len) {
+                    CD_COMMAND;
+                    cmd++;
+                    write8(cmd);
+                }
+            }
+            CS_IDLE;
         }
         size -= len + 2;
     }
