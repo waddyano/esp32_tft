@@ -1571,7 +1571,46 @@ case 0x4532:    // thanks Leodino
             0x0007, 0x0133,     // Display Control (R07h)
             TFTLCD_DELAY, 50,
         };
-        init_table16(ST7781_regValues, sizeof(ST7781_regValues));
+        static const uint16_t ST7781_regValues_CPT24[] PROGMEM = {
+            0x0001, 0x0100,     // Driver Output Control Register (R01h)
+            0x0002, 0x0700,     // LCD Driving Waveform Control (R02h)
+            0x0003, 0x1030,     // Entry Mode (R03h)
+            0x0008, 0x0302,     // Porch
+            0x0009, 0x0000,     // Scan
+            0x000A, 0x0008,     // Fmark Off
+            0x0010, 0x0000,     // Power Control 1 (R10h)
+            0x0011, 0x0005,     // Power Control 2 (R11h)
+            0x0012, 0x0000,     // Power Control 3 (R12h)
+            0x0013, 0x0000,     // Power Control 4 (R13h)
+            TFTLCD_DELAY, 100,
+            0x0010, 0x12B0,     // Power Control 1 SAP=1, BT=2, APE=1, AP=3
+            TFTLCD_DELAY, 50,
+            0x0011, 0x0007,     // Power Control 2 VC=7
+            TFTLCD_DELAY, 50,
+            0x0012, 0x008C,     // Power Control 3 VCIRE=1, VRH=12
+            0x0013, 0x1700,     // Power Control 4 VDV=23
+            0x0029, 0x0020,     // NVM read data 2 VCM=32
+            TFTLCD_DELAY, 50,
+            0x0030, 0x0000,     // Gamma Control 1 App Note CPT 2.4
+            0x0031, 0x0106,     // Gamma Control 2
+            0x0032, 0x0101,     // Gamma Control 3
+            0x0035, 0x0106,     // Gamma Control 4
+            0x0036, 0x0203,     // Gamma Control 5
+            0x0037, 0x0000,     // Gamma Control 6
+            0x0038, 0x0707,     // Gamma Control 7
+            0x0039, 0x0204,     // Gamma Control 8
+            0x003C, 0x0106,     // Gamma Control 9
+            0x003D, 0x0103,     // Gamma Control 10
+            0x0060, 0xA700,     // Driver Output Control (R60h) .kbv was 0xa700
+            0x0061, 0x0001,     // Driver Output Control (R61h)
+            0x0090, 0X0030,     // Panel Interface Control 1 (R90h)
+
+            // Display On
+            0x0007, 0x0133,     // Display Control (R07h)
+            TFTLCD_DELAY, 50,
+        };
+        init_table16(ST7781_regValues_CPT24, sizeof(ST7781_regValues_CPT24));
+        //init_table16(ST7781_regValues, sizeof(ST7781_regValues));
         break;
 #endif
 
