@@ -23,6 +23,8 @@
 #if 0
 //################################### UNO ##############################
 #elif defined(__AVR_ATmega328P__) || defined(__AVR_ATmega328PB__)       //regular UNO shield on UNO
+//LCD pins  |D7 |D6 |D5 |D4 |D3 |D2 |D1 |D0 | |RD |WR |RS |CS |RST|
+//AVR   pin |PD7|PD6|PD5|PD4|PD3|PD2|PB1|PB0| |PC0|PC1|PC2|PC3|PC4|
 #define RD_PORT PORTC
 #define RD_PIN  0
 #define WR_PORT PORTC
@@ -51,6 +53,8 @@
 
 //################################### MEGA2560 ##############################
 #elif defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)       //regular UNO shield on MEGA2560
+//LCD pins  |D7 |D6 |D5 |D4 |D3 |D2 |D1 |D0 | |RD |WR |RS |CS |RST|
+//AVR   pin |PH4|PH3|PE3|PG5|PE5|PE4|PH6|PH5| |PF0|PF1|PF2|PF3|PF4|
 #define RD_PORT PORTF
 #define RD_PIN  0
 #define WR_PORT PORTF
@@ -126,6 +130,8 @@
 #elif defined(__AVR_ATmega4809__) && (defined(ARDUINO_AVR_NANO_EVERY) || defined(ARDUINO_AVR_UNO_WIFI_REV2))
 #if defined(ARDUINO_AVR_NANO_EVERY)
 #warning EVERY-4809 with Nano-Shield_Adapter using VPORT.OUT and BLD/BST
+//LCD pins  |D7 |D6 |D5 |D4 |D3 |D2 |D1 |D0 | |RD |WR |RS |CS |RST|
+//AVR   pin |PA1|PF4|PB2|PC6|PF5|PA0|PB0|PE3| |PD3|PD2|PD1|PD0|PF2|
 #define RD_PORT VPORTD  //
 #define RD_PIN  3
 #define WR_PORT VPORTD
@@ -361,6 +367,8 @@ void write_8(uint8_t val)
 
 //####################################### DUE ############################
 #elif defined(__SAM3X8E__)      //regular UNO shield on DUE
+//LCD pins   |D7  |D6  |D5  |D4  |D3  |D2  |D1  |D0  | |RD  |WR  |RS  |CS  |RST |
+//SAM3XE pin |PC23|PC24|PC25|PC26|PC28|PB25|PC21|PC22| |PA16|PA24|PA23|PA22|PA6 |
 #define WRITE_DELAY { WR_ACTIVE; }
 #define IDLE_DELAY  { WR_IDLE; }
 #define READ_DELAY  { RD_ACTIVE;}
@@ -415,6 +423,8 @@ void write_8(uint8_t val)
 
 //################################### LEONARDO ##############################
 #elif defined(__AVR_ATmega32U4__)       //regular UNO shield on Leonardo
+//LCD pins  |D7 |D6 |D5 |D4 |D3 |D2 |D1 |D0 | |RD |WR |RS |CS |RST|
+//AVR   pin |PE6|PD7|PC6|PD4|PD0|PD1|PB5|PB4| |PF7|PF6|PF5|PF4|PF1|
 #define RD_PORT PORTF
 #define RD_PIN  7
 #define WR_PORT PORTF
