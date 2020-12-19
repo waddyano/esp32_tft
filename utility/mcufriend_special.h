@@ -553,6 +553,9 @@ static __attribute((always_inline)) void write_8(uint8_t val)
 #define PIN_OUTPUT(p, b)     *(&p-1) |= (1<<(b))
 
 #elif defined(__AVR_ATmega2560__) && defined(USE_MEGA_8BIT_PROTOSHIELD)
+//LCD pins  |D7 |D6 |D5 |D4 |D3 |D2 |D1 |D0 | |RD |WR |RS |CS |RST|
+//AVR   pin |PA7|PA6|PA5|PA4|PA3|PA2|PA1|PA0| |PF0|PF1|PF2|PF3|PF4|
+//digital#  | 29| 28| 27| 26| 25| 24| 23| 22| | A0| A1| A2| A3| A4|
 #warning USE_MEGA_8BIT_PROTOSHIELD
 #define RD_PORT PORTF
 #define RD_PIN  0
