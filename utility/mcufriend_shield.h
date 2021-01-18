@@ -25,6 +25,7 @@
 #elif defined(__AVR_ATmega328P__) || defined(__AVR_ATmega328PB__)       //regular UNO shield on UNO
 //LCD pins  |D7 |D6 |D5 |D4 |D3 |D2 |D1 |D0 | |RD |WR |RS |CS |RST|
 //AVR   pin |PD7|PD6|PD5|PD4|PD3|PD2|PB1|PB0| |PC0|PC1|PC2|PC3|PC4|
+//UNO pins  |7  |6  |5  |4  |3  |2  |9  |8  | |A0 |A1 |A2 |A3 |A4 |
 #define RD_PORT PORTC
 #define RD_PIN  0
 #define WR_PORT PORTC
@@ -515,6 +516,7 @@ void write_8(uint8_t x)
 
 //LCD pins  |D7  |D6  |D5 |D4 |D3 |D2 |D1  |D0  | |RD  |WR  |RS  |CS  |RST |  A5
 //MXRT pin  |7.17|7.10|9.8|9.6|9.5|9.4|7.11|7.16| |6.18|6.19|6.23|6.22|6.17|6.16
+//4.x pins  |7   |6   |5  |4  |3   |2  |9  |8   | |14  |15  |16  |17  |18  |
 
 #if 0
 #elif defined(__IMXRT1062__)
