@@ -1092,6 +1092,77 @@ static void setReadDir()
 #define PIN_HIGH(p, b)       (digitalWrite(b, HIGH))
 #define PIN_OUTPUT(p, b)     (pinMode(b, OUTPUT))
 
+//################################## NANO33 BLE ############################
+#elif defined(ARDUINO_ARDUINO_NANO33BLE)
+#warning regular UNO shield on a Nano33 BLE
+
+//LCD pins  |D7   |D6   |D5   |D4   |D3   |D2   |D1   |D0   | |RD  |WR  |RS   |CS   |RST  |
+//BLE pin   |P0.23|P1.14|P1.13|P1.15|P1.12|P1.11|P0.27|P0.21| |P0.4|P0.5|P0.30|P0.29|P0.31|
+
+#define WRITE_DELAY { WR_ACTIVE8; }   //M4F @ 64MHz
+#define IDLE_DELAY  { WR_IDLE2; }
+#define READ_DELAY  { RD_ACTIVE4; RD_ACTIVE; }
+
+#define RD_PORT NRF_P0
+#define RD_PIN 4
+#define WR_PORT NRF_P0
+#define WR_PIN 5
+#define CD_PORT NRF_P0
+#define CD_PIN 30
+#define CS_PORT NRF_P0
+#define CS_PIN 29
+#define RESET_PORT NRF_P0
+#define RESET_PIN 31
+
+// configure macros for the data pins
+#define P0MASK ((1<<23)|(1<<27)|(1<<21))   //NRF_P0
+#define P1MASK ((1<<14)|(1<<13)|(1<<15)|(1<<12)|(1<<11))  //NRF_P1
+
+#define write_8(d) { \
+        NRF_P0->OUTCLR = P0MASK; NRF_P1->OUTCLR = P1MASK; \
+        NRF_P0->OUTSET = (((d) & (1 << 0)) << 21) \
+                     | (((d) & (1 << 1)) << 26) \
+                     | (((d) & (1 << 7)) << 16); \
+        NRF_P1->OUTSET = (((d) & (1 << 2)) << 9) \
+                     | (((d) & (1 << 3)) << 9) \
+                     | (((d) & (1 << 4)) << 11) \
+                     | (((d) & (1 << 5)) << 8) \
+                     | (((d) & (1 << 6)) << 8); \
+        }
+
+#define read_8()   ((((NRF_P0->IN & (1<<21)) >> 21) \
+                   | ((NRF_P0->IN & (1 << 27)) >> 26) \
+                   | ((NRF_P1->IN & (1 << 11)) >> 9) \
+                   | ((NRF_P1->IN & (1 << 12)) >> 9) \
+                   | ((NRF_P1->IN & (1 << 15)) >> 11) \
+                   | ((NRF_P1->IN & (1 << 13)) >> 8) \
+                   | ((NRF_P1->IN & (1 << 14)) >> 8) \
+                   | ((NRF_P0->IN & (1 << 23)) >> 16)))
+
+#define BUS_CNF(x) {\
+    NRF_P0->PIN_CNF[21] = x;\
+    NRF_P0->PIN_CNF[27] = x;\
+    NRF_P1->PIN_CNF[11] = x;\
+    NRF_P1->PIN_CNF[12] = x;\
+    NRF_P1->PIN_CNF[15] = x;\
+    NRF_P1->PIN_CNF[13] = x;\
+    NRF_P1->PIN_CNF[14] = x;\
+    NRF_P0->PIN_CNF[23] = x;\
+}
+#define setWriteDir() {BUS_CNF(3); }
+#define setReadDir()  {BUS_CNF(0); }
+
+#define write8(x)     { write_8(x); WRITE_DELAY; WR_STROBE; IDLE_DELAY; }
+#define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
+#define READ_8(dst)   { RD_STROBE; READ_DELAY; dst = read_8(); RD_IDLE; } //PJ adjusted
+#define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
+//#define GPIO_INIT()   {for (int i = A0; i <= A4; i++) pinMode(i, OUTPUT);}
+
+#define PIN_LOW(port, pin)    (port)->OUTCLR = (1<<(pin))
+#define PIN_HIGH(port, pin)   (port)->OUTSET = (1<<(pin))
+#define PIN_OUTPUT(port, pin) (port)->DIR |= (1<<(pin))
+
+//############################# END OF BLOCKS ############################
 #else
 #error MCU unsupported
 #endif                          // regular UNO shields on Arduino boards
