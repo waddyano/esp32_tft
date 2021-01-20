@@ -21,6 +21,10 @@
 #define USE_SDFAT
 #include <SdFat.h>           // Use the SdFat library
 
+#if SPI_DRIVER_SELECT != 2
+#error edit SdFatConfig.h .  READ THE SKETCH INSTRUCTIONS
+#endif
+
 SoftSpiDriver<12, 11, 13> softSpi; //Bit-Bang on the Shield pins SDFat.h v2
 SdFat SD;
 #define SD_CS SdSpiConfig(10, DEDICATED_SPI, SD_SCK_MHZ(0), &softSpi)
