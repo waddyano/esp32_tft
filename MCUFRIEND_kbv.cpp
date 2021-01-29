@@ -242,8 +242,8 @@ uint16_t MCUFRIEND_kbv::readID(void)
     uint32_t ret32 = readReg32(0x04);
     msb = ret32 >> 16;
     ret = ret32;	
-    if (msb = 0xE3 && ret == 0x0000) return 0xE300; //reg(04) = [xx E3 00 00] BangGood
-//    if (msb = 0x38 && ret == 0x8000) //unknown [xx 38 80 00] with D3 = 0x1602
+    if (msb == 0xE3 && ret == 0x0000) return 0xE300; //reg(04) = [xx E3 00 00] BangGood
+//    if (msb == 0x38 && ret == 0x8000) //unknown [xx 38 80 00] with D3 = 0x1602
     if (msb == 0x00 && ret == 0x8000) { //HX8357-D [xx 00 80 00]
 #if 1
         uint8_t cmds[] = {0xFF, 0x83, 0x57};
