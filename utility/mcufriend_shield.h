@@ -1098,6 +1098,7 @@ static void setReadDir()
 
 //LCD pins  |D7   |D6   |D5   |D4   |D3   |D2   |D1   |D0   | |RD  |WR  |RS   |CS   |RST  |
 //BLE pin   |P0.23|P1.14|P1.13|P1.15|P1.12|P1.11|P0.27|P0.21| |P0.4|P0.5|P0.30|P0.29|P0.31|
+//NANO pins |7    |6    |5    |4    |3    |2    |9    |8    | |A0  |A1  |A2   |A3   |A4   |
 
 #define WRITE_DELAY { WR_ACTIVE8; }   //M4F @ 64MHz
 #define IDLE_DELAY  { WR_IDLE2; }
