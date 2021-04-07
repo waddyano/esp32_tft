@@ -126,7 +126,7 @@ It also runs on NUCLEO-F103 and TEENSY3.2 with Sparkfun Adapter
 
 19. OPEN-SMART Shields have different wiring to regular Uno Shields:
     Edit utility/mcufriend_shield.h:  #define USE_SPECIAL
-    Edit utility/mcufriend_special.h: #define USE_OPENSMART_SHIELD_PINOUT
+    Edit utility/mcufriend_special.h: #define USE_OPENSMART_SHIELD_PINOUT_xxx e.g. USE_OPENSMART_SHIELD_PINOUT_MEGA
     Edit MCUFRIEND_kbv.cpp:           #define SUPPORT_8352B
 
 20. OPEN-SMART Shields can not read LM75A on a Mega because there are no SDA/SCL pins next on AREF header.
