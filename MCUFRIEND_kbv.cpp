@@ -17,6 +17,8 @@
 //#define SUPPORT_8357D_GAMMA       //monster 34 byte 
 //#define SUPPORT_9163              //
 //#define SUPPORT_9225              //ILI9225-B, ILI9225-G ID=0x9225, ID=0x9226, ID=0x6813 +380 bytes
+//#define SUPPORT_9320              //ID=0x0001, R61505, SPFD5408, ILI9320
+//#define SUPPORT_9325              //RM68090, ILI9325, ILI9328, ILI9331, ILI9335 
 //#define SUPPORT_9326_5420         //ILI9326, SPFD5420 +246 bytes
 //#define SUPPORT_9342              //costs +114 bytes
 //#define SUPPORT_9806              //UNTESTED
@@ -2326,6 +2328,7 @@ case 0x4532:    // thanks Leodino
         break;
 #endif
 
+#ifdef SUPPORT_9320
     case 0x0001:
         _lcd_capable = 0 | REV_SCREEN | INVERT_GS; //no RGB bug. thanks Ivo_Deshev
         goto common_9320;
@@ -2401,6 +2404,9 @@ case 0x4532:    // thanks Leodino
         };
         init_table16(ILI9320_regValues, sizeof(ILI9320_regValues));
         break;
+#endif
+
+#ifdef SUPPORT_9325
     case 0x6809:
         _lcd_capable = 0 | REV_SCREEN | INVERT_GS | AUTO_READINC;
         goto common_93x5;
@@ -2474,6 +2480,7 @@ case 0x4532:    // thanks Leodino
         };
         init_table16(ILI9325_regValues, sizeof(ILI9325_regValues));
         break;
+#endif
 
 #if defined(SUPPORT_9326_5420)
 	case 0x5420:
