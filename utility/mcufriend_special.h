@@ -331,8 +331,8 @@ static __attribute((always_inline))
 #define CD_PIN  2
 #define CS_PORT PORTC
 #define CS_PIN  3
-#define RESET_PORT PORTC
-#define RESET_PIN  1  // n/a. so mimic WR_PIN
+#define RESET_PORT PORTD //n.c. on Open-Smart shields
+#define RESET_PIN  2  // aliexpress.com/store/1199788
 
 #define BMASK         B00101111
 #define DMASK         B11010000
