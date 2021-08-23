@@ -320,6 +320,9 @@ static __attribute((always_inline))
 #define PIN_OUTPUT(p, b)     (p).DIR |= (1<<(b))
 
 #elif defined(__AVR_ATmega328P__) && defined(USE_OPENSMART_SHIELD_PINOUT_UNO)
+//LCD pins  |D7 |D6 |D5 |D4 |D3 |D2 |D1 |D0 | |RD |WR |RS |CS |RST|
+//AVR   pin |PD7|PD6|PB5|PD4|PB3|PB2|PB1|PB0| |PC0|PC1|PC2|PC3|PD2|
+//UNO pins  |7  |6  |13 |4  |11 |10 |9  |8  | |A0 |A1 |A2 |A3 |2  |
 #define RD_PORT PORTC
 #define RD_PIN  0
 #define WR_PORT PORTC
