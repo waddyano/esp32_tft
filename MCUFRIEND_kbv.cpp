@@ -640,7 +640,7 @@ void MCUFRIEND_kbv::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_
             STROBE_16BIT;
         }
 #else
-#if defined(SUPPORT_1289)
+#if defined(SUPPORT_1289) || defined(SUPPORT_1963)
         if (is9797) {
              uint8_t r = color565_to_r(color);
              uint8_t g = color565_to_g(color);
@@ -1271,16 +1271,23 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
         break;
 #endif
 
-#if defined(SUPPORT_1963) && USING_16BIT_BUS 
+#if defined(SUPPORT_1963) 
     case 0x1963:
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | READ_NODUMMY | INVERT_SS | INVERT_RGB;
+#if USING_16BIT_BUS
+#define SSD1963_PIXDATA 0x03
+#else
+#define SSD1963_PIXDATA 0x00
+        is9797 = 1;
+        _lcd_capable |= READ_24BITS;
+#endif
         // from NHD 5.0" 8-bit
         static const uint8_t SSD1963_NHD_50_regValues[] PROGMEM = {
             (0xE0), 1, 0x01,    // PLL enable
             TFTLCD_DELAY8, 10,
             (0xE0), 1, 0x03,    // Lock PLL
             (0xB0), 7, 0x08, 0x80, 0x03, 0x1F, 0x01, 0xDF, 0x00,        //LCD SPECIFICATION
-            (0xF0), 1, 0x03,    //was 00 pixel data interface
+            (0xF0), 1, SSD1963_PIXDATA,    //was 00 pixel data interface
             //            (0x3A), 1, 0x60,        // SET R G B format = 6 6 6
             (0xE2), 3, 0x1D, 0x02, 0x54,        //PLL multiplier, set PLL clock to 120M
             (0xE6), 3, 0x02, 0xFF, 0xFF,        //PLL setting for PCLK, depends on resolution
@@ -1298,7 +1305,7 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
             0x01, 0,            //Soft Reset
             TFTLCD_DELAY8, 120,
             (0xB0), 7, 0x08, 0x80, 0x03, 0x1F, 0x01, 0xDF, 0x00,        //LCD SPECIFICATION
-            (0xF0), 1, 0x03,    //was 00 pixel data interface
+            (0xF0), 1, SSD1963_PIXDATA,    //was 00 pixel data interface
             //            (0x3A), 1, 0x60,        // SET R G B format = 6 6 6
             (0xE6), 3, 0x0F, 0xFF, 0xFF,        //PLL setting for PCLK, depends on resolution
             (0xB4), 8, 0x04, 0x20, 0x00, 0x58, 0x80, 0x00, 0x00, 0x00,  //HSYNC
@@ -1322,7 +1329,7 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
             (0xB6), 7, 0x02, 0x0D, 0x00, 0x10, 0x10, 0x00, 0x08,        //VSYNC
             (0xBA), 1, 0x0F,    //GPIO[3:0] out 1
             (0xB8), 2, 0x07, 0x01,      //GPIO3=input, GPIO[2:0]=output
-            (0xF0), 1, 0x03,    //pixel data interface
+            (0xF0), 1, SSD1963_PIXDATA,    //pixel data interface
             TFTLCD_DELAY8, 1,
             0x28, 0,            //Display Off
             0x11, 0,            //Sleep Out
@@ -1346,7 +1353,7 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
             (0xB6), 7, 0x02, 0x0D, 0x00, 0x10, 0x10, 0x00, 0x08,        //VSYNC VT=525, VPS=16, VPW=16, FPS=8
             (0xBA), 1, 0x0F,    //GPIO[3:0] out 1
             (0xB8), 2, 0x07, 0x01,      //GPIO3=input, GPIO[2:0]=output
-            (0xF0), 1, 0x03,    //pixel data interface
+            (0xF0), 1, SSD1963_PIXDATA,    //pixel data interface
             TFTLCD_DELAY8, 1,
             0x28, 0,            //Display Off
             0x11, 0,            //Sleep Out
@@ -1370,7 +1377,7 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
             (0xB6), 7, 0x02, 0x0D, 0x00, 0x10, 0x10, 0x00, 0x08,        //VSYNC VT=525, VPS=16, VPW=16, FPS=8
             (0xBA), 1, 0x0F,    //GPIO[3:0] out 1
             (0xB8), 2, 0x07, 0x01,      //GPIO3=input, GPIO[2:0]=output
-            (0xF0), 1, 0x03,    //pixel data interface
+            (0xF0), 1, SSD1963_PIXDATA,    //pixel data interface
             TFTLCD_DELAY8, 1,
             0x28, 0,            //Display Off
             0x11, 0,            //Sleep Out
@@ -1394,7 +1401,7 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
             (0xB6), 7, 0x01, 0x20, 0x00, 0x04, 0x0C, 0x00, 0x02,        //VSYNC
             (0xBA), 1, 0x0F,    //GPIO[3:0] out 1
             (0xB8), 2, 0x07, 0x01,      //GPIO3=input, GPIO[2:0]=output
-            (0xF0), 1, 0x03,    //pixel data interface
+            (0xF0), 1, SSD1963_PIXDATA,    //pixel data interface
             TFTLCD_DELAY8, 1,
             0x28, 0,            //Display Off
             0x11, 0,            //Sleep Out
