@@ -715,8 +715,7 @@ static __attribute((always_inline)) void write_8(uint8_t val)
 #define PIN_OUTPUT(port, pin) (port)->PIO_OER = (1<<(pin))
 
 #elif defined(__SAM3X8E__) && defined(USE_DUE_16BIT_SHIELD)  //regular CTE shield on DUE
-#warning USE_DUE_16BIT_SHIELD
-#define USES_16BIT_BUS
+#define USES_16BIT_BUS  //COMMENT THIS LINE IF YOU USE 8BIT BUS
 // configure macros for the control pins
 #define RD_PORT PIOA
 #define RD_PIN  15     //D24 Graham
@@ -738,13 +737,23 @@ static __attribute((always_inline)) void write_8(uint8_t val)
 #define write_16(x)   { PIOC->PIO_CODR = CMASK; \
                         PIOC->PIO_SODR = (((x)&0x00FF)<<1)|(((x)&0xFF00)<<4); }
 #define read_16()     (((PIOC->PIO_PDSR & CMASKH)>>4)|((PIOC->PIO_PDSR & CMASKL)>>1) )
-#define read_8()      (read_16() & 0xFF)
+//#define read_8()      (read_16() & 0xFF)
+#define read_8()      ((PIOC->PIO_PDSR & CMASKL)>>1)
 #define setWriteDir() { PIOC->PIO_OER = CMASK; PIOC->PIO_PER = CMASK; }
 #define setReadDir()  { PMC->PMC_PCER0 = (1 << ID_PIOC); PIOC->PIO_ODR = CMASK; }
+#if defined(USES_16BIT_BUS)
+#warning USE_DUE_16BIT_SHIELD
 #define write8(x)     { write16(x & 0xFF); }
 #define write16(x)    { write_16(x); WR_ACTIVE; WR_STROBE; WR_IDLE; WR_IDLE; }
 #define READ_16(dst)  { RD_STROBE; RD_ACTIVE4; dst = read_16(); RD_IDLE; RD_IDLE; RD_IDLE; }
 #define READ_8(dst)   { READ_16(dst); dst &= 0xFF; }
+#else
+#warning USE_DUE_8BIT_SHIELD
+#define write8(x)     { write_8(x); WR_ACTIVE4; WR_STROBE; WR_IDLE4; }
+#define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
+#define READ_8(dst)   { RD_STROBE; RD_ACTIVE4; dst = read_8(); RD_IDLE; RD_IDLE; RD_IDLE; }
+#define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
+#endif
 
 // Shield Control macros.
 #define PIN_LOW(port, pin)    (port)->PIO_CODR = (1<<(pin))
