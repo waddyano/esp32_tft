@@ -686,6 +686,9 @@ static __attribute((always_inline)) void write_8(uint8_t val)
 #define PIN_OUTPUT(p, b)     *(&p-1) |= (1<<(b))
 
 #elif defined(__SAM3X8E__) && defined(USE_DUE_8BIT_PROTOSHIELD)  //regular UNO shield on DUE
+//LCD pins   |D7  |D6  |D5  |D4  |D3  |D2  |D1  |D0  | |RD  |WR  |RS  |CS  |RST |
+//SAM3XE pin |PD7 |PD6 |PD5 |PD4 |PD3 |PD2 |PD1 |PD0 | |PA16|PA24|PA23|PA22|PA6 |
+//Due pins   |11  |29  |15  |14  |28  |27  |26  |25  | |A0  |A1  |A2  |A3  |A4  |
 #warning USE_DUE_8BIT_PROTOSHIELD
 // configure macros for the control pins
   #define RD_PORT PIOA
