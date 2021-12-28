@@ -358,7 +358,7 @@ int16_t MCUFRIEND_kbv::readGRAM(int16_t x, int16_t y, uint16_t * block, int16_t 
 
 void MCUFRIEND_kbv::setRotation(uint8_t r)
 {
-    uint16_t GS, SS_v, ORG, REV = _lcd_rev;
+    uint16_t GS, SS_v, ORG, REV = _lcd_rev, NL;
     uint8_t val, d[3];
     rotation = r & 3;           // just perform the operation ourselves on the protected variables
     _width = (rotation & 1) ? HEIGHT : WIDTH;
@@ -472,9 +472,11 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
 		case 0xB509:
             _MC = 0x200, _MP = 0x201, _MW = 0x202, _SC = 0x210, _EC = 0x211, _SP = 0x212, _EP = 0x213;
             GS = (val & 0x80) ? (1 << 15) : 0;
-			uint16_t NL;
-			NL = ((432 / 8) - 1) << 9;
-            if (_lcd_ID == 0x9326 || _lcd_ID == 0x5420) NL >>= 1;
+            NL = ((400 / 8) - 1) << 9;  // 400 rows
+            if (_lcd_ID == 0x9326 || _lcd_ID == 0x5420) { //NL and SCN are in diff position
+                if (GS) GS |= (4 << 0);  //start SCN at row 32 PLEASE TEST ILI9326, SPFD5420
+                NL >>= 1;
+            }
             WriteCmdData(0x400, GS | NL);
             goto common_SS;
         default:
