@@ -334,8 +334,8 @@ static __attribute((always_inline))
 #define RESET_PORT PORTD //n.c. on Open-Smart shields
 #define RESET_PIN  2  // aliexpress.com/store/1199788
 
-#define BMASK         B00101111
-#define DMASK         B11010000
+#define BMASK         0b00101111
+#define DMASK         0b11010000
 
 #define write_8(x) {                          \
         PORTD = (PORTD & ~DMASK) | ((x) & DMASK); \
@@ -368,7 +368,7 @@ static __attribute((always_inline))
 #define RESET_PORT PORTF
 #define RESET_PIN  1  // n/a. so mimic WR_PIN
 
-#define BMASK         B10110000 //D13, D11, D10
+#define BMASK         0b10110000 //D13, D11, D10
 #define GMASK         0x20      //D4
 #define HMASK         0x78      //D6, D7, D8, D9
 
@@ -392,15 +392,15 @@ static __attribute((always_inline)) void write_8(uint8_t val)
 }
 #else
 #define write_8(x) {  \
-        PORTH = (PORTH&~HMASK)|(((x)&B11000000)>>3)|(((x)&B00000011)<<5); \
-        PORTB = (PORTB&~BMASK)|(((x)&B00101100)<<2); \
-        PORTG = (PORTG&~GMASK)|(((x)&B00010000)<<1); \
+        PORTH = (PORTH&~HMASK)|(((x)& 0b11000000)>>3)|(((x)& 0b00000011)<<5); \
+        PORTB = (PORTB&~BMASK)|(((x)& 0b00101100)<<2); \
+        PORTG = (PORTG&~GMASK)|(((x)& 0b00010000)<<1); \
     }
 #endif
 
 #define read_8()(\
-                 ((PINH & B00011000) << 3) | ((PINB & BMASK) >> 2) | \
-                 ((PING & GMASK) >> 1) | ((PINH & B01100000) >> 5) )
+                 ((PINH & 0b00011000) << 3) | ((PINB & BMASK) >> 2) | \
+                 ((PING & GMASK) >> 1) | ((PINH & 0b01100000) >> 5) )
 #define setWriteDir() { DDRH |=  HMASK; DDRB |=  BMASK; DDRG |=  GMASK; }
 #define setReadDir()  { DDRH &= ~HMASK; DDRB &= ~BMASK; DDRG &= ~GMASK; }
 
