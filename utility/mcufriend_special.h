@@ -47,11 +47,13 @@ ST7796S  tWC = 66ns  tWRH = 15ns  tRCFM = 450ns  tRC = 160ns
 #elif defined(USE_MY_PICO) && defined(ARDUINO_ARCH_RP2040)       //regular UNO shield on PICO
 //LCD pins  |D7  |D6  |D5  |D4  |D3  |D2 |D1  |D0  | |RD  |WR  |RS  |CS  |RST |    |
 //RP2040 pin|GP13|GP12|GP11|GP10|GP9 |GP8|GP19|GP18| |GP14|GP26|GP27|GP28|GP16|GP17|
+//BODMER pin|GP13|GP12|GP11|GP10|GP9 |GP8|GP7 |GP6 | |GP14|GP22|GP27|GP28|GP16|GP17|
 //UNO pins  |7   |6   |5   |4   |3   |2  |9   |8   | |A0  |A1  |A2  |A3  |A4  |A5  |
 //LCD pins  |CS  |MOSI|MISO|SCK | |SDA|SCL|
 //RP2040 pin|GP21|GP3 |GP4 |GP2 | |GP6|GP7|
 //UNO pins  |10  |11  |12  |13  | |18 |19 |
 
+//#define USE_BODMER
 
 #define WRITE_DELAY { WR_ACTIVE4; }
 #define IDLE_DELAY  { WR_IDLE; }
@@ -70,14 +72,19 @@ ST7796S  tWC = 66ns  tWRH = 15ns  tRCFM = 450ns  tRC = 160ns
 
 #define LMASK         (0x03 << 18)
 #define HMASK         (0xFC << 6)
+#if defined(USE_BODMER)
+//#define WR_PIN        22
+#define LMASK         (0x00 << 18)
+#define HMASK         (0xFF << 6)
+#endif
 #define GPMASK        (LMASK | HMASK)       //more intuitive style for mixed Ports
 #define write_8(x)    { sio_hw->gpio_clr = GPMASK; \
-                        sio_hw->gpio_set = ((((x) & 0x03) << 18)) | ((((x) & 0xFC) << 6)); \
+                        sio_hw->gpio_set = (((x) << 18) & LMASK) | (((x) << 6) & HMASK); \
                       }
 #define read_8()      ( ((sio_hw->gpio_in & HMASK) >> 6) | ((sio_hw->gpio_in & LMASK) >> 18) )
 #define setWriteDir() { sio_hw->gpio_oe_set = GPMASK; }
 #define setReadDir()  { sio_hw->gpio_oe_clr = GPMASK; }
-#define GPIO_INIT() {for (int i = 8; i <= 14; i++) pinMode(i, OUTPUT); for (int i = 16; i <= 28; i++) pinMode(i, OUTPUT);}
+#define GPIO_INIT() {for (int i = 6; i <= 14; i++) pinMode(i, OUTPUT); for (int i = 16; i <= 28; i++) pinMode(i, OUTPUT);}
 #define write8(x)     { write_8(x); WRITE_DELAY; WR_STROBE; IDLE_DELAY; }
 #define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
 #define READ_8(dst)   { RD_STROBE; READ_DELAY; dst = read_8(); RD_IDLE2; RD_IDLE; }
