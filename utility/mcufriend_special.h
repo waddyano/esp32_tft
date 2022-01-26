@@ -523,6 +523,12 @@ static __attribute((always_inline)) void write_8(uint8_t val)
 #define PIN_OUTPUT(p, b)     *(&p-1) |= (1<<(b))
 
 #elif defined(__AVR_ATmega2560__) && defined(USE_MEGA_16BIT_SHIELD)
+//LCD pins   |D15 |D14 |D13 |D12 |D11 |D10 |D9  |D8  |D7  |D6  |D5  |D4  |D3  |D2  |D1  |D0  |
+//ATmega2560 |PA7 |PA6 |PA5 |PA4 |PA3 |PA2 |PA1 |PA0 |PC7 |PC6 |PC5 |PC4 |PC3 |PC2 |PC1 |PC0 |
+//MEGA2560pin|29  |28  |27  |26  |25  |24  |23  |22  |30  |31  |32  |33  |34  |35  |36  |37  |
+//LCD pins   |RD  |WR  |RS  |CS  |RST |
+//ATmega2560 |PL6 |PG2 |PD7 |PG1 |PG0 |
+//MEGA2560pin|43  |39  |38  |40  |41  |
 #warning USE_MEGA_16BIT_SHIELD
 #define USES_16BIT_BUS
 #define RD_PORT PORTL
@@ -553,6 +559,9 @@ static __attribute((always_inline)) void write_8(uint8_t val)
 #define PIN_OUTPUT(p, b)     *(&p-1) |= (1<<(b))
 
 #elif defined(__AVR_ATmega2560__) && defined(USE_MEGA_8BIT_SHIELD)
+//LCD pins   |D7  |D6  |D5  |D4  |D3  |D2  |D1  |D0  |  |RD  |WR  |RS  |CS  |RST |
+//ATmega2560 |PA7 |PA6 |PA5 |PA4 |PA3 |PA2 |PA1 |PA0 |  |PL6 |PG2 |PD7 |PG1 |PG0 |
+//MEGA2560pin|29  |28  |27  |26  |25  |24  |23  |22  |  |43  |39  |38  |40  |41  |
 #warning USE_MEGA_8BIT_SHIELD for vagos21
 #define RD_PORT PORTL
 #define RD_PIN  6        //PL6 (D43).   Graham has PA15 (D24) on Due Shield 
@@ -580,6 +589,9 @@ static __attribute((always_inline)) void write_8(uint8_t val)
 #define PIN_OUTPUT(p, b)     *(&p-1) |= (1<<(b))
 
 #elif defined(__AVR_ATmega2560__) && defined(USE_MEGA_8BIT_PORTC_SHIELD)
+//LCD pins   |D7  |D6  |D5  |D4  |D3  |D2  |D1  |D0  |  |RD  |WR  |RS  |CS  |RST |
+//ATmega2560 |PC7 |PC6 |PC5 |PC4 |PC3 |PC2 |PC1 |PC0 |  |PL6 |PG2 |PD7 |PG1 |PG0 |
+//MEGA2560pin|30  |31  |32  |33  |34  |35  |36  |37  |  |43  |39  |38  |40  |41  |
 #warning USE_MEGA_8BIT_PORTC_SHIELD for Mihael54
 #define RD_PORT PORTL
 #define RD_PIN  6        //PL6 (D43).   Graham has PA15 (D24) on Due Shield 
@@ -807,6 +819,12 @@ static __attribute((always_inline)) void write_8(uint8_t val)
 #define PIN_OUTPUT(port, pin) (port)->PIO_OER = (1<<(pin))
 
 #elif defined(__SAM3X8E__) && defined(USE_MEGA_16BIT_SHIELD)  //regular MEGA shield on DUE
+//LCD pins   |D15 |D14 |D13 |D12 |D11 |D10 |D9  |D8  |D7  |D6  |D5  |D4  |D3  |D2  |D1  |D0  |
+//SAM3XE pin |PD6 |PD3 |PD2 |PD1 |PD0 |PA15|PA14|PB26|PD9 |PA7 |PD10|PC1 |PC2 |PC3 |PC4 |PC5 |
+//Due pins   |29  |28  |27  |26  |25  |24  |23  |22  |30  |31  |32  |33  |34  |35  |36  |37  |
+//LCD pins   |RD  |WR  |RS  |CS  |RST |
+//SAM3XE pin |PA20|PC7 |PC6 |PC8 |PC9 |
+//Due pins   |43  |39  |38  |40  |41  |
 #warning USE_MEGA_16BIT_SHIELD
 #define USES_16BIT_BUS
 // configure macros for the control pins
@@ -886,6 +904,9 @@ static __attribute((always_inline)) void write_8(uint8_t val)
 #define PIN_OUTPUT(port, pin) (port)->PIO_OER = (1<<(pin))
 
 #elif defined(__SAM3X8E__) && defined(USE_MEGA_8BIT_SHIELD)  //regular CTE shield on DUE
+//LCD pins   |D7  |D6  |D5  |D4  |D3  |D2  |D1  |D0  |  |RD  |WR  |RS  |CS  |RST |
+//SAM3XE pin |PD6 |PD3 |PD2 |PD1 |PD0 |PA15|PA14|PB26|  |PA20|PC7 |PC6 |PC8 |PC9 |
+//Due pins   |29  |28  |27  |26  |25  |24  |23  |22  |  |43  |39  |38  |40  |41  |
 #warning USE_MEGA_8BIT_SHIELD for peloxp
 // configure macros for the control pins
 #define RD_PORT PIOA
@@ -942,6 +963,9 @@ static __attribute((always_inline)) void write_8(uint8_t val)
 #define PIN_OUTPUT(port, pin) (port)->PIO_OER = (1<<(pin))
 
 #elif defined(__SAM3X8E__) && defined(USE_MEGA_8BIT_PORTC_SHIELD)  //Surenoo 8/16bit shield on DUE
+//LCD pins   |D7  |D6  |D5  |D4  |D3  |D2  |D1  |D0  |  |RD  |WR  |RS  |CS  |RST |
+//SAM3XE pin |PD9 |PA7 |PD10|PC1 |PC2 |PC3 |PC4 |PC5 |  |PA20|PC7 |PC6 |PC8 |PC9 |
+//Due pins   |30  |31  |32  |33  |34  |35  |36  |37  |  |43  |39  |38  |40  |41  |
 #warning USE_MEGA_8BIT_PORTC_SHIELD on DUE
 // configure macros for the control pins
 #define RD_PORT PIOA
