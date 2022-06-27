@@ -19,6 +19,9 @@
 //#define USE_MIKROELEKTRONIKA
 //#define USE_XPRO_MEGA4809
 //#define USE_MY_PICO
+//#define USE_CURIOSITY_AVR128DA48
+//#define USE_CURIOSITY_AVR128DB48
+
 
 /*
 HX8347A  tWC =100ns  tWRH = 35ns  tRCFM = 450ns  tRC = ?  ns
@@ -42,6 +45,86 @@ ST7796S  tWC = 66ns  tWRH = 15ns  tRCFM = 450ns  tRC = 160ns
 */
 
 #if 0
+
+//################################### Curiosity AVR128DA48 ##############################
+#elif defined(__AVR_AVR128DA48__) && defined(USE_CURIOSITY_AVR128DA48)     // 
+#warning Curiosity AVR128DA48
+//LCD pins  |D7 |D6 |D5 |D4 |D3 |D2 |D1 |D0 | |RD |WR |RS |CS |RST| |SDA0|SCL0| |SDA1|SCL1|
+//DA48  pin |PA3|PA2|PB5|PB4|PB3|PB2|PB1|PB0| |PD0|PD1|PD2|PD3|PD4| |PC2 |PC3 | |PF2 |PF3 |
+//DB48  pin |PC7|PC6|PC5|PC4|PC3|PC2|PC1|PC0| |PD0|PD1|PD2|PD4|PD5| |PA2 |PA3 | |PF2 |PF3 |
+//Curiosity |37 |36 |35 |34 |23 |22 |21 |20 | |46 |47 |48 |43 |44 | |9   |10  | |18  |19  |
+//UNO pins  |7  |6  |5  |4  |3  |2  |9  |8  | |A0 |A1 |A2 |A3 |A4 | |18  |19  |
+//LCD pins  |CS  |MOSI|MISO|SCK | |SDA|SCL|
+//128DA pin |PA7 |PA4 |PA5 |PA6 | |PF2|GP7|
+//UNO pins  |10  |11  |12  |13  | |18 |19 |
+
+#define WRITE_DELAY {  }
+#define READ_DELAY  { RD_ACTIVE2; }
+
+#define RD_PORT VPORTD
+#define RD_PIN  0
+#define WR_PORT VPORTD
+#define WR_PIN  1
+#define CD_PORT VPORTD
+#define CD_PIN  2
+#define CS_PORT VPORTD
+#define CS_PIN  3
+#define RESET_PORT VPORTD
+#define RESET_PIN  4
+
+#define BMASK 0x3F
+#define AMASK 0x0C
+//#define write_8(x)    { VPORTB.OUT = ((x) & BMASK) | (VPORTB.OUT & 0xC0); VPORTA.OUT = (((x) & 0xC0) >> 4) | (VPORTA.OUT & ~AMASK);}
+//#define write_8(x)    { PORTB.OUTCLR = BMASK; PORTB.OUTSET =((x) & BMASK); PORTA.OUTCLR = AMASK; PORTA.OUTSET = ((x) >> 4) & AMASK;}
+#define write_8(x)    { PORTB.OUTCLR = BMASK; PORTA.OUTCLR = AMASK; PORTB.OUTSET =((x) & BMASK); PORTA.OUTSET = ((x) >> 4) & AMASK;}
+#define read_8()      ( (VPORTB_IN & BMASK) | ((VPORTA_IN & AMASK) << 4) )
+#define setWriteDir() { VPORTB.DIR |=  BMASK; VPORTA.DIR |=  AMASK; }
+#define setReadDir()  { VPORTB.DIR &= ~BMASK; VPORTA.DIR &= ~AMASK; }
+#define write8(x)     { write_8(x); WRITE_DELAY; WR_STROBE; }
+#define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
+#define READ_8(dst)   { RD_STROBE; READ_DELAY; dst = read_8(); RD_IDLE; }
+#define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
+
+#define PIN_LOW(p, b)        (p).OUT &= ~(1<<(b))
+#define PIN_HIGH(p, b)       (p).OUT |= (1<<(b))
+#define PIN_OUTPUT(p, b)     (p).DIR |= (1<<(b))
+
+//################################### Curiosity AVR128DB48 ##############################
+#elif defined(__AVR_AVR128DB48__) && defined(USE_CURIOSITY_AVR128DB48)       //
+#warning Curiosity AVR128DB48
+//LCD pins  |D7 |D6 |D5 |D4 |D3 |D2 |D1 |D0 | |RD |WR |RS |CS |RST|
+//DA48  pin |PA3|PA2|PB5|PB4|PB3|PB2|PB1|PB0| |PD0|PD1|PD2|PD3|PD4|
+//DB48  pin |PC7|PC6|PC5|PC4|PC3|PC2|PC1|PC0| |PD0|PD1|PD2|PD4|PD5|
+//Curiosity |37 |36 |35 |34 |23 |22 |21 |20 | |46 |47 |48 |43 |44 |
+//UNO pins  |7  |6  |5  |4  |3  |2  |9  |8  | |A0 |A1 |A2 |A3 |A4 |
+
+#define WRITE_DELAY {  }
+#define READ_DELAY  { RD_ACTIVE2; }
+
+#define RD_PORT VPORTD
+#define RD_PIN  0
+#define WR_PORT VPORTD
+#define WR_PIN  1
+#define CD_PORT VPORTD
+#define CD_PIN  2
+#define CS_PORT VPORTD
+#define CS_PIN  4
+#define RESET_PORT VPORTD
+#define RESET_PIN  5
+
+#define CMASK 0xFF
+#define write_8(x)    { PORTC.OUT = x; }
+#define read_8()      ( (PORTC.IN) )
+#define setWriteDir() { VPORTC.DIR |=  CMASK; }
+#define setReadDir()  { VPORTC.DIR &= ~CMASK; }
+#define write8(x)     { write_8(x); WRITE_DELAY; WR_STROBE; }
+#define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
+#define READ_8(dst)   { RD_STROBE; READ_DELAY; dst = read_8(); RD_IDLE; }
+#define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
+
+#define PIN_LOW(p, b)        (p).OUT &= ~(1<<(b))
+#define PIN_HIGH(p, b)       (p).OUT |= (1<<(b))
+#define PIN_OUTPUT(p, b)     (p).DIR |= (1<<(b))
 
 //################################### RP2040 ##############################
 #elif defined(USE_MY_PICO) && defined(ARDUINO_ARCH_RP2040)       //regular UNO shield on PICO
@@ -136,11 +219,15 @@ ST7796S  tWC = 66ns  tWRH = 15ns  tRCFM = 450ns  tRC = 160ns
 #define RESET_PIN  1
 
 #elif defined(__AVR_ATxmega128A1__)
-#warning Home made shield with Xplained A1 CTL=J4 (PC), DATA=J2 (PA)
 #define VPMAP10 0x50    // VPORT0=A, 1=F, 2=C, 3=D
 #define VPMAP32 0x32    // VPORT0=A, 1=F, 2=C, 3=D
 #define DATPORT VPORT0  //PORTA
-#define CTLPORT VPORT2  //PORTC
+#define CTLPORT VPORT1  //PORTF i.e. CTL=J1 (PF), DATA=J2 (PA)
+#warning Home made shield with Xplained A1 CTL=J1 (PF), DATA=J2 (PA)
+//#define CTLPORT VPORT2  //PORTC i.e. CTL=J4 (PC), DATA=J2 (PA) upsets Serial on PC2,PC3
+//#warning Home made shield with Xplained A1 CTL=J4 (PC), DATA=J2 (PA) upsets Serial on PC2,PC3
+//#define CTLPORT VPORT3  //PORTD i.e. CTL=J3 (PD), DATA=J2 (PA) note J3 VCC pin=5V0
+//#warning Home made shield with Xplained A1 CTL=J3 (PD), DATA=J2 (PA) note J3 VCC pin=5V0
 #define RD_PORT CTLPORT //PC0.
 #define RD_PIN  0
 #define WR_PORT CTLPORT
@@ -216,6 +303,11 @@ ST7796S  tWC = 66ns  tWRH = 15ns  tRCFM = 450ns  tRC = 160ns
 
 //################################# XPRO-4809 with XPRO-Shield_Adapter ############################
 #elif defined(__AVR_ATmega4809__) && !defined(USE_BLD_BST_MEGA4809) && defined(USE_XPRO_MEGA4809) // XPRO-4809 with XPRO-Shield_Adapter
+//LCD pins  |D7 |D6 |D5 |D4 |D3 |D2 |D1 |D0 | |RD |WR |RS |CS |RST| |CS |DI |
+//4809  pin |PE1|PB3|PF6|PC7|PC6|PB2|PA3|PA2| |PD2|PD3|PD4|PD5|PC2| |PA7]PA4|
+//XPRO      |215|210|206|110|109|209|106|105| |103|104|203|204|111| |115|116|
+//UNO pins  |7  |6  |5  |4  |3  |2  |9  |8  | |A0 |A1 |A2 |A3 |A4 | |10 |11 |
+//XPRO Shield Adapter SW100=down for D11=EXT1.16.  SW101=up for D3=EXT1.9 
 #warning XPRO-4809 with XPRO-Shield_Adapter using PORT.OUTSET
 #define RD_PORT PORTD  //
 #define RD_PIN  2
@@ -827,6 +919,9 @@ static __attribute((always_inline)) void write_8(uint8_t val)
 //Due pins   |43  |39  |38  |40  |41  |
 #warning USE_MEGA_16BIT_SHIELD
 #define USES_16BIT_BUS
+#define WRITE_DELAY { WR_ACTIVE4; WR_ACTIVE2; }
+#define IDLE_DELAY  { }
+#define READ_DELAY  { RD_ACTIVE4; }
 // configure macros for the control pins
 #define RD_PORT PIOA
 #define RD_PIN  20     //D43
@@ -894,8 +989,8 @@ static __attribute((always_inline)) void write_8(uint8_t val)
 					  }
 #define write8(x)     { write16(x & 0xFF); }
 // ILI9486 is slower than ILI9481
-#define write16(x)    { write_16(x); WR_ACTIVE8; WR_STROBE; WR_IDLE4;}
-#define READ_16(dst)  { RD_STROBE; RD_ACTIVE4; dst = read_16(); RD_IDLE; RD_IDLE; RD_IDLE; }
+#define write16(x)    { write_16(x); WRITE_DELAY; WR_STROBE; IDLE_DELAY;}
+#define READ_16(dst)  { RD_STROBE; READ_DELAY; dst = read_16(); RD_IDLE2; }
 #define READ_8(dst)   { READ_16(dst); dst &= 0xFF; }
 
 // Shield Control macros.
@@ -908,6 +1003,9 @@ static __attribute((always_inline)) void write_8(uint8_t val)
 //SAM3XE pin |PD6 |PD3 |PD2 |PD1 |PD0 |PA15|PA14|PB26|  |PA20|PC7 |PC6 |PC8 |PC9 |
 //Due pins   |29  |28  |27  |26  |25  |24  |23  |22  |  |43  |39  |38  |40  |41  |
 #warning USE_MEGA_8BIT_SHIELD for peloxp
+#define WRITE_DELAY { WR_ACTIVE4; }
+#define IDLE_DELAY  { }
+#define READ_DELAY  { RD_ACTIVE4; }
 // configure macros for the control pins
 #define RD_PORT PIOA
 #define RD_PIN  20     //D43
@@ -952,9 +1050,9 @@ static __attribute((always_inline)) void write_8(uint8_t val)
 					  }
 
 // ILI9486 is slower than ILI9481. HX8357-D is slower
-#define write8(x)     { write_8(x); WR_ACTIVE4; WR_STROBE; WR_IDLE; WR_IDLE; }
+#define write8(x)     { write_8(x); WRITE_DELAY; WR_STROBE; IDLE_DELAY; }
 #define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
-#define READ_8(dst)   { RD_STROBE; RD_ACTIVE4; dst = read_8(); RD_IDLE; RD_IDLE; RD_IDLE; }
+#define READ_8(dst)   { RD_STROBE; READ_DELAY; dst = read_8(); RD_IDLE2; }
 #define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
 
 // Shield Control macros.
@@ -967,6 +1065,9 @@ static __attribute((always_inline)) void write_8(uint8_t val)
 //SAM3XE pin |PD9 |PA7 |PD10|PC1 |PC2 |PC3 |PC4 |PC5 |  |PA20|PC7 |PC6 |PC8 |PC9 |
 //Due pins   |30  |31  |32  |33  |34  |35  |36  |37  |  |43  |39  |38  |40  |41  |
 #warning USE_MEGA_8BIT_PORTC_SHIELD on DUE
+#define WRITE_DELAY { }
+#define IDLE_DELAY  { }
+#define READ_DELAY  { RD_ACTIVE4; }
 // configure macros for the control pins
 #define RD_PORT PIOA
 #define RD_PIN  20     //D43
@@ -1018,9 +1119,9 @@ static __attribute((always_inline)) void write_8(uint8_t val)
 					  }
 
 // ILI9486 is slower than ILI9481. HX8357-D is slower
-#define write8(x)     { write_8(x); WR_ACTIVE4; WR_STROBE; WR_IDLE; WR_IDLE; }
+#define write8(x)     { write_8(x); WRITE_DELAY; WR_STROBE; IDLE_DELAY; }
 #define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
-#define READ_8(dst)   { RD_STROBE; RD_ACTIVE4; dst = read_8(); RD_IDLE; RD_IDLE; RD_IDLE; }
+#define READ_8(dst)   { RD_STROBE; READ_DELAY; dst = read_8(); RD_IDLE2; }
 #define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
 
 // Shield Control macros.
