@@ -259,7 +259,7 @@ void write_8(uint8_t val)
  // configure macros for data bus
 #define DMASK 0x0030C3C0
  //  #define write_8(x) PORT->Group[0].OUT.reg = (PORT->Group[0].OUT.reg & ~DMASK)|(((x) & 0x0F) << 6)|(((x) & 0x30) << 10)|(((x) & 0xC0)<<14)
-#if defined(ARDUINO_SAMD_ZERO) || defined(ARDUINO_SAMD_ZERO)   // American ZERO
+#if defined(ARDUINO_SAMD_ZERO) && !defined(USE_M0_PINOUT)   // American ZERO
 //LCD pins   |D7  |D6  |D5  |D4  |D3  |D2  |D1  |D0  | |RD |WR |RS  |CS  |RST |
 //SAMD21 pin |PA21|PA20|PA15|PA8 |PA9 |PA14|PA7 |PA6 | |PA2|PB8|PB9 |PA4 |PA5 |
 #define write_8(x) {\
