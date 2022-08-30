@@ -18,9 +18,10 @@
 //#define USE_ADIGITALEU_TEENSY
 //#define USE_MIKROELEKTRONIKA
 //#define USE_XPRO_MEGA4809
-//#define USE_MY_PICO
+//#define USE_MY_PICO               //MBED_RP2040 pinout changed feb2022 v2.7.2 
 //#define USE_CURIOSITY_AVR128DA48
 //#define USE_CURIOSITY_AVR128DB48
+//#define USE_M0_PINOUT             //Chinese M0 boards have Zero bootloader but M0_PRO pinout
 
 
 /*
@@ -52,11 +53,16 @@ ST7796S  tWC = 66ns  tWRH = 15ns  tRCFM = 450ns  tRC = 160ns
 //LCD pins  |D7 |D6 |D5 |D4 |D3 |D2 |D1 |D0 | |RD |WR |RS |CS |RST| |SDA0|SCL0| |SDA1|SCL1|
 //DA48  pin |PA3|PA2|PB5|PB4|PB3|PB2|PB1|PB0| |PD0|PD1|PD2|PD3|PD4| |PC2 |PC3 | |PF2 |PF3 |
 //DB48  pin |PC7|PC6|PC5|PC4|PC3|PC2|PC1|PC0| |PD0|PD1|PD2|PD4|PD5| |PA2 |PA3 | |PF2 |PF3 |
+//m4809 pin |PF1|PF0|PB5|PB4|PB3|PB2|PB1|PB0| |PD0|PD1|PD2|PD4|PD5| |PA2 |PA3 | |PF2 |PF3 |
 //Curiosity |37 |36 |35 |34 |23 |22 |21 |20 | |46 |47 |48 |43 |44 | |9   |10  | |18  |19  |
 //UNO pins  |7  |6  |5  |4  |3  |2  |9  |8  | |A0 |A1 |A2 |A3 |A4 | |18  |19  |
-//LCD pins  |CS  |MOSI|MISO|SCK | |SDA|SCL|
-//128DA pin |PA7 |PA4 |PA5 |PA6 | |PF2|GP7|
-//UNO pins  |10  |11  |12  |13  | |18 |19 |
+//LCD pins  |CS  |MOSI|MISO|SCK | |SDA|SCL| |DC |RST|
+//128DA pin |PA7 |PA4 |PA5 |PA6 | |PC2|PC3| |PB1|PB0|
+//128DB pin |PA7 |PA4 |PA5 |PA6 | |PA2|PA3| |PC1|PC0|
+//m4809 pin |PA7 |PA4 |PA5 |PA6 | |PA2|PA3| |PB1|PB0|
+//t1627 pin |PC3 |PC2 |PC1 |PC0 | |PB1|PB0| |PA4,PA3| link A0+D9, A1+D8
+//Curiosity |14  |11  |12  |13  | |9  |10 | |21 |20 |
+//UNO shield|D10 |D11 |D12 |D13 | |D18|D19| |D9 |D8 |
 
 #define WRITE_DELAY {  }
 #define READ_DELAY  { RD_ACTIVE2; }
@@ -127,23 +133,24 @@ ST7796S  tWC = 66ns  tWRH = 15ns  tRCFM = 450ns  tRC = 160ns
 #define PIN_OUTPUT(p, b)     (p).DIR |= (1<<(b))
 
 //################################### RP2040 ##############################
+//## MBED_RP2040 2.0.0 released 8 apr 2021 SPI0 on gp2-4, I2C0 on gp6-7
+//## MBED_RP2040 2.7.2 released 7 feb 2022 SPI0 on gp16-19, I2C0 on gp4-5
 #elif defined(USE_MY_PICO) && defined(ARDUINO_ARCH_RP2040)       //regular UNO shield on PICO
 //LCD pins  |D7  |D6  |D5  |D4  |D3  |D2 |D1  |D0  | |RD  |WR  |RS  |CS  |RST |    |
-//RP2040 pin|GP13|GP12|GP11|GP10|GP9 |GP8|GP19|GP18| |GP14|GP26|GP27|GP28|GP16|GP17|
+//TAG200 pin|GP13|GP12|GP11|GP10|GP9 |GP8|GP19|GP18| |GP14|GP26|GP27|GP28|GP16|GP17|
 //BODMER pin|GP13|GP12|GP11|GP10|GP9 |GP8|GP7 |GP6 | |GP14|GP22|GP27|GP28|GP16|GP17|
+//TAG272 pin|GP13|GP12|GP11|GP10|GP9 |GP8|GP7 |GP6 | |GP21|GP26|GP27|GP28|GP14|GP15|
 //UNO pins  |7   |6   |5   |4   |3   |2  |9   |8   | |A0  |A1  |A2  |A3  |A4  |A5  |
 //LCD pins  |CS  |MOSI|MISO|SCK | |SDA|SCL|
-//RP2040 pin|GP21|GP3 |GP4 |GP2 | |GP6|GP7|
+//TAG200 pin|GP21|GP3 |GP4 |GP2 | |GP6|GP7|
+//TAG272 pin|GP17|GP19|GP16|GP18| |GP4|GP5|
 //UNO pins  |10  |11  |12  |13  | |18 |19 |
-
-//#define USE_BODMER
 
 #define WRITE_DELAY { WR_ACTIVE4; }
 #define IDLE_DELAY  { WR_IDLE; }
 #define READ_DELAY  { RD_ACTIVE8; }
 
 #define RD_PORT sio_hw
-#define RD_PIN  14
 #define WR_PORT sio_hw
 #define WR_PIN  26
 #define CD_PORT sio_hw
@@ -151,14 +158,19 @@ ST7796S  tWC = 66ns  tWRH = 15ns  tRCFM = 450ns  tRC = 160ns
 #define CS_PORT sio_hw
 #define CS_PIN  28
 #define RESET_PORT sio_hw
-#define RESET_PIN  16
 
+#if defined(USE_MY_PICO_TAG200)
 #define LMASK         (0x03 << 18)
 #define HMASK         (0xFC << 6)
-#if defined(USE_BODMER)
-//#define WR_PIN        22
+#define GPIO_INIT() {for (int i = 8; i <= 14; i++) pinMode(i, OUTPUT); for (int i = 16; i <= 19; i++) pinMode(i, OUTPUT); for (int i = 26; i <= 28; i++) pinMode(i, OUTPUT);}
+#define RD_PIN        14
+#define RESET_PIN     16
+#else
 #define LMASK         (0x00 << 18)
 #define HMASK         (0xFF << 6)
+#define GPIO_INIT() {for (int i = 6; i <= 14; i++) pinMode(i, OUTPUT); pinMode(21, OUTPUT); for (int i = 26; i <= 28; i++) pinMode(i, OUTPUT);}
+#define RD_PIN        21
+#define RESET_PIN     14
 #endif
 #define GPMASK        (LMASK | HMASK)       //more intuitive style for mixed Ports
 #define write_8(x)    { sio_hw->gpio_clr = GPMASK; \
@@ -167,7 +179,6 @@ ST7796S  tWC = 66ns  tWRH = 15ns  tRCFM = 450ns  tRC = 160ns
 #define read_8()      ( ((sio_hw->gpio_in & HMASK) >> 6) | ((sio_hw->gpio_in & LMASK) >> 18) )
 #define setWriteDir() { sio_hw->gpio_oe_set = GPMASK; }
 #define setReadDir()  { sio_hw->gpio_oe_clr = GPMASK; }
-#define GPIO_INIT() {for (int i = 6; i <= 14; i++) pinMode(i, OUTPUT); for (int i = 16; i <= 28; i++) pinMode(i, OUTPUT);}
 #define write8(x)     { write_8(x); WRITE_DELAY; WR_STROBE; IDLE_DELAY; }
 #define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
 #define READ_8(dst)   { RD_STROBE; READ_DELAY; dst = read_8(); RD_IDLE2; RD_IDLE; }
