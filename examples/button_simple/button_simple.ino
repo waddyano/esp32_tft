@@ -21,9 +21,7 @@ bool Touch_getXY(void)
 {
     TSPoint p = ts.getPoint();
     pinMode(YP, OUTPUT);      //restore shared pins
-    pinMode(XM, OUTPUT);
-    digitalWrite(YP, HIGH);   //because TFT control pins
-    digitalWrite(XM, HIGH);
+    pinMode(XM, OUTPUT);      //because TFT control pins
     bool pressed = (p.z > MINPRESSURE && p.z < MAXPRESSURE);
     if (pressed) {
         pixel_x = map(p.x, TS_LEFT, TS_RT, 0, tft.width()); //.kbv makes sense to me
@@ -43,6 +41,9 @@ bool Touch_getXY(void)
 
 void setup(void)
 {
+#if defined(__arm__) || defined(ESP32) //default to 12-bit ADC
+    analogReadResolution(10); //Adafruit TouchScreen.h expects 10-bit
+#endif
     Serial.begin(9600);
     uint16_t ID = tft.readID();
     Serial.print("TFT ID = 0x");

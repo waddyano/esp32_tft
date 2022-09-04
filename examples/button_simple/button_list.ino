@@ -1,5 +1,5 @@
 /* an alternative approach.   swap the #if 1 / 0 values to try it
- * 
+ * how to map for different rotations.
  */
 #if 0
 
@@ -10,12 +10,18 @@ MCUFRIEND_kbv tft;
 #define MINPRESSURE 200
 #define MAXPRESSURE 1000
 
+#define ORIENTATION 1   //change screen rotation
+
 // ALL Touch panels and wiring is DIFFERENT
 // copy-paste results from TouchScreen_Calibr_native.ino
 const int XP = 6, XM = A2, YP = A1, YM = 7; //ID=0x9341
 const int TS_LEFT = 907, TS_RT = 136, TS_TOP = 942, TS_BOT = 139;
 
 TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
+
+// forward declarations 
+extern bool update_button(Adafruit_GFX_Button *b, bool down);
+extern bool update_button_list(Adafruit_GFX_Button **pb);
 
 Adafruit_GFX_Button on_btn, off_btn;
 
@@ -24,13 +30,29 @@ bool Touch_getXY(void)
 {
     TSPoint p = ts.getPoint();
     pinMode(YP, OUTPUT);      //restore shared pins
-    pinMode(XM, OUTPUT);
-    digitalWrite(YP, HIGH);   //because TFT control pins
-    digitalWrite(XM, HIGH);
+    pinMode(XM, OUTPUT);      //because TFT control pins
     bool pressed = (p.z > MINPRESSURE && p.z < MAXPRESSURE);
     if (pressed) {
-        pixel_x = map(p.x, TS_LEFT, TS_RT, 0, tft.width()); //.kbv makes sense to me
-        pixel_y = map(p.y, TS_TOP, TS_BOT, 0, tft.height());
+        switch (tft.getRotation() & 3) {
+            // map raw ADC values to pixel coordinates
+            // most apps only use a fixed rotation e.g omit unused rotations
+            case 0:      //PORTRAIT
+                pixel_x = map(p.x, TS_LEFT, TS_RT, 0, tft.width());
+                pixel_y = map(p.y, TS_TOP, TS_BOT, 0, tft.height());
+                break;
+            case 1:      //LANDSCAPE
+                pixel_x = map(p.y, TS_TOP, TS_BOT, 0, tft.width());
+                pixel_y = map(p.x, TS_RT, TS_LEFT, 0, tft.height());
+                break;
+            case 2:      //PORTRAIT REV
+                pixel_x = map(p.x, TS_RT, TS_LEFT, 0, tft.width());
+                pixel_y = map(p.y, TS_BOT, TS_TOP, 0, tft.height());
+                break;
+            case 3:      //LANDSCAPE REV
+                pixel_x = map(p.y, TS_BOT, TS_TOP, 0, tft.width());
+                pixel_y = map(p.x, TS_LEFT, TS_RT, 0, tft.height());
+                break;
+        }
     }
     return pressed;
 }
@@ -46,6 +68,9 @@ bool Touch_getXY(void)
 
 void setup(void)
 {
+#if defined(__arm__) || defined(ESP32) //default to 12-bit ADC
+    analogReadResolution(10); //Adafruit TouchScreen.h expects 10-bit
+#endif
     Serial.begin(9600);
     uint16_t ID = tft.readID();
     Serial.print("TFT ID = 0x");
@@ -53,7 +78,7 @@ void setup(void)
     Serial.println("Calibrate for your Touch Panel");
     if (ID == 0xD3D3) ID = 0x9486; // write-only shield
     tft.begin(ID);
-    tft.setRotation(0);            //PORTRAIT
+    tft.setRotation(ORIENTATION);   // try different rotations
     tft.fillScreen(BLACK);
     on_btn.initButton(&tft,  60, 200, 100, 40, WHITE, CYAN, BLACK, "ON", 2);
     off_btn.initButton(&tft, 180, 200, 100, 40, WHITE, CYAN, BLACK, "OFF", 2);
