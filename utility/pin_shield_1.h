@@ -661,7 +661,7 @@
   #define D8_PIN  6
   #define D9_PORT PORT->Group[1] //EXT1-6  PB07 PA25
   #define D9_PIN  7
-  #define D10_PORT PORT->Group[0] //EXT1-8 PA05 PA19
+  #define D10_PORT PORT->Group[0] //EXT1-15 PA05 PA11
   #define D10_PIN  5
   #define D11_PORT PORT->Group[0] //EXT1-16 PA06 PA13 SW100=down
   #define D11_PIN  6
@@ -767,8 +767,8 @@
   #define D8_PIN  24
   #define D9_PORT PIOA //EXT1-6  PB07 PA25
   #define D9_PIN  25
-  #define D10_PORT PIOA //EXT1-8 PA05 PA19
-  #define D10_PIN  19
+  #define D10_PORT PIOA //EXT1-15 PA05 PA11
+  #define D10_PIN  11
   #define D11_PORT PIOA //EXT1-16 PA06 PA13 SW100=down
   #define D11_PIN  13
   #define D12_PORT PIOA //EXT1-17 PA04 PA12
@@ -961,7 +961,7 @@
   #define D1_PIN  0
   #define D2_PORT PORTB
   #define D2_PIN  2
-  #define D3_PORT PORTC
+  #define D3_PORT PORTC //EXT1-7  PB02 PA23 PC6 SW101=down
   #define D3_PIN  6
   #define D4_PORT PORTC
   #define D4_PIN  7
@@ -969,23 +969,23 @@
   #define D5_PIN  6
   #define D6_PORT PORTB
   #define D6_PIN  3
-  #define D7_PORT PORTE
+  #define D7_PORT PORTE //EXT2-15 PA17 PA09 PE1
   #define D7_PIN  1
-  #define D8_PORT PORTA
+  #define D8_PORT PORTA //EXT1-5  PB06 PA24 PA2
   #define D8_PIN  2
-  #define D9_PORT PORTA
+  #define D9_PORT PORTA //EXT1-6  PB07 PA25 PA3
   #define D9_PIN  3
-  #define D10_PORT PORTA
+  #define D10_PORT PORTA //EXT1-15 PA05 PA11 PA7
   #define D10_PIN  7
-  #define D11_PORT PORTA //PC5
+  #define D11_PORT PORTA //EXT1-16 PA06 PA13 PA4 SW100=down
   #define D11_PIN  4
-  #define D12_PORT PORTA
+  #define D12_PORT PORTA //EXT1-17 PA04 PA12 PA5
   #define D12_PIN  5
-  #define D13_PORT PORTA
+  #define D13_PORT PORTA //EXT1-18 PA07 PA14 PA6
   #define D13_PIN  6
-  #define A0_PORT PORTD
+  #define A0_PORT PORTD //EXT1-3  PB00 PA17 PD2
   #define A0_PIN  2
-  #define A1_PORT PORTD
+  #define A1_PORT PORTD //EXT1-4  PB01 PA18 PD3
   #define A1_PIN  3
   #define A2_PORT PORTD
   #define A2_PIN  4
