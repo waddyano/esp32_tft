@@ -1,0 +1,6 @@
+[submodule "components/MCUFRIEND_kbv"]
+	path = components/MCUFRIEND_kbv
+	url = https://github.com/waddyano/MCUFRIEND_kbv.git
+[submodule "components\\JPEGDEC"]
+	path = components\\JPEGDEC
+	url = https://github.com/bitbank2/JPEGDEC.git
